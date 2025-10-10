@@ -6,11 +6,12 @@
     <meta name="theme-color" content="#9333ea">
     <meta name="description" content="Pexeso - Hra pro dva hráče">
     <title>Pexeso</title>
-    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiUGV4ZXNvIiwic2hvcnRfbmFtZSI6IlBleGVzbyIsInN0YXJ0X3VybCI6Ii4iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjOTMzM2VhIiwidGhlbWVfY29sb3IiOiIjOTMzM2VhIn0=">
     <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
     <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
         body {
             margin: 0;
@@ -24,7 +25,24 @@
     <div id="root"></div>
     
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useRef } = React;
+
+        // Firebase konfigurace
+   	 const firebaseConfig = {
+		apiKey: "AIzaSyBLtCRf4_OYedrTrdizRRCFLN0FIk-bnIE",
+		authDomain: "pexeso-game.firebaseapp.com",
+		projectId: "pexeso-game",
+		storageBucket: "pexeso-game.firebasestorage.app",
+		messagingSenderId: "1770108821",
+		appId: "1:1770108821:web:53089614906957421fe89c",
+		measurementId: "G-G0Y3QV8L2W"
+	};
+
+        // Inicializace Firebase (pouze pokud ještě není)
+        if (!firebase.apps.length) {
+          firebase.initializeApp(firebaseConfig);
+        }
+        const database = firebase.database();
 
         const PexesoGame = () => {
           const ROWS = 10;
@@ -32,12 +50,21 @@
           const TOTAL_CARDS = ROWS * COLS;
           const PAIRS = TOTAL_CARDS / 2;
 
+          const [gameMode, setGameMode] = useState('menu'); // menu, local, online
+          const [roomCode, setRoomCode] = useState('');
+          const [joinCode, setJoinCode] = useState('');
+          const [playerNumber, setPlayerNumber] = useState(null);
+          const [waitingForPlayer, setWaitingForPlayer] = useState(false);
+          
           const [cards, setCards] = useState([]);
           const [flipped, setFlipped] = useState([]);
           const [matched, setMatched] = useState([]);
           const [currentPlayer, setCurrentPlayer] = useState(1);
           const [scores, setScores] = useState({ player1: 0, player2: 0 });
           const [canFlip, setCanFlip] = useState(true);
+
+          const roomRef = useRef(null);
+          const isOnline = gameMode === 'online';
 
           const animals = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', 
                           '🦁', '🐮', '🐷', '🐸', '🐵', '🐔', '🐧', '🐦', '🐤', '🦆',
@@ -52,18 +79,108 @@
             '#FAD7A0', '#D6EAF8', '#FCF3CF', '#E8DAEF', '#D1F2EB'
           ];
 
-          useEffect(() => {
-            initGame();
-          }, []);
+          const generateRoomCode = () => {
+            return Math.random().toString(36).substring(2, 8).toUpperCase();
+          };
 
-          const initGame = () => {
+          const createRoom = async () => {
+            const code = generateRoomCode();
             const cardValues = [];
             for (let i = 0; i < PAIRS; i++) {
               cardValues.push(i, i);
             }
             
             const shuffled = cardValues
-              .map(value => ({ value, color: colors[value % colors.length], animal: animals[value % animals.length], sort: Math.random() }))
+              .map(value => ({ 
+                value, 
+                color: colors[value % colors.length], 
+                animal: animals[value % animals.length], 
+                sort: Math.random() 
+              }))
+              .sort((a, b) => a.sort - b.sort)
+              .map(({ value, color, animal }) => ({ value, color, animal }));
+
+            await database.ref('rooms/' + code).set({
+              cards: shuffled,
+              flipped: [],
+              matched: [],
+              currentPlayer: 1,
+              scores: { player1: 0, player2: 0 },
+              players: { player1: true, player2: false },
+              createdAt: Date.now()
+            });
+
+            setRoomCode(code);
+            setPlayerNumber(1);
+            setGameMode('online');
+            setWaitingForPlayer(true);
+            listenToRoom(code);
+          };
+
+          const joinRoom = async () => {
+            if (!joinCode.trim()) return;
+            
+            const code = joinCode.trim().toUpperCase();
+            const roomSnapshot = await database.ref('rooms/' + code).once('value');
+            
+            if (!roomSnapshot.exists()) {
+              alert('Místnost nenalezena!');
+              return;
+            }
+
+            const roomData = roomSnapshot.val();
+            if (roomData.players.player2) {
+              alert('Místnost je plná!');
+              return;
+            }
+
+            await database.ref('rooms/' + code + '/players/player2').set(true);
+            
+            setRoomCode(code);
+            setPlayerNumber(2);
+            setGameMode('online');
+            setWaitingForPlayer(false);
+            listenToRoom(code);
+          };
+
+          const listenToRoom = (code) => {
+            roomRef.current = database.ref('rooms/' + code);
+            
+            roomRef.current.on('value', (snapshot) => {
+              const data = snapshot.val();
+              if (data) {
+                setCards(data.cards || []);
+                setFlipped(data.flipped || []);
+                setMatched(data.matched || []);
+                setCurrentPlayer(data.currentPlayer || 1);
+                setScores(data.scores || { player1: 0, player2: 0 });
+                
+                if (data.players.player2) {
+                  setWaitingForPlayer(false);
+                }
+              }
+            });
+          };
+
+          const updateRoom = async (updates) => {
+            if (roomRef.current) {
+              await roomRef.current.update(updates);
+            }
+          };
+
+          const initLocalGame = () => {
+            const cardValues = [];
+            for (let i = 0; i < PAIRS; i++) {
+              cardValues.push(i, i);
+            }
+            
+            const shuffled = cardValues
+              .map(value => ({ 
+                value, 
+                color: colors[value % colors.length], 
+                animal: animals[value % animals.length], 
+                sort: Math.random() 
+              }))
               .sort((a, b) => a.sort - b.sort)
               .map(({ value, color, animal }) => ({ value, color, animal }));
             
@@ -73,76 +190,199 @@
             setCurrentPlayer(1);
             setScores({ player1: 0, player2: 0 });
             setCanFlip(true);
+            setGameMode('local');
           };
 
-          const handleCardClick = (index) => {
+          const handleCardClick = async (index) => {
+            if (isOnline && currentPlayer !== playerNumber) return;
             if (!canFlip || flipped.includes(index) || matched.includes(index) || flipped.length >= 2) {
               return;
             }
 
             const newFlipped = [...flipped, index];
-            setFlipped(newFlipped);
+            
+            if (isOnline) {
+              await updateRoom({ flipped: newFlipped });
+            } else {
+              setFlipped(newFlipped);
+            }
 
             if (newFlipped.length === 2) {
               setCanFlip(false);
               const [first, second] = newFlipped;
               
               if (cards[first].value === cards[second].value) {
-                setTimeout(() => {
-                  setMatched([...matched, first, second]);
-                  setScores(prev => ({
-                    ...prev,
-                    [`player${currentPlayer}`]: prev[`player${currentPlayer}`] + 1
-                  }));
-                  setFlipped([]);
+                setTimeout(async () => {
+                  const newMatched = [...matched, first, second];
+                  const newScores = {
+                    ...scores,
+                    [`player${currentPlayer}`]: scores[`player${currentPlayer}`] + 1
+                  };
+                  
+                  if (isOnline) {
+                    await updateRoom({
+                      matched: newMatched,
+                      scores: newScores,
+                      flipped: []
+                    });
+                  } else {
+                    setMatched(newMatched);
+                    setScores(newScores);
+                    setFlipped([]);
+                  }
                   setCanFlip(true);
                 }, 500);
               } else {
-                setTimeout(() => {
-                  setFlipped([]);
-                  setCurrentPlayer(currentPlayer === 1 ? 2 : 1);
+                setTimeout(async () => {
+                  const nextPlayer = currentPlayer === 1 ? 2 : 1;
+                  
+                  if (isOnline) {
+                    await updateRoom({
+                      flipped: [],
+                      currentPlayer: nextPlayer
+                    });
+                  } else {
+                    setFlipped([]);
+                    setCurrentPlayer(nextPlayer);
+                  }
                   setCanFlip(true);
                 }, 400);
               }
             }
           };
 
+          const backToMenu = () => {
+            if (roomRef.current) {
+              roomRef.current.off();
+            }
+            setGameMode('menu');
+            setRoomCode('');
+            setJoinCode('');
+            setPlayerNumber(null);
+            setWaitingForPlayer(false);
+            setCards([]);
+            setFlipped([]);
+            setMatched([]);
+            setCurrentPlayer(1);
+            setScores({ player1: 0, player2: 0 });
+          };
+
           const isGameOver = matched.length === TOTAL_CARDS;
 
+          // Menu obrazovka
+          if (gameMode === 'menu') {
+            return (
+              <div className="h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-red-500 p-4 flex items-center justify-center">
+                <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+                  <h1 className="text-4xl font-bold text-center mb-8 text-purple-600">🎮 Pexeso</h1>
+                  
+                  <div className="space-y-4">
+                    <button
+                      onClick={initLocalGame}
+                      className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-6 rounded-lg text-xl transition-all transform hover:scale-105"
+                    >
+                      🏠 Lokální hra
+                    </button>
+
+                    <div className="border-t-2 border-gray-300 my-6"></div>
+                    
+                    <button
+                      onClick={createRoom}
+                      className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-6 rounded-lg text-xl transition-all transform hover:scale-105"
+                    >
+                      ➕ Vytvořit místnost
+                    </button>
+
+                    <div className="space-y-2">
+                      <input
+                        type="text"
+                        placeholder="Zadej kód místnosti"
+                        value={joinCode}
+                        onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-center text-xl font-mono uppercase"
+                        maxLength="6"
+                      />
+                      <button
+                        onClick={joinRoom}
+                        className="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-4 px-6 rounded-lg text-xl transition-all transform hover:scale-105"
+                      >
+                        🔗 Připojit se
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          // Čekací obrazovka
+          if (waitingForPlayer) {
+            return (
+              <div className="h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-red-500 p-4 flex items-center justify-center">
+                <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
+                  <h2 className="text-3xl font-bold mb-4">⏳ Čekám na hráče...</h2>
+                  <div className="bg-gray-100 rounded-lg p-6 mb-6">
+                    <p className="text-sm text-gray-600 mb-2">Kód místnosti:</p>
+                    <p className="text-4xl font-mono font-bold text-purple-600">{roomCode}</p>
+                  </div>
+                  <p className="text-gray-600 mb-6">Sdílej tento kód s druhým hráčem!</p>
+                  <button
+                    onClick={backToMenu}
+                    className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg"
+                  >
+                    ← Zpět
+                  </button>
+                </div>
+              </div>
+            );
+          }
+
+          // Herní obrazovka
           return (
             <div className="h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-red-500 p-2 flex flex-col overflow-hidden">
               <div className="w-full h-full flex flex-col max-w-2xl mx-auto">
-                <h1 className="text-xl md:text-2xl font-bold text-white text-center mb-1 flex-shrink-0">🎮 Pexeso</h1>
+                <div className="flex items-center justify-between mb-1">
+                  <button
+                    onClick={backToMenu}
+                    className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm font-bold"
+                  >
+                    ← Menu
+                  </button>
+                  <h1 className="text-xl md:text-2xl font-bold text-white text-center flex-1">🎮 Pexeso</h1>
+                  {isOnline && (
+                    <div className="bg-white px-3 py-1 rounded-lg text-sm font-mono font-bold">
+                      {roomCode}
+                    </div>
+                  )}
+                </div>
                 
                 <div className="bg-white rounded-lg shadow-xl p-2 mb-1 flex-shrink-0">
                   <div className="flex justify-between items-center">
                     <div className={`flex-1 p-1.5 rounded-lg ${currentPlayer === 1 && !isGameOver ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}>
-                      <div className="text-xs md:text-sm font-bold">Hráč 1</div>
+                      <div className="text-xs md:text-sm font-bold">
+                        Hráč 1 {isOnline && playerNumber === 1 && '(Ty)'}
+                      </div>
                       <div className="text-lg md:text-2xl font-bold">{scores.player1}</div>
                     </div>
                     
-                    <button
-                      onClick={initGame}
-                      className="mx-1.5 bg-green-500 hover:bg-green-600 text-white p-2 rounded-full shadow-lg transition-transform hover:scale-110"
-                      title="Nová hra"
-                    >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="23 4 23 10 17 10"></polyline>
-                        <polyline points="1 20 1 14 7 14"></polyline>
-                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-                      </svg>
-                    </button>
-
-                    <button
-                      className="mx-1.5 bg-purple-500 text-white px-3 py-2 rounded-lg shadow-lg text-xs font-bold opacity-50 cursor-not-allowed"
-                      title="Online multiplayer (zatím nedostupný)"
-                      disabled
-                    >
-                      🌐 Online
-                    </button>
+                    {!isOnline && (
+                      <button
+                        onClick={initLocalGame}
+                        className="mx-1.5 bg-green-500 hover:bg-green-600 text-white p-2 rounded-full shadow-lg transition-transform hover:scale-110"
+                        title="Nová hra"
+                      >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="23 4 23 10 17 10"></polyline>
+                          <polyline points="1 20 1 14 7 14"></polyline>
+                          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                        </svg>
+                      </button>
+                    )}
                     
                     <div className={`flex-1 p-1.5 rounded-lg ${currentPlayer === 2 && !isGameOver ? 'bg-red-500 text-white' : 'bg-gray-200'}`}>
-                      <div className="text-xs md:text-sm font-bold">Hráč 2</div>
+                      <div className="text-xs md:text-sm font-bold">
+                        Hráč 2 {isOnline && playerNumber === 2 && '(Ty)'}
+                      </div>
                       <div className="text-lg md:text-2xl font-bold">{scores.player2}</div>
                     </div>
                   </div>
@@ -180,13 +420,13 @@
                           }`}
                           style={{
                             backgroundColor: isFlipped || isMatched ? card.color : '#6B7280',
-                            cursor: canFlip && !isFlipped && !isMatched ? 'pointer' : 'default'
+                            cursor: canFlip && !isFlipped && !isMatched && (!isOnline || currentPlayer === playerNumber) ? 'pointer' : 'default'
                           }}
-                          disabled={!canFlip || isFlipped || isMatched}
+                          disabled={!canFlip || isFlipped || isMatched || (isOnline && currentPlayer !== playerNumber)}
                         >
                           <div className="w-full h-full flex items-center justify-center">
                             {(isFlipped || isMatched) ? (
-                              <span className="text-4xl md:text-5xl">{card.animal}</span>
+                              <span className="text-3xl md:text-4xl">{card.animal}</span>
                             ) : (
                               <span className="text-white text-base md:text-xl font-bold">?</span>
                             )}
