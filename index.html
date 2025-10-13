@@ -28,16 +28,15 @@
         const { useState, useEffect, useRef } = React;
 
         // Firebase konfigurace
-   	 const firebaseConfig = {
-	  apiKey: "AIzaSyBLtCRf4_OYedrTrdizRRCFLN0FIk-bnIE",
-	  authDomain: "pexeso-game.firebaseapp.com",
- 	  databaseURL: "https://pexeso-game-default-rtdb.europe-west1.firebasedatabase.app",
-	  projectId: "pexeso-game",
-	  storageBucket: "pexeso-game.firebasestorage.app",
-	  messagingSenderId: "1770108821",
-	  appId: "1:1770108821:web:53089614906957421fe89c",
-	  measurementId: "G-G0Y3QV8L2W"
-	};
+        const firebaseConfig = {
+          apiKey: "AIzaSyBXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+          authDomain: "pexeso-game.firebaseapp.com",
+          databaseURL: "https://pexeso-game-default-rtdb.firebaseio.com",
+          projectId: "pexeso-game",
+          storageBucket: "pexeso-game.appspot.com",
+          messagingSenderId: "123456789",
+          appId: "1:123456789:web:xxxxxxxxxxxxx"
+        };
 
         // Inicializace Firebase (pouze pokud ještě není)
         if (!firebase.apps.length) {
@@ -81,7 +80,12 @@
           ];
 
           const generateRoomCode = () => {
-            return Math.random().toString(36).substring(2, 8).toUpperCase();
+            const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            let code = '';
+            for (let i = 0; i < 2; i++) {
+              code += letters.charAt(Math.floor(Math.random() * letters.length));
+            }
+            return code;
           };
 
           const createRoom = async () => {
@@ -297,11 +301,11 @@
                     <div className="space-y-2">
                       <input
                         type="text"
-                        placeholder="Zadej kód místnosti"
+                        placeholder="Zadej kód (2 písmena)"
                         value={joinCode}
                         onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
                         className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-center text-xl font-mono uppercase"
-                        maxLength="6"
+                        maxLength="2"
                       />
                       <button
                         onClick={joinRoom}
