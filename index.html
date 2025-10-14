@@ -27,7 +27,7 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // Firebase konfigurace
+         // Firebase konfigurace
    	 const firebaseConfig = {
 	  apiKey: "AIzaSyBLtCRf4_OYedrTrdizRRCFLN0FIk-bnIE",
 	  authDomain: "pexeso-game.firebaseapp.com",
@@ -81,7 +81,12 @@
           ];
 
           const generateRoomCode = () => {
-            return Math.random().toString(36).substring(2, 8).toUpperCase();
+            const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            let code = '';
+            for (let i = 0; i < 2; i++) {
+              code += letters.charAt(Math.floor(Math.random() * letters.length));
+            }
+            return code;
           };
 
           const createRoom = async () => {
