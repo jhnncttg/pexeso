@@ -557,7 +557,7 @@
                           key={index}
                           onClick={() => handleCardClick(index)}
                           className={`w-full h-full rounded-lg transition-all duration-300 ${
-                            isMatched ? 'opacity-50' : 'opacity-100'
+                            isMatched ? 'opacity-0 invisible' : 'opacity-100'
                           }`}
                           style={{
                             backgroundColor: isFlipped || isMatched ? card.color : '#6B7280',
