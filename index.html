@@ -72,39 +72,9 @@
           const roomRef = useRef(null);
           const isOnline = gameMode === 'online';
 
-          // SVG ikony zvířat (budou stejné na všech platformách)
-          const animalSVGs = {
-            dog: <svg viewBox="0 0 64 64" className="w-8 h-8 md:w-10 md:h-10"><path fill="#8B4513" d="M32 8c-8 0-16 4-20 12-2 4-2 8 0 12 4 8 12 12 20 12s16-4 20-12c2-4 2-8 0-12-4-8-12-12-20-12z"/><circle fill="#FFF" cx="24" cy="24" r="4"/><circle fill="#000" cx="24" cy="24" r="2"/><circle fill="#FFF" cx="40" cy="24" r="4"/><circle fill="#000" cx="40" cy="24" r="2"/><path fill="#000" d="M32 28c-2 0-4 1-5 2 1 2 3 3 5 3s4-1 5-3c-1-1-3-2-5-2z"/></svg>,
-            cat: <svg viewBox="0 0 64 64" className="w-8 h-8 md:w-10 md:h-10"><path fill="#FF8C42" d="M12 8l8 16h24l8-16-8 4-8-4-8 4-8-4z"/><circle fill="#FFA500" cx="32" cy="32" r="16"/><circle fill="#FFF" cx="26" cy="28" r="3"/><circle fill="#000" cx="26" cy="28" r="1.5"/><circle fill="#FFF" cx="38" cy="28" r="3"/><circle fill="#000" cx="38" cy="28" r="1.5"/><path fill="#000" d="M32 32c-1.5 0-3 .5-4 1.5.5 1 2 2 4 2s3.5-1 4-2c-1-1-2.5-1.5-4-1.5z"/></svg>,
-            mouse: <svg viewBox="0 0 64 64" className="w-8 h-8 md:w-10 md:h-10"><circle fill="#A9A9A9" cx="32" cy="36" r="14"/><circle fill="#FFF" cx="28" cy="32" r="2.5"/><circle fill="#000" cx="28" cy="32" r="1"/><circle fill="#FFF" cx="36" cy="32" r="2.5"/><circle fill="#000" cx="36" cy="32" r="1"/><path fill="#FFB6C1" d="M28 40c1 1 2.5 1.5 4 1.5s3-0.5 4-1.5"/><circle fill="#FFB6C1" cx="50" cy="24" r="10"/><circle fill="#FFB6C1" cx="14" cy="24" r="10"/></svg>,
-            rabbit: <svg viewBox="0 0 64 64" className="w-8 h-8 md:w-10 md:h-10"><ellipse fill="#FFF" cx="24" cy="16" rx="6" ry="14"/><ellipse fill="#FFF" cx="40" cy="16" rx="6" ry="14"/><circle fill="#FFF" cx="32" cy="36" r="16"/><circle fill="#000" cx="26" cy="32" r="2"/><circle fill="#000" cx="38" cy="32" r="2"/><ellipse fill="#FFB6C1" cx="32" cy="38" rx="4" ry="3"/><path fill="#FFF" d="M28 42c1 1.5 2.5 2 4 2s3-0.5 4-2"/></svg>,
-            fox: <svg viewBox="0 0 64 64" className="w-8 h-8 md:w-10 md:h-10"><path fill="#FF6347" d="M16 12l12 12 4-4 4 4 12-12-8 16-8-4-8 4z"/><circle fill="#FF6347" cx="32" cy="32" r="14"/><path fill="#FFF" cx="32" cy="36" d="M22 28l6 6 4-2 4 2 6-6"/><circle fill="#000" cx="26" cy="30" r="2"/><circle fill="#000" cx="38" cy="30" r="2"/></svg>,
-            bear: <svg viewBox="0 0 64 64" className="w-8 h-8 md:w-10 md:h-10"><circle fill="#8B4513" cx="18" cy="18" r="8"/><circle fill="#8B4513" cx="46" cy="18" r="8"/><circle fill="#A0522D" cx="32" cy="32" r="18"/><circle fill="#FFF" cx="26" cy="28" r="3"/><circle fill="#000" cx="26" cy="28" r="1.5"/><circle fill="#FFF" cx="38" cy="28" r="3"/><circle fill="#000" cx="38" cy="28" r="1.5"/><ellipse fill="#8B4513" cx="32" cy="36" rx="6" ry="4"/></svg>,
-            panda: <svg viewBox="0 0 64 64" className="w-8 h-8 md:w-10 md:h-10"><circle fill="#000" cx="20" cy="20" r="8"/><circle fill="#000" cx="44" cy="20" r="8"/><circle fill="#FFF" cx="32" cy="32" r="16"/><ellipse fill="#000" cx="26" cy="28" rx="6" ry="8"/><circle fill="#FFF" cx="26" cy="28" r="3"/><ellipse fill="#000" cx="38" cy="28" rx="6" ry="8"/><circle fill="#FFF" cx="38" cy="28" r="3"/><path fill="#000" d="M32 34c-2 0-4 1-5 2 1 1.5 3 2 5 2s4-0.5 5-2c-1-1-3-2-5-2z"/></svg>,
-            koala: <svg viewBox="0 0 64 64" className="w-8 h-8 md:w-10 md:h-10"><circle fill="#A9A9A9" cx="18" cy="18" r="10"/><circle fill="#A9A9A9" cx="46" cy="18" r="10"/><circle fill="#A9A9A9" cx="32" cy="34" r="16"/><ellipse fill="#FFF" cx="32" cy="36" rx="10" ry="8"/><circle fill="#000" cx="26" cy="30" r="3"/><circle fill="#000" cx="38" cy="30" r="3"/><ellipse fill="#000" cx="32" cy="38" rx="4" ry="3"/></svg>,
-            lion: <svg viewBox="0 0 64 64" className="w-8 h-8 md:w-10 md:h-10"><circle fill="#DAA520" cx="32" cy="32" r="20"/><circle fill="#FFD700" cx="32" cy="32" r="14"/><circle fill="#000" cx="26" cy="28" r="2"/><circle fill="#000" cx="38" cy="28" r="2"/><path fill="#8B4513" d="M28 36c1 1.5 2.5 2 4 2s3-0.5 4-2"/><circle fill="#DAA520" cx="32" cy="12" r="4"/><circle fill="#DAA520" cx="48" cy="20" r="4"/><circle fill="#DAA520" cx="52" cy="32" r="4"/><circle fill="#DAA520" cx="16" cy="20" r="4"/><circle fill="#DAA520" cx="12" cy="32" r="4"/></svg>,
-            cow: <svg viewBox="0 0 64 64" className="w-8 h-8 md:w-10 md:h-10"><ellipse fill="#FFF" cx="32" cy="32" rx="18" ry="16"/><ellipse fill="#000" cx="22" cy="26" rx="8" ry="6"/><ellipse fill="#000" cx="42" cy="26" rx="8" ry="6"/><circle fill="#000" cx="26" cy="30" r="2"/><circle fill="#000" cx="38" cy="30" r="2"/><ellipse fill="#FFB6C1" cx="32" cy="38" rx="6" ry="4"/></svg>,
-            pig: <svg viewBox="0 0 64 64" className="w-8 h-8 md:w-10 md:h-10"><circle fill="#FFB6C1" cx="32" cy="32" r="16"/><circle fill="#000" cx="26" cy="28" r="2"/><circle fill="#000" cx="38" cy="28" r="2"/><ellipse fill="#FFC0CB" cx="32" cy="36" rx="8" ry="6"/><circle fill="#FFB6C1" cx="28" cy="36" r="2"/><circle fill="#FFB6C1" cx="36" cy="36" r="2"/></svg>,
-            frog: <svg viewBox="0 0 64 64" className="w-8 h-8 md:w-10 md:h-10"><ellipse fill="#32CD32" cx="32" cy="36" rx="18" ry="12"/><circle fill="#FFF" cx="24" cy="26" r="6"/><circle fill="#000" cx="24" cy="26" r="3"/><circle fill="#FFF" cx="40" cy="26" r="6"/><circle fill="#000" cx="40" cy="26" r="3"/><path fill="#228B22" d="M28 40c1 1 2.5 1.5 4 1.5s3-0.5 4-1.5"/></svg>,
-            monkey: <svg viewBox="0 0 64 64" className="w-8 h-8 md:w-10 md:h-10"><circle fill="#8B4513" cx="18" cy="22" r="10"/><circle fill="#8B4513" cx="46" cy="22" r="10"/><circle fill="#D2691E" cx="32" cy="32" r="16"/><ellipse fill="#FFE4B5" cx="32" cy="36" rx="12" ry="10"/><circle fill="#000" cx="26" cy="30" r="2"/><circle fill="#000" cx="38" cy="30" r="2"/><path fill="#8B4513" d="M28 38c1 1 2.5 1.5 4 1.5s3-0.5 4-1.5"/></svg>,
-            chicken: <svg viewBox="0 0 64 64" className="w-8 h-8 md:w-10 md:h-10"><circle fill="#FFF" cx="32" cy="32" r="14"/><circle fill="#000" cx="28" cy="28" r="2"/><circle fill="#000" cx="36" cy="28" r="2"/><path fill="#FF6347" d="M32 16c-2 0-4 2-4 4h8c0-2-2-4-4-4z"/><path fill="#FFA500" d="M28 34l4 4 4-4z"/></svg>,
-            penguin: <svg viewBox="0 0 64 64" className="w-8 h-8 md:w-10 md:h-10"><ellipse fill="#000" cx="32" cy="32" rx="14" ry="18"/><ellipse fill="#FFF" cx="32" cy="36" rx="10" ry="14"/><circle fill="#000" cx="28" cy="26" r="2"/><circle fill="#000" cx="36" cy="26" r="2"/><path fill="#FFA500" d="M28 30l4 2 4-2z"/></svg>,
-            bird: <svg viewBox="0 0 64 64" className="w-8 h-8 md:w-10 md:h-10"><circle fill="#87CEEB" cx="32" cy="28" r="12"/><circle fill="#000" cx="28" cy="26" r="2"/><circle fill="#000" cx="36" cy="26" r="2"/><path fill="#FFA500" d="M28 30l4 2 4-2z"/><path fill="#87CEEB" d="M14 28c4-4 10-6 18-6s14 2 18 6c-4 2-10 2-18 2s-14 0-18-2z"/></svg>,
-            duck: <svg viewBox="0 0 64 64" className="w-8 h-8 md:w-10 md:h-10"><circle fill="#FFD700" cx="32" cy="32" r="14"/><circle fill="#000" cx="28" cy="28" r="2"/><circle fill="#000" cx="36" cy="28" r="2"/><path fill="#FFA500" d="M26 34l6 3 6-3z"/><ellipse fill="#FFD700" cx="48" cy="28" rx="8" ry="6"/></svg>,
-            owl: <svg viewBox="0 0 64 64" className="w-8 h-8 md:w-10 md:h-10"><circle fill="#8B4513" cx="32" cy="32" r="16"/><circle fill="#FFF" cx="26" cy="28" r="6"/><circle fill="#000" cx="26" cy="28" r="3"/><circle fill="#FFF" cx="38" cy="28" r="6"/><circle fill="#000" cx="38" cy="28" r="3"/><path fill="#FFA500" d="M30 36l2 4 2-4z"/><path fill="#8B4513" d="M20 16l6 8-4 2z M44 16l-6 8 4 2z"/></svg>,
-            bat: <svg viewBox="0 0 64 64" className="w-8 h-8 md:w-10 md:h-10"><path fill="#4B0082" d="M12 28c0-8 8-12 12-10l8 10 8-10c4-2 12 2 12 10-4 8-8 12-20 12s-16-4-20-12z"/><circle fill="#4B0082" cx="32" cy="32" r="8"/><circle fill="#FF0000" cx="28" cy="30" r="2"/><circle fill="#FF0000" cx="36" cy="30" r="2"/></svg>,
-            wolf: <svg viewBox="0 0 64 64" className="w-8 h-8 md:w-10 md:h-10"><path fill="#696969" d="M20 14l8 10 4-2 4 2 8-10-6 12z"/><circle fill="#696969" cx="32" cy="32" r="14"/><circle fill="#FFF" cx="26" cy="28" r="3"/><circle fill="#000" cx="26" cy="28" r="1.5"/><circle fill="#FFF" cx="38" cy="28" r="3"/><circle fill="#000" cx="38" cy="28" r="1.5"/><path fill="#000" d="M28 36c1 1.5 2.5 2 4 2s3-0.5 4-2"/></svg>,
-            horse: <svg viewBox="0 0 64 64" className="w-8 h-8 md:w-10 md:h-10"><path fill="#8B4513" d="M28 12c-4 0-8 4-8 8v4h24v-4c0-4-4-8-8-8l-4 4z"/><ellipse fill="#A0522D" cx="32" cy="34" rx="16" ry="14"/><circle fill="#000" cx="26" cy="30" r="2"/><circle fill="#000" cx="38" cy="30" r="2"/><ellipse fill="#8B4513" cx="32" cy="38" rx="6" ry="4"/></svg>,
-            unicorn: <svg viewBox="0 0 64 64" className="w-8 h-8 md:w-10 md:h-10"><path fill="#FF69B4" d="M28 12c-4 0-8 4-8 8v4h24v-4c0-4-4-8-8-8l-4 4z"/><path fill="#FFD700" d="M32 8l2 8-2 2-2-2z"/><ellipse fill="#FFF" cx="32" cy="34" rx="16" ry="14"/><circle fill="#000" cx="26" cy="30" r="2"/><circle fill="#000" cx="38" cy="30" r="2"/></svg>,
-            bee: <svg viewBox="0 0 64 64" className="w-8 h-8 md:w-10 md:h-10"><ellipse fill="#FFD700" cx="32" cy="32" rx="12" ry="16"/><rect fill="#000" x="26" y="24" width="12" height="3"/><rect fill="#000" x="26" y="32" width="12" height="3"/><rect fill="#000" x="26" y="40" width="12" height="3"/><ellipse fill="#ADD8E6" cx="20" cy="28" rx="8" ry="4" transform="rotate(-30 20 28)"/><ellipse fill="#ADD8E6" cx="44" cy="28" rx="8" ry="4" transform="rotate(30 44 28)"/></svg>,
-            butterfly: <svg viewBox="0 0 64 64" className="w-8 h-8 md:w-10 md:h-10"><ellipse fill="#FF69B4" cx="20" cy="24" rx="10" ry="12"/><ellipse fill="#FF1493" cx="18" cy="22" rx="6" ry="8"/><ellipse fill="#FF69B4" cx="44" cy="24" rx="10" ry="12"/><ellipse fill="#FF1493" cx="46" cy="22" rx="6" ry="8"/><ellipse fill="#FFA500" cx="20" cy="40" rx="8" ry="10"/><ellipse fill="#FFD700" cx="19" cy="38" rx="5" ry="6"/><ellipse fill="#FFA500" cx="44" cy="40" rx="8" ry="10"/><ellipse fill="#FFD700" cx="45" cy="38" rx="5" ry="6"/><rect fill="#000" x="31" y="16" width="2" height="32"/></svg>,
-            elephant: <svg viewBox="0 0 64 64" className="w-8 h-8 md:w-10 md:h-10"><circle fill="#A9A9A9" cx="36" cy="28" r="16"/><ellipse fill="#A9A9A9" cx="24" cy="36" rx="8" ry="16"/><circle fill="#000" cx="32" cy="24" r="2"/><circle fill="#000" cx="42" cy="24" r="2"/></svg>,
-            giraffe: <svg viewBox="0 0 64 64" className="w-8 h-8 md:w-10 md:h-10"><ellipse fill="#DAA520" cx="32" cy="36" rx="14" ry="16"/><rect fill="#DAA520" x="30" y="12" width="4" height="16"/><circle fill="#DAA520" cx="32" cy="12" r="6"/><circle fill="#8B4513" cx="28" cy="32" r="3"/><circle fill="#8B4513" cx="36" cy="32" r="3"/><circle fill="#000" cx="28" cy="32" r="1.5"/><circle fill="#000" cx="36" cy="32" r="1.5"/></svg>,
-            tiger: <svg viewBox="0 0 64 64" className="w-8 h-8 md:w-10 md:h-10"><circle fill="#FFA500" cx="32" cy="32" r="16"/><rect fill="#000" x="24" y="22" width="3" height="20"/><rect fill="#000" x="37" y="22" width="3" height="20"/><circle fill="#FFF" cx="26" cy="28" r="3"/><circle fill="#000" cx="26" cy="28" r="1.5"/><circle fill="#FFF" cx="38" cy="28" r="3"/><circle fill="#000" cx="38" cy="28" r="1.5"/></svg>,
-            zebra: <svg viewBox="0 0 64 64" className="w-8 h-8 md:w-10 md:h-10"><ellipse fill="#FFF" cx="32" cy="32" rx="16" ry="14"/><rect fill="#000" x="20" y="24" width="24" height="3"/><rect fill="#000" x="20" y="32" width="24" height="3"/><rect fill="#000" x="20" y="40" width="24" height="3"/><circle fill="#000" cx="26" cy="28" r="2"/><circle fill="#000" cx="38" cy="28" r="2"/></svg>
-          };
-
-          const animalKeys = Object.keys(animalSVGs);
+          const animals = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', 
+                          '🦁', '🐮', '🐷', '🐸', '🐵', '🐔', '🐧', '🐦', '🐤', '🦆',
+                          '🦅', '🦉', '🦇', '🐺', '🐗', '🐴', '🦄', '🐝', '🐛', '🦋'];
 
           const colors = [
             '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8',
@@ -135,7 +105,7 @@
               .map(value => ({ 
                 value, 
                 color: colors[value % colors.length], 
-                animal: animalKeys[value % animalKeys.length], 
+                animal: animals[value % animals.length], 
                 sort: Math.random() 
               }))
               .sort((a, b) => a.sort - b.sort)
@@ -264,7 +234,7 @@
               .map(value => ({ 
                 value, 
                 color: colors[value % colors.length], 
-                animal: animalKeys[value % animalKeys.length], 
+                animal: animals[value % animals.length], 
                 sort: Math.random() 
               }))
               .sort((a, b) => a.sort - b.sort)
@@ -597,9 +567,7 @@
                         >
                           <div className="w-full h-full flex items-center justify-center">
                             {(isFlipped || isMatched) ? (
-                              <div className="flex items-center justify-center">
-                                {animalSVGs[card.animal]}
-                              </div>
+                              <span className="text-3xl md:text-4xl">{card.animal}</span>
                             ) : (
                               <span className="text-white text-base md:text-xl font-bold">?</span>
                             )}
