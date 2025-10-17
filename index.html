@@ -25,6 +25,7 @@
             height: 100%;
             object-fit: contain;
             padding: 2px;
+	    background-color: transparent;
         }
     </style>
 </head>
@@ -603,7 +604,9 @@
                         >
                           <div className="w-full h-full flex items-center justify-center">
                             {(isFlipped || isMatched) ? (
+			      <div className="w-full h-full flex items-center justify-center bg-transparent">
                               <img src={card.animal} alt="zvíře" className="card-image" />
+				</div>
                             ) : (
                               <span className="text-white text-base md:text-xl font-bold">?</span>
                             )}
