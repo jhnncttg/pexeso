@@ -20,6 +20,12 @@
             touch-action: manipulation;
             background-color: #1a1a2e;
         }
+        .card-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 2px;
+        }
     </style>
 </head>
 <body>
@@ -72,9 +78,39 @@
           const roomRef = useRef(null);
           const isOnline = gameMode === 'online';
 
-          const animals = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', 
-                          '🦁', '🐮', '🐷', '🐸', '🐵', '🐔', '🐧', '🐦', '🐤', '🦆',
-                          '🦅', '🦉', '🦇', '🐺', '🐗', '🐴', '🦄', '🐝', '🐛', '🦋'];
+          // PNG obrázky zvířat
+          const animals = [
+            'images/animals/amstaf.png',
+            'images/animals/bear.png',
+            'images/animals/bengal.png',
+            'images/animals/bird.png',
+            'images/animals/butterfly.png',
+            'images/animals/cat.png',
+            'images/animals/cobra.png',
+            'images/animals/dog.png',
+            'images/animals/dolphin.png',
+            'images/animals/elephant.png',
+            'images/animals/fenix.png',
+            'images/animals/fish.png',
+            'images/animals/frog.png',
+            'images/animals/girafe.png',
+            'images/animals/goat.png',
+            'images/animals/gorila.png',
+            'images/animals/hamster.png',
+            'images/animals/horse.png',
+            'images/animals/kokr.png',
+            'images/animals/levhart.png',
+            'images/animals/lion.png',
+            'images/animals/neon.png',
+            'images/animals/parrot.png',
+            'images/animals/pav.png',
+            'images/animals/pelikan.png',
+            'images/animals/pinguin.png',
+            'images/animals/skalar.png',
+            'images/animals/star.png',
+            'images/animals/tiger.png',
+            'images/animals/turtle.png'
+          ];
 
           const colors = [
             '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8',
@@ -567,7 +603,7 @@
                         >
                           <div className="w-full h-full flex items-center justify-center">
                             {(isFlipped || isMatched) ? (
-                              <span className="text-3xl md:text-4xl">{card.animal}</span>
+                              <img src={card.animal} alt="zvíře" className="card-image" />
                             ) : (
                               <span className="text-white text-base md:text-xl font-bold">?</span>
                             )}
