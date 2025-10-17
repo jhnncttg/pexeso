@@ -20,13 +20,15 @@
             touch-action: manipulation;
             background-color: #1a1a2e;
         }
-        .card-image {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            padding: 2px;
-	    background-color: transparent;
-        }
+     .card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 2px;
+  background-color: transparent;
+  display: block;
+}
+
     </style>
 </head>
 <body>
@@ -589,31 +591,30 @@
                       const isFlipped = flipped.includes(index);
                       const isMatched = matched.includes(index);
                       
-                      return (
-                        <button
-                          key={index}
-                          onClick={() => handleCardClick(index)}
-                          className={`w-full h-full rounded-lg transition-all duration-300 ${
-                            isMatched ? 'opacity-0 invisible' : 'opacity-100'
-                          }`}
-                          style={{
-                            backgroundColor: isFlipped || isMatched ? card.color : '#6B7280',
-                            cursor: canFlip && !isFlipped && !isMatched && (!isOnline || currentPlayer === playerNumber) ? 'pointer' : 'default'
-                          }}
-                          disabled={!canFlip || isFlipped || isMatched || (isOnline && currentPlayer !== playerNumber)}
-                        >
-                          <div className="w-full h-full flex items-center justify-center">
-                            {(isFlipped || isMatched) ? (
-			      <div className="w-full h-full flex items-center justify-center bg-transparent">
-                              <img src={card.animal} alt="zvíře" className="card-image" />
-				</div>
-                            ) : (
-                              <span className="text-white text-base md:text-xl font-bold">?</span>
-                            )}
-                          </div>
-                        </button>
-                      );
-                    })}
+                       return (
+    <button
+      key={index}
+      onClick={() => handleCardClick(index)}
+      className={`w-full h-full rounded-lg transition-all duration-300 ${
+        isMatched ? 'opacity-0 invisible' : 'opacity-100'
+      }`}
+      style={{
+        backgroundColor: isFlipped || isMatched ? 'transparent' : '#6B7280',
+        cursor: canFlip && !isFlipped && !isMatched && (!isOnline || currentPlayer === playerNumber) ? 'pointer' : 'default'
+      }}
+      disabled={!canFlip || isFlipped || isMatched || (isOnline && currentPlayer !== playerNumber)}
+    >
+      <div className="w-full h-full flex items-center justify-center">
+        {(isFlipped || isMatched) ? (
+          <img src={card.animal} alt="zvíře" className="card-image" />
+        ) : (
+          <span className="text-white text-base md:text-xl font-bold">?</span>
+        )}
+      </div>
+    </button>
+  );
+})}
+
                   </div>
                 </div>
               </div>
