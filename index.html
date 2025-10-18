@@ -30,15 +30,31 @@
     display: block;
 }
 
+/* Základní nastavení pro portrait (mobil) */
 .game-grid {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    grid-template-rows: repeat(10, 1fr);
     gap: 0.25rem;
-    width: calc((100vh - 200px) * 0.6);
-    height: calc(100vh - 200px);
-    max-width: 100%;
+    width: 100%;
+    height: 100%;
     margin: 0 auto;
+}
+
+/* Mobil/Tablet na výšku: 6 sloupců × 10 řádků */
+@media (orientation: portrait) {
+    .game-grid {
+        grid-template-columns: repeat(6, 1fr);
+        grid-template-rows: repeat(10, 1fr);
+        max-width: 60vh;
+    }
+}
+
+/* Desktop/Tablet na šířku: 10 sloupců × 6 řádků */
+@media (orientation: landscape) {
+    .game-grid {
+        grid-template-columns: repeat(10, 1fr);
+        grid-template-rows: repeat(6, 1fr);
+        max-width: 100vh;
+    }
 }
 
 .card-button {
