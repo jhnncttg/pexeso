@@ -380,38 +380,43 @@
                     setCanFlip(false);
                     const [first, second] = newFlipped;
                     
-                    if (cards[first].value === cards[second].value) {
-                        setTimeout(async () => {
-                            const newMatched = [...matched, first, second];
-                            const newScores = {
-                                ...scores,
-                                [`player${currentPlayer}`]: scores[`player${currentPlayer}`] + 1
-                            };
-                            
-                            if (newMatched.length === TOTAL_CARDS && isOnline) {
-    const newMatchWins = {...matchWins};
-    
-    // Přičti bod pouze pokud není remíza
-    if (newScores.player1 > newScores.player2) {
-        newMatchWins.player1 = matchWins.player1 + 1;
-    } else if (newScores.player2 > newScores.player1) {
-        newMatchWins.player2 = matchWins.player2 + 1;
-    }
-    // Jinak remíza - nepřičítá se nic
-    
-    await updateRoom({
-        matched: newMatched,
-        scores: newScores,
-        matchWins: newMatchWins,
-        flipped: []
-    });
-                            } else {
-                                setMatched(newMatched);
-                                setScores(newScores);
-                                setFlipped([]);
-                            }
-                            setCanFlip(true);
-                        }, 600);
+                   if (cards[first].value === cards[second].value) {
+    setTimeout(async () => {
+        const newMatched = [...matched, first, second];
+        const newScores = {
+            ...scores,
+            [`player${currentPlayer}`]: scores[`player${currentPlayer}`] + 1
+        };
+        
+        if (newMatched.length === TOTAL_CARDS && isOnline) {
+            const newMatchWins = {...matchWins};
+            
+            // Přičti bod pouze pokud není remíza
+            if (newScores.player1 > newScores.player2) {
+                newMatchWins.player1 = matchWins.player1 + 1;
+            } else if (newScores.player2 > newScores.player1) {
+                newMatchWins.player2 = matchWins.player2 + 1;
+            }
+            
+            await updateRoom({
+                matched: newMatched,
+                scores: newScores,
+                matchWins: newMatchWins,
+                flipped: []
+            });
+        } else if (isOnline) {
+            await updateRoom({
+                matched: newMatched,
+                scores: newScores,
+                flipped: []
+            });
+        } else {
+            setMatched(newMatched);
+            setScores(newScores);
+            setFlipped([]);
+        }
+        setCanFlip(true);
+    }, 600);
                     } else {
                         setTimeout(async () => {
                             const nextPlayer = currentPlayer === 1 ? 2 : 1;
