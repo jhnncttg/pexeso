@@ -658,9 +658,9 @@
                                         <button
     key={index}
     onClick={() => handleCardClick(index)}
-    className={`card-button transition-all duration-300 ${
-        isMatched ? 'opacity-0 invisible' : 'opacity-100'
-    }`}
+ className={`card-button transition-all duration-300 ${
+    isMatched ? 'opacity-0 pointer-events-none' : 'opacity-100'
+}`}
                                             style={{
                                                 backgroundColor: isFlipped || isMatched ? 'transparent' : '#6B7280',
                                                 cursor: canFlip && !isFlipped && !isMatched && (!isOnline || currentPlayer === playerNumber) ? 'pointer' : 'default'
