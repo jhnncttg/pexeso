@@ -102,6 +102,49 @@
         }
         const database = firebase.database();
 
+        // === KATEGORIE OBRÁZKŮ ===
+        const categories = {
+            animals: {
+                name: "Zvířata",
+                images: [
+                    'images/animals/amstaf.png', 'images/animals/bear.png', 'images/animals/bengal.png',
+                    'images/animals/bird.png', 'images/animals/bonemouth.png', 'images/animals/butterfly.png',
+                    'images/animals/cat.png', 'images/animals/chicken.png', 'images/animals/cobra.png',
+                    'images/animals/dog.png', 'images/animals/dolphin.png', 'images/animals/elephant.png',
+                    'images/animals/fenix.png', 'images/animals/fish.png', 'images/animals/frog.png',
+                    'images/animals/girafe.png', 'images/animals/goat.png', 'images/animals/gorila.png',
+                    'images/animals/hamster.png', 'images/animals/horse.png', 'images/animals/kokr.png',
+                    'images/animals/labrador.png', 'images/animals/labut.png', 'images/animals/leguan.png',
+                    'images/animals/levhart.png', 'images/animals/lion.png', 'images/animals/monkey.png',
+                    'images/animals/motyl.png', 'images/animals/neon.png', 'images/animals/parrot.png',
+                    'images/animals/pav.png', 'images/animals/pelikan.png', 'images/animals/pinguin.png',
+                    'images/animals/retrivr.png', 'images/animals/rotvik.png', 'images/animals/skalar.png',
+                    'images/animals/star.png', 'images/animals/sykora.png', 'images/animals/tiger.png',
+                    'images/animals/turtle.png', 'images/animals/vlcak.png', 'images/animals/wolf.png'
+                ]
+            },
+            biblical: {
+                name: "Biblické",
+                images: [
+                    "images/biblical/aron.png", "images/biblical/baptizo.png", "images/biblical/Dorkas.png",
+                    "images/biblical/farizeus.png", "images/biblical/fish.png", "images/biblical/fisherman.png",
+                    "images/biblical/grave.png", "images/biblical/herodes.png", "images/biblical/jericho.png",
+                    "images/biblical/jesus.png", "images/biblical/jesuscloud.png", "images/biblical/jesuszjeveni.png",
+                    "images/biblical/jidas.png", "images/biblical/john.png", "images/biblical/Josef.png",
+                    "images/biblical/jozue2.png", "images/biblical/lazar.png", "images/biblical/maria.png",
+                    "images/biblical/moses.png", "images/biblical/natanael.png", "images/biblical/onezim.png",
+                    "images/biblical/oslatko.png", "images/biblical/ovce.png", "images/biblical/palm.png",
+                    "images/biblical/paul.png", "images/biblical/sea.png", "images/biblical/snake.png",
+                    "images/biblical/sun.png", "images/biblical/wine.png", "images/biblical/zebedej.png"
+                ]
+            }
+        };
+
+        // === FUNKCE PRO PŘIDÁNÍ NOVÉ KATEGORIE (pro budoucnost) ===
+        const addCategory = (key, name, imageArray) => {
+            categories[key] = { name, images: imageArray };
+        };
+
         const PexesoGame = () => {
             const ROWS = 10;
             const COLS = 6;
@@ -109,6 +152,7 @@
             const PAIRS = TOTAL_CARDS / 2;
 
             const [gameMode, setGameMode] = useState('menu');
+            const [selectedCategory, setSelectedCategory] = useState('animals'); // ← nový stav
             const [roomCode, setRoomCode] = useState('');
             const [joinCode, setJoinCode] = useState('');
             const [playerNumber, setPlayerNumber] = useState(null);
@@ -127,52 +171,6 @@
             const roomRef = useRef(null);
             const isOnline = gameMode === 'online';
 
-            // VŠECHNY dostupné PNG obrázky zvířat
-            const allAnimals = [
-                'images/animals/amstaf.png',
-                'images/animals/bear.png',
-                'images/animals/bengal.png',
-                'images/animals/bird.png',
-                'images/animals/bonemouth.png',
-                'images/animals/butterfly.png',
-                'images/animals/cat.png',
-                'images/animals/chicken.png',
-                'images/animals/cobra.png',
-                'images/animals/dog.png',
-                'images/animals/dolphin.png',
-                'images/animals/elephant.png',
-                'images/animals/fenix.png',
-                'images/animals/fish.png',
-                'images/animals/frog.png',
-                'images/animals/girafe.png',
-                'images/animals/goat.png',
-                'images/animals/gorila.png',
-                'images/animals/hamster.png',
-                'images/animals/horse.png',
-                'images/animals/kokr.png',
-                'images/animals/labrador.png',
-                'images/animals/labut.png',
-                'images/animals/leguan.png',
-                'images/animals/levhart.png',
-                'images/animals/lion.png',
-                'images/animals/monkey.png',
-                'images/animals/motyl.png',
-                'images/animals/neon.png',
-                'images/animals/parrot.png',
-                'images/animals/pav.png',
-                'images/animals/pelikan.png',
-                'images/animals/pinguin.png',
-                'images/animals/retrivr.png',
-                'images/animals/rotvik.png',
-                'images/animals/skalar.png',
-                'images/animals/star.png',
-                'images/animals/sykora.png',
-                'images/animals/tiger.png',
-                'images/animals/turtle.png',
-                'images/animals/vlcak.png',
-                'images/animals/wolf.png'
-            ];
-
             const colors = [
                 '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8',
                 '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B739', '#52BE80',
@@ -182,9 +180,11 @@
                 '#FAD7A0', '#D6EAF8', '#FCF3CF', '#E8DAEF', '#D1F2EB'
             ];
 
-            // Funkce pro náhodný výběr N obrázků ze všech dostupných
-            const getRandomAnimals = (count) => {
-                const shuffled = [...allAnimals].sort(() => Math.random() - 0.5);
+            // === Náhodný výběr 30 obrázků z vybrané kategorie ===
+            const getRandomImages = (count, categoryKey) => {
+                const cat = categories[categoryKey];
+                if (!cat || cat.images.length < count) return [];
+                const shuffled = [...cat.images].sort(() => Math.random() - 0.5);
                 return shuffled.slice(0, count);
             };
 
@@ -199,9 +199,7 @@
 
             const createRoom = async () => {
                 const code = generateRoomCode();
-                
-                // Vyber náhodně 30 obrázků
-                const selectedAnimals = getRandomAnimals(PAIRS);
+                const selectedImages = getRandomImages(PAIRS, selectedCategory);
                 
                 const cardValues = [];
                 for (let i = 0; i < PAIRS; i++) {
@@ -212,7 +210,7 @@
                     .map(value => ({ 
                         value, 
                         color: colors[value % colors.length], 
-                        animal: selectedAnimals[value],
+                        animal: selectedImages[value],
                         sort: Math.random() 
                     }))
                     .sort((a, b) => a.sort - b.sort)
@@ -227,6 +225,7 @@
                     matchWins: { player1: 0, player2: 0 },
                     readyForNextRound: { player1: false, player2: false },
                     players: { player1: true, player2: false },
+                    category: selectedCategory, // uložíme kategorii
                     createdAt: Date.now()
                 });
 
@@ -254,6 +253,9 @@
                     return;
                 }
 
+                // Načti kategorii z místnosti
+                setSelectedCategory(roomData.category || 'animals');
+
                 await database.ref('rooms/' + code + '/players/player2').set(true);
                 
                 setRoomCode(code);
@@ -276,6 +278,7 @@
                         setScores(data.scores || { player1: 0, player2: 0 });
                         setMatchWins(data.matchWins || { player1: 0, player2: 0 });
                         setReadyForNextRound(data.readyForNextRound || { player1: false, player2: false });
+                        setSelectedCategory(data.category || 'animals');
                         
                         if (data.players.player2) {
                             setWaitingForPlayer(false);
@@ -291,8 +294,7 @@
             };
 
             const startNextRound = async () => {
-                // Vyber náhodně 30 NOVÝCH obrázků pro další kolo
-                const selectedAnimals = getRandomAnimals(PAIRS);
+                const selectedImages = getRandomImages(PAIRS, selectedCategory);
                 
                 const cardValues = [];
                 for (let i = 0; i < PAIRS; i++) {
@@ -303,7 +305,7 @@
                     .map(value => ({ 
                         value, 
                         color: colors[value % colors.length], 
-                        animal: selectedAnimals[value],
+                        animal: selectedImages[value],
                         sort: Math.random() 
                     }))
                     .sort((a, b) => a.sort - b.sort)
@@ -315,7 +317,8 @@
                     matched: [],
                     currentPlayer: 1,
                     scores: { player1: 0, player2: 0 },
-                    readyForNextRound: { player1: false, player2: false }
+                    readyForNextRound: { player1: false, player2: false },
+                    category: selectedCategory
                 });
             };
 
@@ -335,8 +338,7 @@
             };
 
             const initLocalGame = () => {
-                // Vyber náhodně 30 obrázků pro lokální hru
-                const selectedAnimals = getRandomAnimals(PAIRS);
+                const selectedImages = getRandomImages(PAIRS, selectedCategory);
                 
                 const cardValues = [];
                 for (let i = 0; i < PAIRS; i++) {
@@ -347,7 +349,7 @@
                     .map(value => ({ 
                         value, 
                         color: colors[value % colors.length], 
-                        animal: selectedAnimals[value],
+                        animal: selectedImages[value],
                         sort: Math.random() 
                     }))
                     .sort((a, b) => a.sort - b.sort)
@@ -380,43 +382,41 @@
                     setCanFlip(false);
                     const [first, second] = newFlipped;
                     
-                   if (cards[first].value === cards[second].value) {
-    setTimeout(async () => {
-        const newMatched = [...matched, first, second];
-        const newScores = {
-            ...scores,
-            [`player${currentPlayer}`]: scores[`player${currentPlayer}`] + 1
-        };
-        
-        if (newMatched.length === TOTAL_CARDS && isOnline) {
-            const newMatchWins = {...matchWins};
-            
-            // Přičti bod pouze pokud není remíza
-            if (newScores.player1 > newScores.player2) {
-                newMatchWins.player1 = matchWins.player1 + 1;
-            } else if (newScores.player2 > newScores.player1) {
-                newMatchWins.player2 = matchWins.player2 + 1;
-            }
-            
-            await updateRoom({
-                matched: newMatched,
-                scores: newScores,
-                matchWins: newMatchWins,
-                flipped: []
-            });
-        } else if (isOnline) {
-            await updateRoom({
-                matched: newMatched,
-                scores: newScores,
-                flipped: []
-            });
-        } else {
-            setMatched(newMatched);
-            setScores(newScores);
-            setFlipped([]);
-        }
-        setCanFlip(true);
-    }, 600);
+                    if (cards[first].value === cards[second].value) {
+                        setTimeout(async () => {
+                            const newMatched = [...matched, first, second];
+                            const newScores = {
+                                ...scores,
+                                [`player${currentPlayer}`]: scores[`player${currentPlayer}`] + 1
+                            };
+                            
+                            if (newMatched.length === TOTAL_CARDS && isOnline) {
+                                const newMatchWins = {...matchWins};
+                                if (newScores.player1 > newScores.player2) {
+                                    newMatchWins.player1 = matchWins.player1 + 1;
+                                } else if (newScores.player2 > newScores.player1) {
+                                    newMatchWins.player2 = matchWins.player2 + 1;
+                                }
+                                
+                                await updateRoom({
+                                    matched: newMatched,
+                                    scores: newScores,
+                                    matchWins: newMatchWins,
+                                    flipped: []
+                                });
+                            } else if (isOnline) {
+                                await updateRoom({
+                                    matched: newMatched,
+                                    scores: newScores,
+                                    flipped: []
+                                });
+                            } else {
+                                setMatched(newMatched);
+                                setScores(newScores);
+                                setFlipped([]);
+                            }
+                            setCanFlip(true);
+                        }, 600);
                     } else {
                         setTimeout(async () => {
                             const nextPlayer = currentPlayer === 1 ? 2 : 1;
@@ -462,14 +462,27 @@
                 return (
                     <div className="h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-4 flex items-center justify-center">
                         <div className="bg-gray-800 rounded-2xl shadow-2xl p-8 max-w-md w-full border border-gray-700">
-                            <h1 className="text-4xl font-bold text-center mb-8 text-purple-400">🎮 Pexeso</h1>
+                            <h1 className="text-4xl font-bold text-center mb-8 text-purple-400">Pexeso</h1>
                             
                             <div className="space-y-4">
+                                <div className="mb-4">
+                                    <label className="block text-sm font-medium text-gray-300 mb-2">Vyber motiv:</label>
+                                    <select
+                                        value={selectedCategory}
+                                        onChange={(e) => setSelectedCategory(e.target.value)}
+                                        className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                    >
+                                        {Object.entries(categories).map(([key, cat]) => (
+                                            <option key={key} value={key}>{cat.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
                                 <button
                                     onClick={initLocalGame}
                                     className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-6 rounded-lg text-xl transition-all transform hover:scale-105"
                                 >
-                                    🏠 Lokální hra
+                                    Lokální hra
                                 </button>
 
                                 <div className="border-t-2 border-gray-300 my-6"></div>
@@ -478,7 +491,7 @@
                                     onClick={createRoom}
                                     className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-6 rounded-lg text-xl transition-all transform hover:scale-105"
                                 >
-                                    ➕ Vytvořit místnost
+                                    Vytvořit místnost
                                 </button>
 
                                 <div className="space-y-2">
@@ -493,8 +506,8 @@
                                     <button
                                         onClick={joinRoom}
                                         className="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-4 px-6 rounded-lg text-xl transition-all transform hover:scale-105"
-                                    >
-                                        🔗 Připojit se
+                                        >
+                                        Připojit se
                                     </button>
                                 </div>
                             </div>
@@ -507,7 +520,7 @@
                 return (
                     <div className="h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-4 flex items-center justify-center">
                         <div className="bg-gray-800 rounded-2xl shadow-2xl p-8 max-w-md w-full text-center border border-gray-700">
-                            <h2 className="text-3xl font-bold mb-4 text-white">⏳ Čekám na hráče...</h2>
+                            <h2 className="text-3xl font-bold mb-4 text-white">Čekám na hráče...</h2>
                             <div className="bg-gray-700 rounded-lg p-6 mb-6 border border-gray-600">
                                 <p className="text-sm text-gray-400 mb-2">Kód místnosti:</p>
                                 <p className="text-4xl font-mono font-bold text-purple-400">{roomCode}</p>
@@ -534,7 +547,7 @@
                             >
                                 ← Menu
                             </button>
-                            <h1 className="text-xl md:text-2xl font-bold text-white text-center flex-1">🎮 Pexeso</h1>
+                            <h1 className="text-xl md:text-2xl font-bold text-white text-center flex-1">Pexeso</h1>
                             {isOnline && (
                                 <div className="bg-gray-700 px-3 py-1 rounded-lg text-sm font-mono font-bold text-white border border-gray-600">
                                     {roomCode}
@@ -563,7 +576,7 @@
                                 <div className={`flex-1 p-1.5 rounded-lg ${currentPlayer === 1 && !isGameOver ? 'bg-blue-500 text-white' : 'bg-gray-700 text-gray-300'}`}>
                                     <div className="text-xs md:text-sm font-bold">
                                         Hráč 1 {isOnline && playerNumber === 1 && '(Ty)'}
-                                        {isOnline && <span className="ml-1">🏆{matchWins.player1}</span>}
+                                        {isOnline && <span className="ml-1">{matchWins.player1}</span>}
                                     </div>
                                     <div className="text-lg md:text-2xl font-bold">{scores.player1}</div>
                                 </div>
@@ -585,7 +598,7 @@
                                 <div className={`flex-1 p-1.5 rounded-lg ${currentPlayer === 2 && !isGameOver ? 'bg-red-500 text-white' : 'bg-gray-700 text-gray-300'}`}>
                                     <div className="text-xs md:text-sm font-bold">
                                         Hráč 2 {isOnline && playerNumber === 2 && '(Ty)'}
-                                        {isOnline && <span className="ml-1">🏆{matchWins.player2}</span>}
+                                        {isOnline && <span className="ml-1">{matchWins.player2}</span>}
                                     </div>
                                     <div className="text-lg md:text-2xl font-bold">{scores.player2}</div>
                                 </div>
@@ -594,8 +607,8 @@
                             {isGameOver && isOnline && !isSeriesOver && (
                                 <div className="text-center p-1.5 mt-1 bg-gray-700 rounded-lg border-2 border-yellow-500">
                                     <div className="text-base md:text-xl font-bold text-white">
-                                        {scores.player1 > scores.player2 ? '🎉 Vyhrál Hráč 1!' : 
-                                         scores.player2 > scores.player1 ? '🎉 Vyhrál Hráč 2!' : '🤝 Remíza!'}
+                                        {scores.player1 > scores.player2 ? 'Vyhrál Hráč 1!' : 
+                                         scores.player2 > scores.player1 ? 'Vyhrál Hráč 2!' : 'Remíza!'}
                                     </div>
                                     <div className="text-xs md:text-sm text-gray-400 mt-1">
                                         Série: {matchWins.player1} - {matchWins.player2}
@@ -610,8 +623,8 @@
                                         }`}
                                     >
                                         {readyForNextRound[`player${playerNumber}`] 
-                                            ? '✓ Připraven' 
-                                            : '▶ Další kolo'}
+                                            ? 'Připraven' 
+                                            : 'Další kolo'}
                                     </button>
                                     {(readyForNextRound.player1 || readyForNextRound.player2) && 
                                      !(readyForNextRound.player1 && readyForNextRound.player2) && (
@@ -625,7 +638,7 @@
                             {isGameOver && isOnline && isSeriesOver && (
                                 <div className="text-center p-2 mt-1 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-lg border-2 border-yellow-600">
                                     <div className="text-xl md:text-2xl font-bold text-white mb-1">
-                                        🏆 CELKOVÝ VÍTĚZ! 🏆
+                                        CELKOVÝ VÍTĚZ!
                                     </div>
                                     <div className="text-base md:text-xl font-bold text-white">
                                         {matchWins.player1 > matchWins.player2 ? 'Hráč 1' : 'Hráč 2'}
@@ -638,7 +651,7 @@
 
                             {isGameOver && !isOnline && (
                                 <div className="text-center p-1.5 mt-1 bg-gray-700 rounded-lg border-2 border-yellow-500">
-                                    <div className="text-base md:text-xl font-bold text-white">🎉 Konec hry! 🎉</div>
+                                    <div className="text-base md:text-xl font-bold text-white">Konec hry!</div>
                                     <div className="text-sm md:text-lg text-gray-300">
                                         {scores.player1 > scores.player2 ? 'Vyhrál Hráč 1!' : 
                                          scores.player2 > scores.player1 ? 'Vyhrál Hráč 2!' : 
@@ -656,11 +669,11 @@
                                     
                                     return (
                                         <button
-    key={index}
-    onClick={() => handleCardClick(index)}
-   className={`card-button transition-all duration-300 ${
-    isMatched ? 'opacity-0 pointer-events-none' : 'opacity-100'
-}`}
+                                            key={index}
+                                            onClick={() => handleCardClick(index)}
+                                            className={`card-button transition-all duration-300 ${
+                                                isMatched ? 'opacity-0 pointer-events-none' : 'opacity-100'
+                                            }`}
                                             style={{
                                                 backgroundColor: isFlipped || isMatched ? 'transparent' : '#6B7280',
                                                 cursor: canFlip && !isFlipped && !isMatched && (!isOnline || currentPlayer === playerNumber) ? 'pointer' : 'default'
@@ -669,13 +682,9 @@
                                         >
                                            <div className="w-full h-full flex items-center justify-center">
                                                 {(isFlipped || isMatched) ? (
-                                                    <img src={card.animal} alt="zvíře" className="card-image" />
+                                                    <img src={card.animal} alt="obrázek" className="card-image" />
                                                 ) : (
                                                     <span className="text-black text-2xl md:text-2xl font-italic" style={{fontFamily: 'Great Vibes, cursive'}}>A</span>
-
-
-
-
                                                 )}
                                             </div>
                                         </button>
