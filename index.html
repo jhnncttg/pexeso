@@ -2,9 +2,12 @@
 <html lang="cs">
 <head>
     <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap" rel="stylesheet">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#9333ea">
+    <meta name="description" content="Pexeso - Hra pro dva hráče">
     <title>Pexeso</title>
     <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
     <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
@@ -13,120 +16,75 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
-        :root {
-            --vh: 1vh;
-        }
+      body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    touch-action: manipulation;
+    background-color: #1a1a2e;
+}
 
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-            touch-action: manipulation;
-            background-color: #1a1a2e;
-            height: 100dvh;
-            overflow: hidden;
-        }
+.card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 2px;
+    background-color: transparent;
+    display: block;
+}
 
-        /* === ČTVERCOVÉ KARTY – HLAVNÍ FIX === */
-        .game-container {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 1rem;
-            box-sizing: border-box;
-        }
+/* Základní nastavení pro portrait (mobil) */
+.game-grid {
+    display: grid;
+    gap: 0.25rem;
+    width: 100%;
+    height: 100%;
+    margin: 0 auto;
+}
 
-        .game-grid {
-            display: grid;
-            gap: 0.35rem;
-            width: 100%;
-            height: 100%;
-            max-width: 90vmin;
-            max-height: 90vmin;
-            aspect-ratio: 1 / 1; /* Zaručí čtverec */
-        }
+/* Mobil/Tablet na výšku: 6 sloupců × 10 řádků */
+@media (orientation: portrait) {
+    .game-grid {
+        grid-template-columns: repeat(6, 1fr);
+        grid-template-rows: repeat(10, 1fr);
+        max-width: 60vh;
+    }
+}
 
-        @media (orientation: portrait) {
-            .game-grid {
-                grid-template-columns: repeat(6, 1fr);
-                grid-template-rows: repeat(6, 1fr);
-            }
-        }
+/* Desktop/Tablet na šířku: 10 sloupců × 6 řádků */
+@media (orientation: landscape) {
+    .game-grid {
+        grid-template-columns: repeat(10, 1fr);
+        grid-template-rows: repeat(6, 1fr);
+        max-width: 100vh;
+    }
+}
 
-        @media (orientation: landscape) {
-            .game-grid {
-                grid-template-columns: repeat(10, 1fr);
-                grid-template-rows: repeat(10, 1fr);
-            }
-        }
+.card-button {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    border-radius: 0.5rem;
+    transition: all 0.3s;
+}
 
-        /* Každá karta je čtverec */
-        .card-button {
-            width: 100%;
-            height: 100%;
-            padding: 0;
-            border: none;
-            background: none;
-            cursor: pointer;
-            border-radius: 0.5rem;
-            overflow: hidden;
-            transition: transform 0.2s ease;
-            aspect-ratio: 1 / 1;
-        }
-
-        .card-button:hover:not(:disabled) {
-            transform: scale(1.05);
-        }
-
-        .card-back {
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #6B7280 0%, #4B5563 100%);
-            border-radius: 0.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .card-front {
-            width: 100%;
-            height: 100%;
-            background-color: #1a1a2e;
-            border-radius: 0.5rem;
-            padding: 12%;
-            box-sizing: border-box;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .card-front img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            display: block;
-        }
-
-        @media (max-width: 640px) {
-            .game-grid { gap: 0.25rem; }
-            .card-front { padding: 8%; }
-            .card-back, .card-front, .card-button { border-radius: 0.3rem; }
-        }
-
-        @supports not (height: 100dvh) {
-            body { height: 100vh; }
-        }
+@media (max-width: 640px) {
+    .game-grid {
+        gap: 0.15rem;
+    }
+    .card-button {
+        border-radius: 0.25rem;
+    }
+}
     </style>
 </head>
 <body>
     <div id="root"></div>
     
     <script type="text/babel">
-        const { useState, useRef } = React;
+        const { useState, useEffect, useRef } = React;
 
+        // Firebase konfigurace
         const firebaseConfig = {
             apiKey: "AIzaSyBLtCRf4_OYedrTrdizRRCFLN0FIk-bnIE",
             authDomain: "pexeso-game.firebaseapp.com",
@@ -134,65 +92,97 @@
             projectId: "pexeso-game",
             storageBucket: "pexeso-game.firebasestorage.app",
             messagingSenderId: "1770108821",
-            appId: "1:1770108821:web:53089614906957421fe89c"
+            appId: "1:1770108821:web:53089614906957421fe89c",
+            measurementId: "G-G0Y3QV8L2W"
         };
 
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        // Inicializace Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
         const database = firebase.database();
 
+        // === KATEGORIE OBRÁZKŮ ===
         const categories = {
-            animals: { name: "Zvířata", images: [
-                'images/animals/amstaf.png', 'images/animals/bear.png', 'images/animals/bengal.png',
-                'images/animals/bird.png', 'images/animals/bonemouth.png', 'images/animals/butterfly.png',
-                'images/animals/cat.png', 'images/animals/chicken.png', 'images/animals/cobra.png',
-                'images/animals/dog.png', 'images/animals/dolphin.png', 'images/animals/elephant.png',
-                'images/animals/fenix.png', 'images/animals/fish.png', 'images/animals/frog.png',
-                'images/animals/girafe.png', 'images/animals/goat.png', 'images/animals/gorila.png',
-                'images/animals/hamster.png', 'images/animals/horse.png', 'images/animals/kokr.png',
-                'images/animals/labrador.png', 'images/animals/labut.png', 'images/animals/leguan.png',
-                'images/animals/levhart.png', 'images/animals/lion.png', 'images/animals/monkey.png',
-                'images/animals/motyl.png', 'images/animals/neon.png', 'images/animals/parrot.png',
-                'images/animals/pav.png', 'images/animals/pelikan.png', 'images/animals/pinguin.png',
-                'images/animals/retrivr.png', 'images/animals/rotvik.png', 'images/animals/skalar.png',
-                'images/animals/star.png', 'images/animals/sykora.png', 'images/animals/tiger.png',
-                'images/animals/turtle.png', 'images/animals/vlcak.png', 'images/animals/wolf.png'
-            ]},
-            biblical: { name: "Biblické", images: [
-                "images/biblical/aron.png", "images/biblical/baptizo.png", "images/biblical/Dorkas.png",
-                "images/biblical/farizeus.png", "images/biblical/fish.png", "images/biblical/fisherman.png",
-                "images/biblical/grave.png", "images/biblical/herodes.png", "images/biblical/jericho.png",
-                "images/biblical/jesus.png", "images/biblical/jesuscloud.png", "images/biblical/jesuszjeveni.png",
-                "images/biblical/jidas.png", "images/biblical/john.png", "images/biblical/Josef.png",
-                "images/biblical/jozue2.png", "images/biblical/lazar.png", "images/biblical/maria.png",
-                "images/biblical/moses.png", "images/biblical/natanael.png", "images/biblical/onezim.png",
-                "images/biblical/oslatko.png", "images/biblical/ovce.png", "images/biblical/palm.png",
-                "images/biblical/paul.png", "images/biblical/sea.png", "images/biblical/snake.png",
-                "images/biblical/sun.png", "images/biblical/wine.png", "images/biblical/zebedej.png"
-            ]}
+            animals: {
+                name: "Zvířata",
+                images: [
+                    'images/animals/amstaf.png', 'images/animals/bear.png', 'images/animals/bengal.png',
+                    'images/animals/bird.png', 'images/animals/bonemouth.png', 'images/animals/butterfly.png',
+                    'images/animals/cat.png', 'images/animals/chicken.png', 'images/animals/cobra.png',
+                    'images/animals/dog.png', 'images/animals/dolphin.png', 'images/animals/elephant.png',
+                    'images/animals/fenix.png', 'images/animals/fish.png', 'images/animals/frog.png',
+                    'images/animals/girafe.png', 'images/animals/goat.png', 'images/animals/gorila.png',
+                    'images/animals/hamster.png', 'images/animals/horse.png', 'images/animals/kokr.png',
+                    'images/animals/labrador.png', 'images/animals/labut.png', 'images/animals/leguan.png',
+                    'images/animals/levhart.png', 'images/animals/lion.png', 'images/animals/monkey.png',
+                    'images/animals/motyl.png', 'images/animals/neon.png', 'images/animals/parrot.png',
+                    'images/animals/pav.png', 'images/animals/pelikan.png', 'images/animals/pinguin.png',
+                    'images/animals/retrivr.png', 'images/animals/rotvik.png', 'images/animals/skalar.png',
+                    'images/animals/star.png', 'images/animals/sykora.png', 'images/animals/tiger.png',
+                    'images/animals/turtle.png', 'images/animals/vlcak.png', 'images/animals/wolf.png'
+                ]
+            },
+            biblical: {
+                name: "Biblické",
+                images: [
+                    "images/biblical/aron.png", "images/biblical/baptizo.png", "images/biblical/Dorkas.png",
+                    "images/biblical/farizeus.png", "images/biblical/fish.png", "images/biblical/fisherman.png",
+                    "images/biblical/grave.png", "images/biblical/herodes.png", "images/biblical/jericho.png",
+                    "images/biblical/jesus.png", "images/biblical/jesuscloud.png", "images/biblical/jesuszjeveni.png",
+                    "images/biblical/jidas.png", "images/biblical/john.png", "images/biblical/Josef.png",
+                    "images/biblical/jozue2.png", "images/biblical/lazar.png", "images/biblical/maria.png",
+                    "images/biblical/moses.png", "images/biblical/natanael.png", "images/biblical/onezim.png",
+                    "images/biblical/oslatko.png", "images/biblical/ovce.png", "images/biblical/palm.png",
+                    "images/biblical/paul.png", "images/biblical/sea.png", "images/biblical/snake.png",
+                    "images/biblical/sun.png", "images/biblical/wine.png", "images/biblical/zebedej.png"
+                ]
+            }
+        };
+
+        // === FUNKCE PRO PŘIDÁNÍ NOVÉ KATEGORIE (pro budoucnost) ===
+        const addCategory = (key, name, imageArray) => {
+            categories[key] = { name, images: imageArray };
         };
 
         const PexesoGame = () => {
-            const TOTAL_CARDS = 60;
-            const PAIRS = 30;
+            const ROWS = 10;
+            const COLS = 6;
+            const TOTAL_CARDS = ROWS * COLS;
+            const PAIRS = TOTAL_CARDS / 2;
 
             const [gameMode, setGameMode] = useState('menu');
-            const [selectedCategory, setSelectedCategory] = useState('animals');
+            const [selectedCategory, setSelectedCategory] = useState('animals'); // ← nový stav
+            const [roomCode, setRoomCode] = useState('');
+            const [joinCode, setJoinCode] = useState('');
+            const [playerNumber, setPlayerNumber] = useState(null);
+            const [waitingForPlayer, setWaitingForPlayer] = useState(false);
+            
             const [cards, setCards] = useState([]);
             const [flipped, setFlipped] = useState([]);
             const [matched, setMatched] = useState([]);
             const [currentPlayer, setCurrentPlayer] = useState(1);
             const [scores, setScores] = useState({ player1: 0, player2: 0 });
             const [canFlip, setCanFlip] = useState(true);
-            const [roomCode, setRoomCode] = useState('');
-            const [joinCode, setJoinCode] = useState('');
-            const [playerNumber, setPlayerNumber] = useState(null);
-            const [waitingForPlayer, setWaitingForPlayer] = useState(false);
+            
+            const [matchWins, setMatchWins] = useState({ player1: 0, player2: 0 });
+            const [readyForNextRound, setReadyForNextRound] = useState({ player1: false, player2: false });
 
             const roomRef = useRef(null);
             const isOnline = gameMode === 'online';
 
-            const getRandomImages = (count, catKey) => {
-                const cat = categories[catKey];
+            const colors = [
+                '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8',
+                '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B739', '#52BE80',
+                '#EC7063', '#5DADE2', '#F5B041', '#AF7AC5', '#48C9B0',
+                '#EB984E', '#7FB3D5', '#73C6B6', '#F1948A', '#85929E',
+                '#D5DBDB', '#AED6F1', '#FADBD8', '#D7BDE2', '#A9DFBF',
+                '#FAD7A0', '#D6EAF8', '#FCF3CF', '#E8DAEF', '#D1F2EB'
+            ];
+
+            // === Náhodný výběr 30 obrázků z vybrané kategorie ===
+            const getRandomImages = (count, categoryKey) => {
+                const cat = categories[categoryKey];
                 if (!cat || cat.images.length < count) return [];
                 const shuffled = [...cat.images].sort(() => Math.random() - 0.5);
                 return shuffled.slice(0, count);
@@ -200,98 +190,246 @@
 
             const generateRoomCode = () => {
                 const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-                return letters.charAt(Math.floor(Math.random() * 26)) + letters.charAt(Math.floor(Math.random() * 26));
+                let code = '';
+                for (let i = 0; i < 2; i++) {
+                    code += letters.charAt(Math.floor(Math.random() * letters.length));
+                }
+                return code;
             };
 
             const createRoom = async () => {
                 const code = generateRoomCode();
-                const images = getRandomImages(PAIRS, selectedCategory);
-                const values = [];
-                for (let i = 0; i < PAIRS; i++) values.push(i, i);
-                const shuffled = values
-                    .map((v, i) => ({ value: v, animal: images[Math.floor(i/2)], sort: Math.random() }))
+                const selectedImages = getRandomImages(PAIRS, selectedCategory);
+                
+                const cardValues = [];
+                for (let i = 0; i < PAIRS; i++) {
+                    cardValues.push(i, i);
+                }
+                
+                const shuffled = cardValues
+                    .map(value => ({ 
+                        value, 
+                        color: colors[value % colors.length], 
+                        animal: selectedImages[value],
+                        sort: Math.random() 
+                    }))
                     .sort((a, b) => a.sort - b.sort)
-                    .map(({ value, animal }) => ({ value, animal }));
+                    .map(({ value, color, animal }) => ({ value, color, animal }));
 
                 await database.ref('rooms/' + code).set({
-                    cards: shuffled, flipped: [], matched: [], currentPlayer: 1,
-                    scores: { player1: 0, player2: 0 }, players: { player1: true, player2: false },
-                    category: selectedCategory
+                    cards: shuffled,
+                    flipped: [],
+                    matched: [],
+                    currentPlayer: 1,
+                    scores: { player1: 0, player2: 0 },
+                    matchWins: { player1: 0, player2: 0 },
+                    readyForNextRound: { player1: false, player2: false },
+                    players: { player1: true, player2: false },
+                    category: selectedCategory, // uložíme kategorii
+                    createdAt: Date.now()
                 });
 
-                setRoomCode(code); setPlayerNumber(1); setGameMode('online'); setWaitingForPlayer(true);
+                setRoomCode(code);
+                setPlayerNumber(1);
+                setGameMode('online');
+                setWaitingForPlayer(true);
                 listenToRoom(code);
             };
 
             const joinRoom = async () => {
+                if (!joinCode.trim()) return;
+                
                 const code = joinCode.trim().toUpperCase();
-                const snap = await database.ref('rooms/' + code).once('value');
-                if (!snap.exists()) return alert('Místnost nenalezena!');
-                if (snap.val().players.player2) return alert('Místnost plná!');
+                const roomSnapshot = await database.ref('rooms/' + code).once('value');
+                
+                if (!roomSnapshot.exists()) {
+                    alert('Místnost nenalezena!');
+                    return;
+                }
+
+                const roomData = roomSnapshot.val();
+                if (roomData.players.player2) {
+                    alert('Místnost je plná!');
+                    return;
+                }
+
+                // Načti kategorii z místnosti
+                setSelectedCategory(roomData.category || 'animals');
+
                 await database.ref('rooms/' + code + '/players/player2').set(true);
-                setRoomCode(code); setPlayerNumber(2); setGameMode('online'); setWaitingForPlayer(false);
+                
+                setRoomCode(code);
+                setPlayerNumber(2);
+                setGameMode('online');
+                setWaitingForPlayer(false);
                 listenToRoom(code);
             };
 
             const listenToRoom = (code) => {
                 roomRef.current = database.ref('rooms/' + code);
-                roomRef.current.on('value', snap => {
-                    const data = snap.val();
+                
+                roomRef.current.on('value', (snapshot) => {
+                    const data = snapshot.val();
                     if (data) {
                         setCards(data.cards || []);
                         setFlipped(data.flipped || []);
                         setMatched(data.matched || []);
                         setCurrentPlayer(data.currentPlayer || 1);
                         setScores(data.scores || { player1: 0, player2: 0 });
+                        setMatchWins(data.matchWins || { player1: 0, player2: 0 });
+                        setReadyForNextRound(data.readyForNextRound || { player1: false, player2: false });
                         setSelectedCategory(data.category || 'animals');
-                        if (data.players.player2) setWaitingForPlayer(false);
+                        
+                        if (data.players.player2) {
+                            setWaitingForPlayer(false);
+                        }
                     }
                 });
             };
 
             const updateRoom = async (updates) => {
-                if (roomRef.current) await roomRef.current.update(updates);
+                if (roomRef.current) {
+                    await roomRef.current.update(updates);
+                }
+            };
+
+            const startNextRound = async () => {
+                const selectedImages = getRandomImages(PAIRS, selectedCategory);
+                
+                const cardValues = [];
+                for (let i = 0; i < PAIRS; i++) {
+                    cardValues.push(i, i);
+                }
+                
+                const shuffled = cardValues
+                    .map(value => ({ 
+                        value, 
+                        color: colors[value % colors.length], 
+                        animal: selectedImages[value],
+                        sort: Math.random() 
+                    }))
+                    .sort((a, b) => a.sort - b.sort)
+                    .map(({ value, color, animal }) => ({ value, color, animal }));
+
+                await updateRoom({
+                    cards: shuffled,
+                    flipped: [],
+                    matched: [],
+                    currentPlayer: 1,
+                    scores: { player1: 0, player2: 0 },
+                    readyForNextRound: { player1: false, player2: false },
+                    category: selectedCategory
+                });
+            };
+
+            const handleReadyForNextRound = async () => {
+                const newReady = {
+                    ...readyForNextRound,
+                    [`player${playerNumber}`]: true
+                };
+                
+                await updateRoom({ readyForNextRound: newReady });
+                
+                if (newReady.player1 && newReady.player2) {
+                    setTimeout(() => {
+                        startNextRound();
+                    }, 500);
+                }
             };
 
             const initLocalGame = () => {
-                const images = getRandomImages(PAIRS, selectedCategory);
-                const values = [];
-                for (let i = 0; i < PAIRS; i++) values.push(i, i);
-                const shuffled = values
-                    .map((v, i) => ({ value: v, animal: images[Math.floor(i/2)], sort: Math.random() }))
+                const selectedImages = getRandomImages(PAIRS, selectedCategory);
+                
+                const cardValues = [];
+                for (let i = 0; i < PAIRS; i++) {
+                    cardValues.push(i, i);
+                }
+                
+                const shuffled = cardValues
+                    .map(value => ({ 
+                        value, 
+                        color: colors[value % colors.length], 
+                        animal: selectedImages[value],
+                        sort: Math.random() 
+                    }))
                     .sort((a, b) => a.sort - b.sort)
-                    .map(({ value, animal }) => ({ value, animal }));
-                setCards(shuffled); setFlipped([]); setMatched([]); setCurrentPlayer(1);
-                setScores({ player1: 0, player2: 0 }); setCanFlip(true); setGameMode('local');
+                    .map(({ value, color, animal }) => ({ value, color, animal }));
+                
+                setCards(shuffled);
+                setFlipped([]);
+                setMatched([]);
+                setCurrentPlayer(1);
+                setScores({ player1: 0, player2: 0 });
+                setCanFlip(true);
+                setGameMode('local');
             };
 
             const handleCardClick = async (index) => {
                 if (isOnline && currentPlayer !== playerNumber) return;
-                if (!canFlip || flipped.includes(index) || matched.includes(index) || flipped.length >= 2) return;
+                if (!canFlip || flipped.includes(index) || matched.includes(index) || flipped.length >= 2) {
+                    return;
+                }
 
                 const newFlipped = [...flipped, index];
-                if (isOnline) await updateRoom({ flipped: newFlipped });
-                else setFlipped(newFlipped);
+                
+                if (isOnline) {
+                    await updateRoom({ flipped: newFlipped });
+                } else {
+                    setFlipped(newFlipped);
+                }
 
                 if (newFlipped.length === 2) {
                     setCanFlip(false);
-                    const [a, b] = newFlipped;
-                    if (cards[a].value === cards[b].value) {
+                    const [first, second] = newFlipped;
+                    
+                    if (cards[first].value === cards[second].value) {
                         setTimeout(async () => {
-                            const newMatched = [...matched, a, b];
-                            const newScores = { ...scores, [`player${currentPlayer}`]: scores[`player${currentPlayer}`] + 1 };
-                            if (isOnline) {
-                                await updateRoom({ matched: newMatched, scores: newScores, flipped: [] });
+                            const newMatched = [...matched, first, second];
+                            const newScores = {
+                                ...scores,
+                                [`player${currentPlayer}`]: scores[`player${currentPlayer}`] + 1
+                            };
+                            
+                            if (newMatched.length === TOTAL_CARDS && isOnline) {
+                                const newMatchWins = {...matchWins};
+                                if (newScores.player1 > newScores.player2) {
+                                    newMatchWins.player1 = matchWins.player1 + 1;
+                                } else if (newScores.player2 > newScores.player1) {
+                                    newMatchWins.player2 = matchWins.player2 + 1;
+                                }
+                                
+                                await updateRoom({
+                                    matched: newMatched,
+                                    scores: newScores,
+                                    matchWins: newMatchWins,
+                                    flipped: []
+                                });
+                            } else if (isOnline) {
+                                await updateRoom({
+                                    matched: newMatched,
+                                    scores: newScores,
+                                    flipped: []
+                                });
                             } else {
-                                setMatched(newMatched); setScores(newScores); setFlipped([]);
+                                setMatched(newMatched);
+                                setScores(newScores);
+                                setFlipped([]);
                             }
                             setCanFlip(true);
                         }, 600);
                     } else {
                         setTimeout(async () => {
-                            const next = currentPlayer === 1 ? 2 : 1;
-                            if (isOnline) await updateRoom({ flipped: [], currentPlayer: next });
-                            else { setFlipped([]); setCurrentPlayer(next); }
+                            const nextPlayer = currentPlayer === 1 ? 2 : 1;
+                            
+                            if (isOnline) {
+                                await updateRoom({
+                                    flipped: [],
+                                    currentPlayer: nextPlayer
+                                });
+                            } else {
+                                setFlipped([]);
+                                setCurrentPlayer(nextPlayer);
+                            }
                             setCanFlip(true);
                         }, 600);
                     }
@@ -299,26 +437,80 @@
             };
 
             const backToMenu = () => {
-                if (roomRef.current) roomRef.current.off();
-                setGameMode('menu'); setRoomCode(''); setJoinCode(''); setPlayerNumber(null);
-                setWaitingForPlayer(false); setCards([]); setFlipped([]); setMatched([]);
-                setCurrentPlayer(1); setScores({ player1: 0, player2: 0 });
+                if (roomRef.current) {
+                    roomRef.current.off();
+                }
+                setGameMode('menu');
+                setRoomCode('');
+                setJoinCode('');
+                setPlayerNumber(null);
+                setWaitingForPlayer(false);
+                setCards([]);
+                setFlipped([]);
+                setMatched([]);
+                setCurrentPlayer(1);
+                setScores({ player1: 0, player2: 0 });
+                setMatchWins({ player1: 0, player2: 0 });
+                setReadyForNextRound({ player1: false, player2: false });
             };
+
+            const isGameOver = matched.length === TOTAL_CARDS;
+            const isSeriesOver = matchWins.player1 >= 2 || matchWins.player2 >= 2;
+            const totalGamesPlayed = matchWins.player1 + matchWins.player2;
 
             if (gameMode === 'menu') {
                 return (
                     <div className="h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-4 flex items-center justify-center">
-                        <div className="bg-gray-800 rounded-2xl p-8 max-w-md w-full text-center border border-gray-700">
-                            <h1 className="text-4xl font-bold mb-8 text-purple-400">Pexeso</h1>
-                            <select value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)}
-                                className="w-full mb-4 px-4 py-3 bg-gray-700 text-white rounded-lg">
-                                {Object.entries(categories).map(([k, v]) => <option key={k} value={k}>{v.name}</option>)}
-                            </select>
-                            <button onClick={initLocalGame} className="w-full mb-3 bg-blue-500 hover:bg-blue-600 text-white py-4 rounded-lg font-bold">Lokální hra</button>
-                            <button onClick={createRoom} className="w-full mb-3 bg-green-500 hover:bg-green-600 text-white py-4 rounded-lg font-bold">Vytvořit místnost</button>
-                            <input type="text" placeholder="Kód" value={joinCode} onChange={e => setJoinCode(e.target.value.toUpperCase())}
-                                className="w-full mb-2 px-4 py-3 bg-gray-700 text-white rounded-lg text-center font-mono" maxLength="2" />
-                            <button onClick={joinRoom} className="w-full bg-purple-500 hover:bg-purple-600 text-white py-4 rounded-lg font-bold">Připojit se</button>
+                        <div className="bg-gray-800 rounded-2xl shadow-2xl p-8 max-w-md w-full border border-gray-700">
+                            <h1 className="text-4xl font-bold text-center mb-8 text-purple-400">Pexeso</h1>
+                            
+                            <div className="space-y-4">
+                                <div className="mb-4">
+                                    <label className="block text-sm font-medium text-gray-300 mb-2">Vyber motiv:</label>
+                                    <select
+                                        value={selectedCategory}
+                                        onChange={(e) => setSelectedCategory(e.target.value)}
+                                        className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                    >
+                                        {Object.entries(categories).map(([key, cat]) => (
+                                            <option key={key} value={key}>{cat.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <button
+                                    onClick={initLocalGame}
+                                    className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-6 rounded-lg text-xl transition-all transform hover:scale-105"
+                                >
+                                    Lokální hra
+                                </button>
+
+                                <div className="border-t-2 border-gray-300 my-6"></div>
+                                
+                                <button
+                                    onClick={createRoom}
+                                    className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-6 rounded-lg text-xl transition-all transform hover:scale-105"
+                                >
+                                    Vytvořit místnost
+                                </button>
+
+                                <div className="space-y-2">
+                                    <input
+                                        type="text"
+                                        placeholder="Zadej kód (2 písmena)"
+                                        value={joinCode}
+                                        onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                                        className="w-full px-4 py-3 border-2 border-gray-600 bg-gray-700 text-white rounded-lg text-center text-xl font-mono uppercase placeholder-gray-400"
+                                        maxLength="2"
+                                    />
+                                    <button
+                                        onClick={joinRoom}
+                                        className="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-4 px-6 rounded-lg text-xl transition-all transform hover:scale-105"
+                                        >
+                                        Připojit se
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 );
@@ -327,59 +519,174 @@
             if (waitingForPlayer) {
                 return (
                     <div className="h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-4 flex items-center justify-center">
-                        <div className="bg-gray-800 rounded-2xl p-8 text-center">
-                            <h2 className="text-3xl font-bold text-white mb-4">Čekám na hráče...</h2>
-                            <p className="text-4xl font-mono text-purple-400">{roomCode}</p>
-                            <button onClick={backToMenu} className="mt-6 bg-red-500 text-white px-6 py-2 rounded-lg">Zpět</button>
+                        <div className="bg-gray-800 rounded-2xl shadow-2xl p-8 max-w-md w-full text-center border border-gray-700">
+                            <h2 className="text-3xl font-bold mb-4 text-white">Čekám na hráče...</h2>
+                            <div className="bg-gray-700 rounded-lg p-6 mb-6 border border-gray-600">
+                                <p className="text-sm text-gray-400 mb-2">Kód místnosti:</p>
+                                <p className="text-4xl font-mono font-bold text-purple-400">{roomCode}</p>
+                            </div>
+                            <p className="text-gray-300 mb-6">Sdílej tento kód s druhým hráčem!</p>
+                            <button
+                                onClick={backToMenu}
+                                className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg"
+                            >
+                                ← Zpět
+                            </button>
                         </div>
                     </div>
                 );
             }
 
             return (
-                <div className="h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-2 flex flex-col">
-                    <div className="max-w-2xl mx-auto w-full flex flex-col h-full gap-2">
-                        <div className="flex justify-between items-center">
-                            <button onClick={backToMenu} className="bg-red-500 text-white px-3 py-1 rounded-lg text-sm">Menu</button>
-                            <h1 className="text-2xl font-bold text-white">Pexeso</h1>
-                            {isOnline && <div className="bg-gray-700 px-3 py-1 rounded-lg text-sm font-mono text-white">{roomCode}</div>}
-                        </div>
-
-                        <div className="bg-gray-800 rounded-lg p-2 border border-gray-700">
-                            <div className="flex justify-between items-center">
-                                <div className={`flex-1 p-2 rounded-lg text-center ${currentPlayer === 1 ? 'bg-blue-500 text-white' : 'bg-gray-700 text-gray-300'}`}>
-                                    <div className="text-sm font-bold">Hráč 1</div>
-                                    <div className="text-2xl font-bold">{scores.player1}</div>
+                <div className="h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-2 flex flex-col overflow-hidden">
+                    <div className="w-full h-full flex flex-col max-w-2xl mx-auto">
+                        <div className="flex items-center justify-between mb-1">
+                            <button
+                                onClick={backToMenu}
+                                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm font-bold"
+                            >
+                                ← Menu
+                            </button>
+                            <h1 className="text-xl md:text-2xl font-bold text-white text-center flex-1">Pexeso</h1>
+                            {isOnline && (
+                                <div className="bg-gray-700 px-3 py-1 rounded-lg text-sm font-mono font-bold text-white border border-gray-600">
+                                    {roomCode}
                                 </div>
+                            )}
+                        </div>
+                        
+                        <div className="bg-gray-800 rounded-lg shadow-xl p-2 mb-1 flex-shrink-0 border border-gray-700">
+                            {isOnline && totalGamesPlayed < 3 && (
+                                <div className="flex justify-center gap-2 mb-2">
+                                    <div className="text-xs font-bold text-gray-400">Best of 3:</div>
+                                    <div className="flex gap-1">
+                                        {[0, 1, 2].map((i) => (
+                                            <div key={i} className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold" style={{
+                                                backgroundColor: i < matchWins.player1 ? '#3B82F6' : i < matchWins.player1 + matchWins.player2 ? '#EF4444' : '#E5E7EB',
+                                                color: i < matchWins.player1 + matchWins.player2 ? 'white' : '#9CA3AF'
+                                            }}>
+                                                {i < matchWins.player1 ? '1' : i < matchWins.player1 + matchWins.player2 ? '2' : '·'}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="flex justify-between items-center">
+                                <div className={`flex-1 p-1.5 rounded-lg ${currentPlayer === 1 && !isGameOver ? 'bg-blue-500 text-white' : 'bg-gray-700 text-gray-300'}`}>
+                                    <div className="text-xs md:text-sm font-bold">
+                                        Hráč 1 {isOnline && playerNumber === 1 && '(Ty)'}
+                                        {isOnline && <span className="ml-1">{matchWins.player1}</span>}
+                                    </div>
+                                    <div className="text-lg md:text-2xl font-bold">{scores.player1}</div>
+                                </div>
+                                
                                 {!isOnline && (
-                                    <button onClick={initLocalGame} className="mx-2 bg-green-500 p-2 rounded-full">
-                                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                                    <button
+                                        onClick={initLocalGame}
+                                        className="mx-1.5 bg-green-500 hover:bg-green-600 text-white p-2 rounded-full shadow-lg transition-transform hover:scale-110"
+                                        title="Nová hra"
+                                    >
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <polyline points="23 4 23 10 17 10"></polyline>
+                                            <polyline points="1 20 1 14 7 14"></polyline>
+                                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                                        </svg>
                                     </button>
                                 )}
-                                <div className={`flex-1 p-2 rounded-lg text-center ${currentPlayer === 2 ? 'bg-red-500 text-white' : 'bg-gray-700 text-gray-300'}`}>
-                                    <div className="text-sm font-bold">Hráč 2</div>
-                                    <div className="text-2xl font-bold">{scores.player2}</div>
+                                
+                                <div className={`flex-1 p-1.5 rounded-lg ${currentPlayer === 2 && !isGameOver ? 'bg-red-500 text-white' : 'bg-gray-700 text-gray-300'}`}>
+                                    <div className="text-xs md:text-sm font-bold">
+                                        Hráč 2 {isOnline && playerNumber === 2 && '(Ty)'}
+                                        {isOnline && <span className="ml-1">{matchWins.player2}</span>}
+                                    </div>
+                                    <div className="text-lg md:text-2xl font-bold">{scores.player2}</div>
                                 </div>
                             </div>
+
+                            {isGameOver && isOnline && !isSeriesOver && (
+                                <div className="text-center p-1.5 mt-1 bg-gray-700 rounded-lg border-2 border-yellow-500">
+                                    <div className="text-base md:text-xl font-bold text-white">
+                                        {scores.player1 > scores.player2 ? 'Vyhrál Hráč 1!' : 
+                                         scores.player2 > scores.player1 ? 'Vyhrál Hráč 2!' : 'Remíza!'}
+                                    </div>
+                                    <div className="text-xs md:text-sm text-gray-400 mt-1">
+                                        Série: {matchWins.player1} - {matchWins.player2}
+                                    </div>
+                                    <button
+                                        onClick={handleReadyForNextRound}
+                                        disabled={readyForNextRound[`player${playerNumber}`]}
+                                        className={`mt-2 px-4 py-2 rounded-lg font-bold text-sm ${
+                                            readyForNextRound[`player${playerNumber}`] 
+                                                ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
+                                                : 'bg-green-500 hover:bg-green-600 text-white'
+                                        }`}
+                                    >
+                                        {readyForNextRound[`player${playerNumber}`] 
+                                            ? 'Připraven' 
+                                            : 'Další kolo'}
+                                    </button>
+                                    {(readyForNextRound.player1 || readyForNextRound.player2) && 
+                                     !(readyForNextRound.player1 && readyForNextRound.player2) && (
+                                        <div className="text-xs text-gray-400 mt-1">
+                                            Čekám na druhého hráče...
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {isGameOver && isOnline && isSeriesOver && (
+                                <div className="text-center p-2 mt-1 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-lg border-2 border-yellow-600">
+                                    <div className="text-xl md:text-2xl font-bold text-white mb-1">
+                                        CELKOVÝ VÍTĚZ!
+                                    </div>
+                                    <div className="text-base md:text-xl font-bold text-white">
+                                        {matchWins.player1 > matchWins.player2 ? 'Hráč 1' : 'Hráč 2'}
+                                    </div>
+                                    <div className="text-sm text-white mt-1">
+                                        Série: {matchWins.player1} - {matchWins.player2}
+                                    </div>
+                                </div>
+                            )}
+
+                            {isGameOver && !isOnline && (
+                                <div className="text-center p-1.5 mt-1 bg-gray-700 rounded-lg border-2 border-yellow-500">
+                                    <div className="text-base md:text-xl font-bold text-white">Konec hry!</div>
+                                    <div className="text-sm md:text-lg text-gray-300">
+                                        {scores.player1 > scores.player2 ? 'Vyhrál Hráč 1!' : 
+                                         scores.player2 > scores.player1 ? 'Vyhrál Hráč 2!' : 
+                                         'Remíza!'}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
-                        <div className="game-container">
+                       <div className="bg-gray-800 rounded-lg shadow-xl p-2 flex-1 overflow-hidden border border-gray-700 min-h-0">
                             <div className="game-grid">
-                                {cards.map((card, i) => {
-                                    const isFlipped = flipped.includes(i);
-                                    const isMatched = matched.includes(i);
+                                {cards.map((card, index) => {
+                                    const isFlipped = flipped.includes(index);
+                                    const isMatched = matched.includes(index);
+                                    
                                     return (
-                                        <button key={i} onClick={() => handleCardClick(i)} className="card-button"
-                                            disabled={!canFlip || isFlipped || isMatched || (isOnline && currentPlayer !== playerNumber)}>
-                                            {!isFlipped && !isMatched ? (
-                                                <div className="card-back">
-                                                    <span className="text-white text-4xl" style={{fontFamily: 'Great Vibes, cursive'}}>A</span>
-                                                </div>
-                                            ) : (
-                                                <div className="card-front">
-                                                    <img src={card.animal} alt="" />
-                                                </div>
-                                            )}
+                                        <button
+                                            key={index}
+                                            onClick={() => handleCardClick(index)}
+                                            className={`card-button transition-all duration-300 ${
+                                                isMatched ? 'opacity-0 pointer-events-none' : 'opacity-100'
+                                            }`}
+                                            style={{
+                                                backgroundColor: isFlipped || isMatched ? 'transparent' : '#6B7280',
+                                                cursor: canFlip && !isFlipped && !isMatched && (!isOnline || currentPlayer === playerNumber) ? 'pointer' : 'default'
+                                            }}
+                                            disabled={!canFlip || isFlipped || isMatched || (isOnline && currentPlayer !== playerNumber)}
+                                        >
+                                           <div className="w-full h-full flex items-center justify-center">
+                                                {(isFlipped || isMatched) ? (
+                                                    <img src={card.animal} alt="obrázek" className="card-image" />
+                                                ) : (
+                                                    <span className="text-black text-2xl md:text-2xl font-italic" style={{fontFamily: 'Great Vibes, cursive'}}>A</span>
+                                                )}
+                                            </div>
                                         </button>
                                     );
                                 })}
@@ -389,14 +696,6 @@
                 </div>
             );
         };
-
-        const setVH = () => {
-            const vh = window.innerHeight * 0.01;
-            document.documentElement.style.setProperty('--vh', `${vh}px`);
-        };
-        window.addEventListener('load', setVH);
-        window.addEventListener('resize', setVH);
-        window.addEventListener('orientationchange', () => setTimeout(setVH, 100));
 
         ReactDOM.render(<PexesoGame />, document.getElementById('root'));
     </script>
