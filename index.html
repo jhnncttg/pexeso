@@ -2,12 +2,9 @@
 <html lang="cs">
 <head>
     <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap" rel="stylesheet">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#9333ea">
-    <meta name="description" content="Pexeso - Hra pro dva hráče">
     <title>Pexeso</title>
     <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
     <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
@@ -72,25 +69,25 @@
             .card-button { border-radius: 0.25rem; }
         }
 
-        /* === iOS SAFARI FIX – POUZE PRO SAFARI === */
+        /* === iOS SAFARI FIX === */
         @supports (-webkit-touch-callout: none) {
-            body {
-                height: -webkit-fill-available;
-            }
-            .game-grid {
-                height: -webkit-fill-available;
-            }
-            @media (orientation: portrait) {
-                .game-grid {
-                    max-width: 60dvh;
-                }
-            }
-            @media (orientation: landscape) {
-                .game-grid {
-                    max-width: 100dvh;
-                }
-            }
+            body, .game-grid { height: -webkit-fill-available; }
+            @media (orientation: portrait) { .game-grid { max-width: 60dvh; } }
+            @media (orientation: landscape) { .game-grid { max-width: 100dvh; } }
         }
+
+        /* === ZMENŠENÝ SKÓRE PANEL === */
+        .score-panel {
+            padding: 0.5rem;
+            gap: 0.5rem;
+        }
+        .score-box {
+            padding: 0.4rem 0.6rem;
+            border-radius: 0.5rem;
+            font-size: 0.85rem;
+        }
+        .score-box .label { font-size: 0.7rem; }
+        .score-box .value { font-size: 1.1rem; }
     </style>
 </head>
 <body>
@@ -99,27 +96,14 @@
     <script type="text/babel">
         const { useState, useRef } = React;
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBLtCRf4_OYedrTrdizRRCFLN0FIk-bnIE",
-            authDomain: "pexeso-game.firebaseapp.com",
-            databaseURL: "https://pexeso-game-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "pexeso-game",
-            storageBucket: "pexeso-game.firebasestorage.app",
-            messagingSenderId: "1770108821",
-            appId: "1:1770108821:web:53089614906957421fe89c",
-            measurementId: "G-G0Y3QV8L2W"
-        };
-
+        const firebaseConfig = { /* tvůj config */ };
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        const categories = { /* ... stejné jako tvůj původní kód ... */ };
+        const categories = { /* tvůj seznam */ };
 
         const PexesoGame = () => {
-            const ROWS = 10;
-            const COLS = 6;
-            const TOTAL_CARDS = ROWS * COLS;
-            const PAIRS = TOTAL_CARDS / 2;
+            const ROWS = 10, COLS = 6, TOTAL_CARDS = 60, PAIRS = 30;
 
             const [gameMode, setGameMode] = useState('menu');
             const [selectedCategory, setSelectedCategory] = useState('animals');
@@ -139,36 +123,24 @@
             const roomRef = useRef(null);
             const isOnline = gameMode === 'online';
 
-            const colors = [ /* ... tvůj seznam barev ... */ ];
+            const colors = [ /* tvůj seznam */ ];
 
-            const getRandomImages = (count, categoryKey) => {
-                const cat = categories[categoryKey];
-                if (!cat || cat.images.length < count) return [];
-                const shuffled = [...cat.images].sort(() => Math.random() - 0.5);
+            const getRandomImages = (count, cat) => {
+                const images = categories[cat]?.images || [];
+                const shuffled = [...images].sort(() => Math.random() - 0.5);
                 return shuffled.slice(0, count);
             };
 
-            const generateRoomCode = () => {
-                const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-                let code = '';
-                for (let i = 0; i < 2; i++) code += letters.charAt(Math.floor(Math.random() * letters.length));
-                return code;
-            };
+            const generateRoomCode = () => 'AB'.replace(/./g, () => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[Math.floor(Math.random() * 26)]);
 
             const createRoom = async () => {
                 const code = generateRoomCode();
-                const selectedImages = getRandomImages(PAIRS, selectedCategory);
-                const cardValues = [];
-                for (let i = 0; i < PAIRS; i++) cardValues.push(i, i);
-                const shuffled = cardValues
-                    .map(value => ({ 
-                        value, 
-                        color: colors[value % colors.length], 
-                        animal: selectedImages[value],
-                        sort: Math.random() 
-                    }))
+                const images = getRandomImages(PAIRS, selectedCategory);
+                const values = Array.from({length: PAIRS}, (_, i) => [i, i]).flat();
+                const shuffled = values
+                    .map((v, i) => ({ value: v, animal: images[Math.floor(i/2)], sort: Math.random() }))
                     .sort((a, b) => a.sort - b.sort)
-                    .map(({ value, color, animal }) => ({ value, color, animal }));
+                    .map(({ value, animal }) => ({ value, animal }));
 
                 await database.ref('rooms/' + code).set({
                     cards: shuffled, flipped: [], matched: [], currentPlayer: 1,
@@ -182,7 +154,6 @@
             };
 
             const joinRoom = async () => {
-                if (!joinCode.trim()) return;
                 const code = joinCode.trim().toUpperCase();
                 const snap = await database.ref('rooms/' + code).once('value');
                 if (!snap.exists()) return alert('Místnost nenalezena!');
@@ -211,18 +182,15 @@
                 });
             };
 
-            const updateRoom = async (updates) => {
-                if (roomRef.current) await roomRef.current.update(updates);
-            };
+            const updateRoom = async (updates) => roomRef.current && await roomRef.current.update(updates);
 
             const initLocalGame = () => {
-                const selectedImages = getRandomImages(PAIRS, selectedCategory);
-                const cardValues = [];
-                for (let i = 0; i < PAIRS; i++) cardValues.push(i, i);
-                const shuffled = cardValues
-                    .map(value => ({ value, color: colors[value % colors.length], animal: selectedImages[value], sort: Math.random() }))
+                const images = getRandomImages(PAIRS, selectedCategory);
+                const values = Array.from({length: PAIRS}, (_, i) => [i, i]).flat();
+                const shuffled = values
+                    .map((v, i) => ({ value: v, animal: images[Math.floor(i/2)], sort: Math.random() }))
                     .sort((a, b) => a.sort - b.sort)
-                    .map(({ value, color, animal }) => ({ value, color, animal }));
+                    .map(({ value, animal }) => ({ value, animal }));
                 setCards(shuffled); setFlipped([]); setMatched([]); setCurrentPlayer(1);
                 setScores({ player1: 0, player2: 0 }); setCanFlip(true); setGameMode('local');
             };
@@ -258,7 +226,7 @@
             };
 
             const backToMenu = () => {
-                if (roomRef.current) roomRef.current.off();
+                roomRef.current?.off();
                 setGameMode('menu'); setRoomCode(''); setJoinCode(''); setPlayerNumber(null);
                 setWaitingForPlayer(false); setCards([]); setFlipped([]); setMatched([]);
                 setCurrentPlayer(1); setScores({ player1: 0, player2: 0 });
@@ -266,25 +234,21 @@
             };
 
             const isGameOver = matched.length === TOTAL_CARDS;
-            const isSeriesOver = matchWins.player1 >= 2 || matchWins.player2 >= 2;
 
             if (gameMode === 'menu') {
                 return (
                     <div className="h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-4 flex items-center justify-center">
-                        <div className="bg-gray-800 rounded-2xl shadow-2xl p-8 max-w-md w-full border border-gray-700">
-                            <h1 className="text-4xl font-bold text-center mb-8 text-purple-400">Pexeso</h1>
-                            <div className="space-y-4">
-                                <select value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)}
-                                    className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600">
-                                    {Object.entries(categories).map(([k, v]) => <option key={k} value={k}>{v.name}</option>)}
-                                </select>
-                                <button onClick={initLocalGame} className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 rounded-lg">Lokální hra</button>
-                                <div className="border-t border-gray-600 my-4"></div>
-                                <button onClick={createRoom} className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-4 rounded-lg">Vytvořit místnost</button>
-                                <input type="text" placeholder="Kód" value={joinCode} onChange={e => setJoinCode(e.target.value.toUpperCase())}
-                                    className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg text-center font-mono" maxLength="2" />
-                                <button onClick={joinRoom} className="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-4 rounded-lg">Připojit se</button>
-                            </div>
+                        <div className="bg-gray-800 rounded-2xl p-6 max-w-xs w-full text-center border border-gray-700">
+                            <h1 className="text-3xl font-bold mb-6 text-purple-400">Pexeso</h1>
+                            <select value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)}
+                                className="w-full mb-3 px-3 py-2 bg-gray-700 text-white rounded-lg text-sm">
+                                {Object.entries(categories).map(([k, v]) => <option key={k} value={k}>{v.name}</option>)}
+                            </select>
+                            <button onClick={initLocalGame} className="w-full mb-2 bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg text-sm font-bold">Lokální hra</button>
+                            <button onClick={createRoom} className="w-full mb-2 bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg text-sm font-bold">Vytvořit místnost</button>
+                            <input type="text" placeholder="Kód" value={joinCode} onChange={e => setJoinCode(e.target.value.toUpperCase())}
+                                className="w-full mb-1 px-3 py-2 bg-gray-700 text-white rounded-lg text-center font-mono text-sm" maxLength="2" />
+                            <button onClick={joinRoom} className="w-full bg-purple-500 hover:bg-purple-600 text-white py-3 rounded-lg text-sm font-bold">Připojit se</button>
                         </div>
                     </div>
                 );
@@ -293,64 +257,56 @@
             if (waitingForPlayer) {
                 return (
                     <div className="h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-4 flex items-center justify-center">
-                        <div className="bg-gray-800 rounded-2xl p-8 text-center">
-                            <h2 className="text-3xl font-bold text-white mb-4">Čekám na hráče...</h2>
-                            <p className="text-4xl font-mono text-purple-400">{roomCode}</p>
-                            <button onClick={backToMenu} className="mt-6 bg-red-500 text-white px-6 py-2 rounded-lg">Zpět</button>
+                        <div className="bg-gray-800 rounded-2xl p-6 text-center">
+                            <h2 className="text-2xl font-bold text-white mb-3">Čekám na hráče...</h2>
+                            <p className="text-3xl font-mono text-purple-400">{roomCode}</p>
+                            <button onClick={backToMenu} className="mt-4 bg-red-500 text-white px-5 py-2 rounded-lg text-sm">Zpět</button>
                         </div>
                     </div>
                 );
             }
 
             return (
-                <div className="h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-2 flex flex-col overflow-hidden">
-                    <div className="w-full h-full flex flex-col max-w-2xl mx-auto">
-                        <div className="flex items-center justify-between mb-1">
-                            <button onClick={backToMenu} className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm font-bold">Menu</button>
-                            <h1 className="text-xl md:text-2xl font-bold text-white text-center flex-1">Pexeso</h1>
-                            {isOnline && <div className="bg-gray-700 px-3 py-1 rounded-lg text-sm font-mono text-white">{roomCode}</div>}
+                <div className="h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-1 flex flex-col">
+                    <div className="max-w-2xl mx-auto w-full h-full flex flex-col gap-1">
+                        <div className="flex justify-between items-center text-white text-xs">
+                            <button onClick={backToMenu} className="bg-red-500 px-2 py-1 rounded text-xs">Menu</button>
+                            <h1 className="font-bold">Pexeso</h1>
+                            {isOnline && <div className="bg-gray-700 px-2 py-1 rounded text-xs font-mono">{roomCode}</div>}
                         </div>
 
-                        <div className="bg-gray-800 rounded-lg shadow-xl p-2 mb-1 flex-shrink-0 border border-gray-700">
-                            <div className="flex justify-between items-center">
-                                <div className={`flex-1 p-1.5 rounded-lg ${currentPlayer === 1 && !isGameOver ? 'bg-blue-500 text-white' : 'bg-gray-700 text-gray-300'}`}>
-                                    <div className="text-xs md:text-sm font-bold">Hráč 1 {isOnline && playerNumber === 1 && '(Ty)'}</div>
-                                    <div className="text-lg md:text-2xl font-bold">{scores.player1}</div>
-                                </div>
-                                {!isOnline && (
-                                    <button onClick={initLocalGame} className="mx-1.5 bg-green-500 p-2 rounded-full">
-                                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                                    </button>
-                                )}
-                                <div className={`flex-1 p-1.5 rounded-lg ${currentPlayer === 2 && !isGameOver ? 'bg-red-500 text-white' : 'bg-gray-700 text-gray-300'}`}>
-                                    <div className="text-xs md:text-sm font-bold">Hráč 2 {isOnline && playerNumber === 2 && '(Ty)'}</div>
-                                    <div className="text-lg md:text-2xl font-bold">{scores.player2}</div>
-                                </div>
+                        {/* ZMENŠENÝ SKÓRE PANEL */}
+                        <div className="score-panel bg-gray-800 rounded-lg border border-gray-700 flex items-center justify-between">
+                            <div className={`score-box flex-1 text-center ${currentPlayer === 1 ? 'bg-blue-500 text-white' : 'bg-gray-700 text-gray-300'}`}>
+                                <div className="label">Hráč 1 {isOnline && playerNumber === 1 && '(Ty)'}</div>
+                                <div className="value font-bold">{scores.player1}</div>
+                            </div>
+                            {!isOnline && (
+                                <button onClick={initLocalGame} className="mx-1 bg-green-500 p-1.5 rounded-full">
+                                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                                </button>
+                            )}
+                            <div className={`score-box flex-1 text-center ${currentPlayer === 2 ? 'bg-red-500 text-white' : 'bg-gray-700 text-gray-300'}`}>
+                                <div className="label">Hráč 2 {isOnline && playerNumber === 2 && '(Ty)'}</div>
+                                <div className="value font-bold">{scores.player2}</div>
                             </div>
                         </div>
 
-                        <div className="bg-gray-800 rounded-lg shadow-xl p-2 flex-1 overflow-hidden border border-gray-700 min-h-0">
+                        {/* GRID – PLNÁ VÝŠKA */}
+                        <div className="flex-1 bg-gray-800 rounded-lg p-1 border border-gray-700 overflow-hidden">
                             <div className="game-grid">
-                                {cards.map((card, index) => {
-                                    const isFlipped = flipped.includes(index);
-                                    const isMatched = matched.includes(index);
+                                {cards.map((card, i) => {
+                                    const isFlipped = flipped.includes(i);
+                                    const isMatched = matched.includes(i);
                                     return (
-                                        <button
-                                            key={index}
-                                            onClick={() => handleCardClick(index)}
-                                            className={`card-button transition-all duration-300 ${isMatched ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
-                                            style={{
-                                                backgroundColor: isFlipped || isMatched ? 'transparent' : '#6B7280',
-                                                cursor: canFlip && !isFlipped && !isMatched && (!isOnline || currentPlayer === playerNumber) ? 'pointer' : 'default'
-                                            }}
-                                            disabled={!canFlip || isFlipped || isMatched || (isOnline && currentPlayer !== playerNumber)}
-                                        >
+                                        <button key={i} onClick={() => handleCardClick(i)} className="card-button"
+                                            style={{ backgroundColor: isFlipped || isMatched ? 'transparent' : '#6B7280' }}
+                                            disabled={!canFlip || isFlipped || isMatched || (isOnline && currentPlayer !== playerNumber)}>
                                             <div className="w-full h-full flex items-center justify-center">
-                                                {(isFlipped || isMatched) ? (
-                                                    <img src={card.animal} alt="obrázek" className="card-image" />
-                                                ) : (
-                                                    <span className="text-black text-2xl md:text-2xl" style={{fontFamily: 'Great Vibes, cursive'}}>A</span>
-                                                )}
+                                                {isFlipped || isMatched ? 
+                                                    <img src={card.animal} alt="" className="card-image" /> : 
+                                                    <span style={{fontFamily: 'Great Vibes, cursive', color: 'black', fontSize: '1.5rem'}}>A</span>
+                                                }
                                             </div>
                                         </button>
                                     );
