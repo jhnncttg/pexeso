@@ -27,40 +27,59 @@
             overflow: hidden;
         }
 
-        /* === ČTVERCOVÉ KARTY – ZÁKLAD === */
-        .game-grid {
-            display: grid;
-            gap: 0.25rem;
+        /* === ČTVERCOVÉ KARTY – HLAVNÍ FIX === */
+        .game-container {
             width: 100%;
             height: 100%;
-            margin: 0 auto;
-            container-type: inline-size;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+
+        .game-grid {
+            display: grid;
+            gap: 0.35rem;
+            width: 100%;
+            height: 100%;
+            max-width: 90vmin;
+            max-height: 90vmin;
+            aspect-ratio: 1 / 1; /* Zaručí čtverec */
         }
 
         @media (orientation: portrait) {
             .game-grid {
                 grid-template-columns: repeat(6, 1fr);
-                grid-template-rows: repeat(10, 1fr);
-                max-width: 60dvh;
-                max-height: calc(var(--vh, 1dvh) * 60);
+                grid-template-rows: repeat(6, 1fr);
             }
         }
 
         @media (orientation: landscape) {
             .game-grid {
                 grid-template-columns: repeat(10, 1fr);
-                grid-template-rows: repeat(6, 1fr);
-                max-width: 100dvh;
-                max-height: calc(var(--vh, 1dvh) * 100);
+                grid-template-rows: repeat(10, 1fr);
             }
         }
 
-        /* VŠECHNY BUŇKY JSOU ČTVERCOVÉ */
-        .game-grid > * {
+        /* Každá karta je čtverec */
+        .card-button {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            border: none;
+            background: none;
+            cursor: pointer;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            transition: transform 0.2s ease;
             aspect-ratio: 1 / 1;
         }
 
-        /* ZADNÍ STRANA KARTY */
+        .card-button:hover:not(:disabled) {
+            transform: scale(1.05);
+        }
+
         .card-back {
             width: 100%;
             height: 100%;
@@ -72,52 +91,29 @@
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
         }
 
-        /* PŘEDNÍ STRANA – CELÝ OBRÁZEK, BEZ OŘEZU */
         .card-front {
             width: 100%;
             height: 100%;
             background-color: #1a1a2e;
             border-radius: 0.5rem;
-            padding: 10%; /* Hezké orámování – můžeš smazat */
+            padding: 12%;
             box-sizing: border-box;
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
         }
 
         .card-front img {
             width: 100%;
             height: 100%;
-            object-fit: contain; /* CELÝ OBRÁZEK, ŽÁDNÝ OŘEZ */
+            object-fit: contain;
             display: block;
         }
 
-        /* TLAČÍTKO KARTY */
-        .card-button {
-            width: 100%;
-            height: 100%;
-            padding: 0;
-            border: none;
-            background: none;
-            cursor: pointer;
-            transition: transform 0.2s ease;
-            border-radius: 0.5rem;
-            overflow: hidden;
-        }
-
-        .card-button:hover:not(:disabled) {
-            transform: scale(1.05);
-        }
-
-        .card-button:disabled {
-            cursor: default;
-        }
-
         @media (max-width: 640px) {
-            .game-grid { gap: 0.15rem; }
-            .card-back, .card-front { border-radius: 0.25rem; }
+            .game-grid { gap: 0.25rem; }
             .card-front { padding: 8%; }
+            .card-back, .card-front, .card-button { border-radius: 0.3rem; }
         }
 
         @supports not (height: 100dvh) {
@@ -129,9 +125,8 @@
     <div id="root"></div>
     
     <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+        const { useState, useRef } = React;
 
-        // === Firebase ===
         const firebaseConfig = {
             apiKey: "AIzaSyBLtCRf4_OYedrTrdizRRCFLN0FIk-bnIE",
             authDomain: "pexeso-game.firebaseapp.com",
@@ -142,52 +137,43 @@
             appId: "1:1770108821:web:53089614906957421fe89c"
         };
 
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // === KATEGORIE ===
         const categories = {
-            animals: {
-                name: "Zvířata",
-                images: [
-                    'images/animals/amstaf.png', 'images/animals/bear.png', 'images/animals/bengal.png',
-                    'images/animals/bird.png', 'images/animals/bonemouth.png', 'images/animals/butterfly.png',
-                    'images/animals/cat.png', 'images/animals/chicken.png', 'images/animals/cobra.png',
-                    'images/animals/dog.png', 'images/animals/dolphin.png', 'images/animals/elephant.png',
-                    'images/animals/fenix.png', 'images/animals/fish.png', 'images/animals/frog.png',
-                    'images/animals/girafe.png', 'images/animals/goat.png', 'images/animals/gorila.png',
-                    'images/animals/hamster.png', 'images/animals/horse.png', 'images/animals/kokr.png',
-                    'images/animals/labrador.png', 'images/animals/labut.png', 'images/animals/leguan.png',
-                    'images/animals/levhart.png', 'images/animals/lion.png', 'images/animals/monkey.png',
-                    'images/animals/motyl.png', 'images/animals/neon.png', 'images/animals/parrot.png',
-                    'images/animals/pav.png', 'images/animals/pelikan.png', 'images/animals/pinguin.png',
-                    'images/animals/retrivr.png', 'images/animals/rotvik.png', 'images/animals/skalar.png',
-                    'images/animals/star.png', 'images/animals/sykora.png', 'images/animals/tiger.png',
-                    'images/animals/turtle.png', 'images/animals/vlcak.png', 'images/animals/wolf.png'
-                ]
-            },
-            biblical: {
-                name: "Biblické",
-                images: [
-                    "images/biblical/aron.png", "images/biblical/baptizo.png", "images/biblical/Dorkas.png",
-                    "images/biblical/farizeus.png", "images/biblical/fish.png", "images/biblical/fisherman.png",
-                    "images/biblical/grave.png", "images/biblical/herodes.png", "images/biblical/jericho.png",
-                    "images/biblical/jesus.png", "images/biblical/jesuscloud.png", "images/biblical/jesuszjeveni.png",
-                    "images/biblical/jidas.png", "images/biblical/john.png", "images/biblical/Josef.png",
-                    "images/biblical/jozue2.png", "images/biblical/lazar.png", "images/biblical/maria.png",
-                    "images/biblical/moses.png", "images/biblical/natanael.png", "images/biblical/onezim.png",
-                    "images/biblical/oslatko.png", "images/biblical/ovce.png", "images/biblical/palm.png",
-                    "images/biblical/paul.png", "images/biblical/sea.png", "images/biblical/snake.png",
-                    "images/biblical/sun.png", "images/biblical/wine.png", "images/biblical/zebedej.png"
-                ]
-            }
+            animals: { name: "Zvířata", images: [
+                'images/animals/amstaf.png', 'images/animals/bear.png', 'images/animals/bengal.png',
+                'images/animals/bird.png', 'images/animals/bonemouth.png', 'images/animals/butterfly.png',
+                'images/animals/cat.png', 'images/animals/chicken.png', 'images/animals/cobra.png',
+                'images/animals/dog.png', 'images/animals/dolphin.png', 'images/animals/elephant.png',
+                'images/animals/fenix.png', 'images/animals/fish.png', 'images/animals/frog.png',
+                'images/animals/girafe.png', 'images/animals/goat.png', 'images/animals/gorila.png',
+                'images/animals/hamster.png', 'images/animals/horse.png', 'images/animals/kokr.png',
+                'images/animals/labrador.png', 'images/animals/labut.png', 'images/animals/leguan.png',
+                'images/animals/levhart.png', 'images/animals/lion.png', 'images/animals/monkey.png',
+                'images/animals/motyl.png', 'images/animals/neon.png', 'images/animals/parrot.png',
+                'images/animals/pav.png', 'images/animals/pelikan.png', 'images/animals/pinguin.png',
+                'images/animals/retrivr.png', 'images/animals/rotvik.png', 'images/animals/skalar.png',
+                'images/animals/star.png', 'images/animals/sykora.png', 'images/animals/tiger.png',
+                'images/animals/turtle.png', 'images/animals/vlcak.png', 'images/animals/wolf.png'
+            ]},
+            biblical: { name: "Biblické", images: [
+                "images/biblical/aron.png", "images/biblical/baptizo.png", "images/biblical/Dorkas.png",
+                "images/biblical/farizeus.png", "images/biblical/fish.png", "images/biblical/fisherman.png",
+                "images/biblical/grave.png", "images/biblical/herodes.png", "images/biblical/jericho.png",
+                "images/biblical/jesus.png", "images/biblical/jesuscloud.png", "images/biblical/jesuszjeveni.png",
+                "images/biblical/jidas.png", "images/biblical/john.png", "images/biblical/Josef.png",
+                "images/biblical/jozue2.png", "images/biblical/lazar.png", "images/biblical/maria.png",
+                "images/biblical/moses.png", "images/biblical/natanael.png", "images/biblical/onezim.png",
+                "images/biblical/oslatko.png", "images/biblical/ovce.png", "images/biblical/palm.png",
+                "images/biblical/paul.png", "images/biblical/sea.png", "images/biblical/snake.png",
+                "images/biblical/sun.png", "images/biblical/wine.png", "images/biblical/zebedej.png"
+            ]}
         };
 
         const PexesoGame = () => {
             const TOTAL_CARDS = 60;
-            const PAIRS = TOTAL_CARDS / 2;
+            const PAIRS = 30;
 
             const [gameMode, setGameMode] = useState('menu');
             const [selectedCategory, setSelectedCategory] = useState('animals');
@@ -197,8 +183,6 @@
             const [currentPlayer, setCurrentPlayer] = useState(1);
             const [scores, setScores] = useState({ player1: 0, player2: 0 });
             const [canFlip, setCanFlip] = useState(true);
-            const [matchWins, setMatchWins] = useState({ player1: 0, player2: 0 });
-            const [readyForNextRound, setReadyForNextRound] = useState({ player1: false, player2: false });
             const [roomCode, setRoomCode] = useState('');
             const [joinCode, setJoinCode] = useState('');
             const [playerNumber, setPlayerNumber] = useState(null);
@@ -207,10 +191,8 @@
             const roomRef = useRef(null);
             const isOnline = gameMode === 'online';
 
-            const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F'];
-
-            const getRandomImages = (count, categoryKey) => {
-                const cat = categories[categoryKey];
+            const getRandomImages = (count, catKey) => {
+                const cat = categories[catKey];
                 if (!cat || cat.images.length < count) return [];
                 const shuffled = [...cat.images].sort(() => Math.random() - 0.5);
                 return shuffled.slice(0, count);
@@ -223,22 +205,17 @@
 
             const createRoom = async () => {
                 const code = generateRoomCode();
-                const selectedImages = getRandomImages(PAIRS, selectedCategory);
-                const cardValues = [];
-                for (let i = 0; i < PAIRS; i++) cardValues.push(i, i);
-                
-                const shuffled = cardValues
-                    .map(value => ({ value, animal: selectedImages[value], sort: Math.random() }))
+                const images = getRandomImages(PAIRS, selectedCategory);
+                const values = [];
+                for (let i = 0; i < PAIRS; i++) values.push(i, i);
+                const shuffled = values
+                    .map((v, i) => ({ value: v, animal: images[Math.floor(i/2)], sort: Math.random() }))
                     .sort((a, b) => a.sort - b.sort)
                     .map(({ value, animal }) => ({ value, animal }));
 
                 await database.ref('rooms/' + code).set({
-                    cards: shuffled,
-                    flipped: [], matched: [], currentPlayer: 1,
-                    scores: { player1: 0, player2: 0 },
-                    matchWins: { player1: 0, player2: 0 },
-                    readyForNextRound: { player1: false, player2: false },
-                    players: { player1: true, player2: false },
+                    cards: shuffled, flipped: [], matched: [], currentPlayer: 1,
+                    scores: { player1: 0, player2: 0 }, players: { player1: true, player2: false },
                     category: selectedCategory
                 });
 
@@ -251,7 +228,6 @@
                 const snap = await database.ref('rooms/' + code).once('value');
                 if (!snap.exists()) return alert('Místnost nenalezena!');
                 if (snap.val().players.player2) return alert('Místnost plná!');
-
                 await database.ref('rooms/' + code + '/players/player2').set(true);
                 setRoomCode(code); setPlayerNumber(2); setGameMode('online'); setWaitingForPlayer(false);
                 listenToRoom(code);
@@ -267,8 +243,6 @@
                         setMatched(data.matched || []);
                         setCurrentPlayer(data.currentPlayer || 1);
                         setScores(data.scores || { player1: 0, player2: 0 });
-                        setMatchWins(data.matchWins || { player1: 0, player2: 0 });
-                        setReadyForNextRound(data.readyForNextRound || { player1: false, player2: false });
                         setSelectedCategory(data.category || 'animals');
                         if (data.players.player2) setWaitingForPlayer(false);
                     }
@@ -279,37 +253,14 @@
                 if (roomRef.current) await roomRef.current.update(updates);
             };
 
-            const startNextRound = async () => {
-                const selectedImages = getRandomImages(PAIRS, selectedCategory);
-                const cardValues = [];
-                for (let i = 0; i < PAIRS; i++) cardValues.push(i, i);
-                const shuffled = cardValues
-                    .map(value => ({ value, animal: selectedImages[value], sort: Math.random() }))
-                    .sort((a, b) => a.sort - b.sort)
-                    .map(({ value, animal }) => ({ value, animal }));
-
-                await updateRoom({
-                    cards: shuffled, flipped: [], matched: [], currentPlayer: 1,
-                    scores: { player1: 0, player2: 0 },
-                    readyForNextRound: { player1: false, player2: false }
-                });
-            };
-
-            const handleReadyForNextRound = async () => {
-                const newReady = { ...readyForNextRound, [`player${playerNumber}`]: true };
-                await updateRoom({ readyForNextRound: newReady });
-                if (newReady.player1 && newReady.player2) setTimeout(startNextRound, 500);
-            };
-
             const initLocalGame = () => {
-                const selectedImages = getRandomImages(PAIRS, selectedCategory);
-                const cardValues = [];
-                for (let i = 0; i < PAIRS; i++) cardValues.push(i, i);
-                const shuffled = cardValues
-                    .map(value => ({ value, animal: selectedImages[value], sort: Math.random() }))
+                const images = getRandomImages(PAIRS, selectedCategory);
+                const values = [];
+                for (let i = 0; i < PAIRS; i++) values.push(i, i);
+                const shuffled = values
+                    .map((v, i) => ({ value: v, animal: images[Math.floor(i/2)], sort: Math.random() }))
                     .sort((a, b) => a.sort - b.sort)
                     .map(({ value, animal }) => ({ value, animal }));
-                
                 setCards(shuffled); setFlipped([]); setMatched([]); setCurrentPlayer(1);
                 setScores({ player1: 0, player2: 0 }); setCanFlip(true); setGameMode('local');
             };
@@ -329,12 +280,7 @@
                         setTimeout(async () => {
                             const newMatched = [...matched, a, b];
                             const newScores = { ...scores, [`player${currentPlayer}`]: scores[`player${currentPlayer}`] + 1 };
-                            if (newMatched.length === TOTAL_CARDS && isOnline) {
-                                const newWins = { ...matchWins };
-                                if (newScores.player1 > newScores.player2) newWins.player1++;
-                                else if (newScores.player2 > newScores.player1) newWins.player2++;
-                                await updateRoom({ matched: newMatched, scores: newScores, matchWins: newWins, flipped: [] });
-                            } else if (isOnline) {
+                            if (isOnline) {
                                 await updateRoom({ matched: newMatched, scores: newScores, flipped: [] });
                             } else {
                                 setMatched(newMatched); setScores(newScores); setFlipped([]);
@@ -357,29 +303,22 @@
                 setGameMode('menu'); setRoomCode(''); setJoinCode(''); setPlayerNumber(null);
                 setWaitingForPlayer(false); setCards([]); setFlipped([]); setMatched([]);
                 setCurrentPlayer(1); setScores({ player1: 0, player2: 0 });
-                setMatchWins({ player1: 0, player2: 0 }); setReadyForNextRound({ player1: false, player2: false });
             };
-
-            const isGameOver = matched.length === TOTAL_CARDS;
-            const isSeriesOver = matchWins.player1 >= 2 || matchWins.player2 >= 2;
 
             if (gameMode === 'menu') {
                 return (
                     <div className="h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-4 flex items-center justify-center">
-                        <div className="bg-gray-800 rounded-2xl shadow-2xl p-8 max-w-md w-full border border-gray-700">
-                            <h1 className="text-4xl font-bold text-center mb-8 text-purple-400">Pexeso</h1>
-                            <div className="space-y-4">
-                                <select value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)}
-                                    className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600">
-                                    {Object.entries(categories).map(([k, v]) => <option key={k} value={k}>{v.name}</option>)}
-                                </select>
-                                <button onClick={initLocalGame} className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 rounded-lg">Lokální hra</button>
-                                <div className="border-t border-gray-600 my-4"></div>
-                                <button onClick={createRoom} className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-4 rounded-lg">Vytvořit místnost</button>
-                                <input type="text" placeholder="Kód" value={joinCode} onChange={e => setJoinCode(e.target.value.toUpperCase())}
-                                    className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg text-center font-mono" maxLength="2" />
-                                <button onClick={joinRoom} className="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-4 rounded-lg">Připojit se</button>
-                            </div>
+                        <div className="bg-gray-800 rounded-2xl p-8 max-w-md w-full text-center border border-gray-700">
+                            <h1 className="text-4xl font-bold mb-8 text-purple-400">Pexeso</h1>
+                            <select value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)}
+                                className="w-full mb-4 px-4 py-3 bg-gray-700 text-white rounded-lg">
+                                {Object.entries(categories).map(([k, v]) => <option key={k} value={k}>{v.name}</option>)}
+                            </select>
+                            <button onClick={initLocalGame} className="w-full mb-3 bg-blue-500 hover:bg-blue-600 text-white py-4 rounded-lg font-bold">Lokální hra</button>
+                            <button onClick={createRoom} className="w-full mb-3 bg-green-500 hover:bg-green-600 text-white py-4 rounded-lg font-bold">Vytvořit místnost</button>
+                            <input type="text" placeholder="Kód" value={joinCode} onChange={e => setJoinCode(e.target.value.toUpperCase())}
+                                className="w-full mb-2 px-4 py-3 bg-gray-700 text-white rounded-lg text-center font-mono" maxLength="2" />
+                            <button onClick={joinRoom} className="w-full bg-purple-500 hover:bg-purple-600 text-white py-4 rounded-lg font-bold">Připojit se</button>
                         </div>
                     </div>
                 );
@@ -399,17 +338,17 @@
 
             return (
                 <div className="h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-2 flex flex-col">
-                    <div className="max-w-2xl mx-auto w-full flex flex-col h-full">
-                        <div className="flex justify-between items-center mb-2">
+                    <div className="max-w-2xl mx-auto w-full flex flex-col h-full gap-2">
+                        <div className="flex justify-between items-center">
                             <button onClick={backToMenu} className="bg-red-500 text-white px-3 py-1 rounded-lg text-sm">Menu</button>
                             <h1 className="text-2xl font-bold text-white">Pexeso</h1>
                             {isOnline && <div className="bg-gray-700 px-3 py-1 rounded-lg text-sm font-mono text-white">{roomCode}</div>}
                         </div>
 
-                        <div className="bg-gray-800 rounded-lg p-2 mb-2 border border-gray-700">
+                        <div className="bg-gray-800 rounded-lg p-2 border border-gray-700">
                             <div className="flex justify-between items-center">
-                                <div className={`flex-1 p-2 rounded-lg text-center ${currentPlayer === 1 && !isGameOver ? 'bg-blue-500 text-white' : 'bg-gray-700 text-gray-300'}`}>
-                                    <div className="text-sm font-bold">Hráč 1 {isOnline && playerNumber === 1 && '(Ty)'}</div>
+                                <div className={`flex-1 p-2 rounded-lg text-center ${currentPlayer === 1 ? 'bg-blue-500 text-white' : 'bg-gray-700 text-gray-300'}`}>
+                                    <div className="text-sm font-bold">Hráč 1</div>
                                     <div className="text-2xl font-bold">{scores.player1}</div>
                                 </div>
                                 {!isOnline && (
@@ -417,22 +356,14 @@
                                         <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                                     </button>
                                 )}
-                                <div className={`flex-1 p-2 rounded-lg text-center ${currentPlayer === 2 && !isGameOver ? 'bg-red-500 text-white' : 'bg-gray-700 text-gray-300'}`}>
-                                    <div className="text-sm font-bold">Hráč 2 {isOnline && playerNumber === 2 && '(Ty)'}</div>
+                                <div className={`flex-1 p-2 rounded-lg text-center ${currentPlayer === 2 ? 'bg-red-500 text-white' : 'bg-gray-700 text-gray-300'}`}>
+                                    <div className="text-sm font-bold">Hráč 2</div>
                                     <div className="text-2xl font-bold">{scores.player2}</div>
                                 </div>
                             </div>
-                            {isGameOver && !isSeriesOver && isOnline && (
-                                <div className="mt-2 text-center">
-                                    <button onClick={handleReadyForNextRound} disabled={readyForNextRound[`player${playerNumber}`]}
-                                        className={`px-4 py-1 rounded-lg text-sm font-bold ${readyForNextRound[`player${playerNumber}`] ? 'bg-gray-600' : 'bg-green-500 hover:bg-green-600 text-white'}`}>
-                                        {readyForNextRound[`player${playerNumber}`] ? 'Připraven' : 'Další kolo'}
-                                    </button>
-                                </div>
-                            )}
                         </div>
 
-                        <div className="flex-1 bg-gray-800 rounded-lg p-2 overflow-hidden border border-gray-700">
+                        <div className="game-container">
                             <div className="game-grid">
                                 {cards.map((card, i) => {
                                     const isFlipped = flipped.includes(i);
@@ -459,7 +390,6 @@
             );
         };
 
-        // === iOS FIX ===
         const setVH = () => {
             const vh = window.innerHeight * 0.01;
             document.documentElement.style.setProperty('--vh', `${vh}px`);
