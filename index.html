@@ -16,84 +16,84 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
-      :root {
-          --vh: 1vh; /* Fallback pro JS */
-      }
+        :root {
+            --vh: 1vh;
+        }
 
-      body {
-          margin: 0;
-          padding: 0;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-          touch-action: manipulation;
-          background-color: #1a1a2e;
-          height: 100dvh;
-          overflow: hidden;
-      }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            touch-action: manipulation;
+            background-color: #1a1a2e;
+            height: 100dvh;
+            overflow: hidden;
+        }
 
-      .card-image {
-          width: 100%;
-          height: 100%;
-          object-fit: contain;
-          padding: 2px;
-          background-color: transparent;
-          display: block;
-      }
+        /* === ČTVERCOVÉ KARTIČKY – HLAVNÍ FIX === */
+        .game-grid {
+            display: grid;
+            gap: 0.25rem;
+            width: 100%;
+            height: 100%;
+            margin: 0 auto;
+            container-type: inline-size;
+        }
 
-      /* Základní nastavení pro portrait (mobil) */
-      .game-grid {
-          display: grid;
-          gap: 0.25rem;
-          width: 100%;
-          height: 100%;
-          margin: 0 auto;
-      }
+        @media (orientation: portrait) {
+            .game-grid {
+                grid-template-columns: repeat(6, 1fr);
+                grid-template-rows: repeat(10, 1fr);
+                max-width: 60dvh;
+                max-height: calc(var(--vh, 1dvh) * 60);
+            }
+        }
 
-      /* Mobil/Tablet na výšku: 6 sloupců × 10 řádků */
-      @media (orientation: portrait) {
-          .game-grid {
-              grid-template-columns: repeat(6, 1fr);
-              grid-template-rows: repeat(10, 1fr);
-              max-width: 60dvh;
-              max-height: calc(var(--vh, 1dvh) * 60);
-          }
-      }
+        @media (orientation: landscape) {
+            .game-grid {
+                grid-template-columns: repeat(10, 1fr);
+                grid-template-rows: repeat(6, 1fr);
+                max-width: 100dvh;
+                max-height: calc(var(--vh, 1dvh) * 100);
+            }
+        }
 
-      /* Desktop/Tablet na šířku: 10 sloupců × 6 řádků */
-      @media (orientation: landscape) {
-          .game-grid {
-              grid-template-columns: repeat(10, 1fr);
-              grid-template-rows: repeat(6, 1fr);
-              max-width: 100dvh;
-              max-height: calc(var(--vh, 1dvh) * 100);
-          }
-      }
+        /* Všechny buňky jsou čtvercové */
+        .game-grid > * {
+            aspect-ratio: 1 / 1;
+        }
 
-      .card-button {
-          width: 100%;
-          height: 100%;
-          position: relative;
-          border-radius: 0.5rem;
-          transition: all 0.3s;
-      }
+        /* Obrázek vyplní celou kartu */
+        .card-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 0.5rem;
+            display: block;
+        }
 
-      @media (max-width: 640px) {
-          .game-grid {
-              gap: 0.15rem;
-          }
-          .card-button {
-              border-radius: 0.25rem;
-          }
-      }
+        .card-button {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            transition: all 0.3s;
+            background-color: #6B7280;
+        }
 
-      /* Fallback pro prohlížeče bez dvh */
-      @supports not (height: 100dvh) {
-          body {
-              height: 100vh;
-          }
-          .game-grid {
-              max-height: calc(var(--vh, 1vh) * 60);
-          }
-      }
+        @media (max-width: 640px) {
+            .game-grid {
+                gap: 0.15rem;
+            }
+            .card-button, .card-image {
+                border-radius: 0.25rem;
+            }
+        }
+
+        @supports not (height: 100dvh) {
+            body { height: 100vh; }
+        }
     </style>
 </head>
 <body>
@@ -689,16 +689,19 @@
                                                 isMatched ? 'opacity-0 pointer-events-none' : 'opacity-100'
                                             }`}
                                             style={{
-                                                backgroundColor: isFlipped || isMatched ? 'transparent' : '#6B7280',
                                                 cursor: canFlip && !isFlipped && !isMatched && (!isOnline || currentPlayer === playerNumber) ? 'pointer' : 'default'
                                             }}
                                             disabled={!canFlip || isFlipped || isMatched || (isOnline && currentPlayer !== playerNumber)}
                                         >
                                            <div className="w-full h-full flex items-center justify-center">
                                                 {(isFlipped || isMatched) ? (
-                                                    <img src={card.animal} alt="obrázek" className="card-image" />
+                                                    <img 
+                                                        src={card.animal} 
+                                                        alt="obrázek" 
+                                                        className="card-image"
+                                                    />
                                                 ) : (
-                                                    <span className="text-black text-2xl md:text-2xl font-italic" style={{fontFamily: 'Great Vibes, cursive'}}>A</span>
+                                                    <span className="text-black text-2xl md:text-2xl" style={{fontFamily: 'Great Vibes, cursive'}}>A</span>
                                                 )}
                                             </div>
                                         </button>
