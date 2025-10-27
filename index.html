@@ -16,22 +16,12 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
-      
       body {
     margin: 0;
     padding: 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
     touch-action: manipulation;
     background-color: #1a1a2e;
-}
-      
-#root {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    overflow: hidden;
 }
 
 .card-image {
@@ -565,7 +555,7 @@
                             )}
                         </div>
                         
-    <div className="bg-gray-800 rounded-lg shadow-xl p-1 mb-0.5 flex-shrink-0 border border-gray-700">
+                        <div className="bg-gray-800 rounded-lg shadow-xl p-2 mb-1 flex-shrink-0 border border-gray-700">
                             {isOnline && totalGamesPlayed < 3 && (
                                 <div className="flex justify-center gap-2 mb-2">
                                     <div className="text-xs font-bold text-gray-400">Best of 3:</div>
@@ -584,7 +574,7 @@
 
                             <div className="flex justify-between items-center">
                                 <div className={`flex-1 p-1.5 rounded-lg ${currentPlayer === 1 && !isGameOver ? 'bg-blue-500 text-white' : 'bg-gray-700 text-gray-300'}`}>
-                                    <div className="text-[10px] md:text-xs font-bold">
+                                    <div className="text-xs md:text-sm font-bold">
                                         Hráč 1 {isOnline && playerNumber === 1 && '(Ty)'}
                                         {isOnline && <span className="ml-1">{matchWins.player1}</span>}
                                     </div>
@@ -606,7 +596,7 @@
                                 )}
                                 
                                 <div className={`flex-1 p-1.5 rounded-lg ${currentPlayer === 2 && !isGameOver ? 'bg-red-500 text-white' : 'bg-gray-700 text-gray-300'}`}>
-                                    <div className="text-[10px] md:text-xs font-bold"> 
+                                    <div className="text-xs md:text-sm font-bold">
                                         Hráč 2 {isOnline && playerNumber === 2 && '(Ty)'}
                                         {isOnline && <span className="ml-1">{matchWins.player2}</span>}
                                     </div>
