@@ -24,15 +24,6 @@
     background-color: #1a1a2e;
 }
 
-#root {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    overflow: hidden;
-}
-
 .card-image {
     width: 100%;
     height: 100%;
@@ -161,7 +152,7 @@
             const PAIRS = TOTAL_CARDS / 2;
 
             const [gameMode, setGameMode] = useState('menu');
-            const [selectedCategory, setSelectedCategory] = useState('animals'); // ← nový stav
+            const [selectedCategory, setSelectedCategory] = useState('animals');
             const [roomCode, setRoomCode] = useState('');
             const [joinCode, setJoinCode] = useState('');
             const [playerNumber, setPlayerNumber] = useState(null);
@@ -234,7 +225,7 @@
                     matchWins: { player1: 0, player2: 0 },
                     readyForNextRound: { player1: false, player2: false },
                     players: { player1: true, player2: false },
-                    category: selectedCategory, // uložíme kategorii
+                    category: selectedCategory,
                     createdAt: Date.now()
                 });
 
@@ -262,7 +253,6 @@
                     return;
                 }
 
-                // Načti kategorii z místnosti
                 setSelectedCategory(roomData.category || 'animals');
 
                 await database.ref('rooms/' + code + '/players/player2').set(true);
@@ -547,32 +537,33 @@
             }
 
             return (
-                <div className="h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-2 pb-4 flex flex-col overflow-hidden">
+                <div className="h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-2 flex flex-col overflow-hidden">
                     <div className="w-full h-full flex flex-col max-w-2xl mx-auto">
-                        <div className="flex items-center justify-between mb-0.5">
+                        <div className="flex items-center justify-between mb-1">
                             <button
                                 onClick={backToMenu}
-                                className="bg-red-500 hover:bg-red-600 text-white px-2 py-0.5 rounded text-xs font-bold"
+                                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm font-bold"
                             >
                                 ← Menu
                             </button>
-                            <h1 className="text-lg md:text-xl font-bold text-white text-center flex-1">Pexeso</h1>
+                            <h1 className="text-xl md:text-2xl font-bold text-white text-center flex-1">Pexeso</h1>
                             {isOnline && (
-                                <div className="bg-gray-700 px-2 py-0.5 rounded text-xs font-mono font-bold text-white border border-gray-600">
+                                <div className="bg-gray-700 px-3 py-1 rounded-lg text-sm font-mono font-bold text-white border border-gray-600">
                                     {roomCode}
                                 </div>
                             )}
                         </div>
                         
-                        <div className="bg-gray-800 rounded-lg shadow-xl p-1 mb-0.5 flex-shrink-0 border border-gray-700">
+                        <div className="bg-gray-800 rounded-lg shadow-xl p-1 mb-1 flex-shrink-0 border border-gray-700">
                             {isOnline && totalGamesPlayed < 3 && (
-                                <div className="flex justify-center gap-2 mb-2">
+                                <div className="flex justify-center gap-1 mb-1">
                                     <div className="text-xs font-bold text-gray-400">Best of 3:</div>
                                     <div className="flex gap-1">
                                         {[0, 1, 2].map((i) => (
-                                            <div key={i} className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold" style={{
+                                            <div key={i} className="w-4 h-4 rounded-full flex items-center justify-center text-xs font-bold" style={{
                                                 backgroundColor: i < matchWins.player1 ? '#3B82F6' : i < matchWins.player1 + matchWins.player2 ? '#EF4444' : '#E5E7EB',
-                                                color: i < matchWins.player1 + matchWins.player2 ? 'white' : '#9CA3AF'
+                                                color: i < matchWins.player1 + matchWins.player2 ? 'white' : '#9CA3AF',
+                                                fontSize: '10px'
                                             }}>
                                                 {i < matchWins.player1 ? '1' : i < matchWins.player1 + matchWins.player2 ? '2' : '·'}
                                             </div>
@@ -582,14 +573,50 @@
                             )}
 
                             <div className="flex justify-between items-center">
-                                <div className={`flex-1 p-1.5 rounded-lg ${currentPlayer === 1 && !isGameOver ? 'bg-blue-500 text-white' : 'bg-gray-700 text-gray-300'}`}>
-                                    <div className="text-xs md:text-sm text-gray-400 mt-1">
+                                <div className={`flex-1 p-1 rounded-lg ${currentPlayer === 1 && !isGameOver ? 'bg-blue-500 text-white' : 'bg-gray-700 text-gray-300'}`}>
+                                    <div className="text-xs font-bold leading-tight">
+                                        Hráč 1 {isOnline && playerNumber === 1 && '(Ty)'}
+                                        {isOnline && <span className="ml-1">{matchWins.player1}</span>}
+                                    </div>
+                                    <div className="text-base md:text-xl font-bold leading-tight">{scores.player1}</div>
+                                </div>
+                                
+                                {!isOnline && (
+                                    <button
+                                        onClick={initLocalGame}
+                                        className="mx-1 bg-green-500 hover:bg-green-600 text-white p-1.5 rounded-full shadow-lg transition-transform hover:scale-110"
+                                        title="Nová hra"
+                                    >
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <polyline points="23 4 23 10 17 10"></polyline>
+                                            <polyline points="1 20 1 14 7 14"></polyline>
+                                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                                        </svg>
+                                    </button>
+                                )}
+                                
+                                <div className={`flex-1 p-1 rounded-lg ${currentPlayer === 2 && !isGameOver ? 'bg-red-500 text-white' : 'bg-gray-700 text-gray-300'}`}>
+                                    <div className="text-xs font-bold leading-tight">
+                                        Hráč 2 {isOnline && playerNumber === 2 && '(Ty)'}
+                                        {isOnline && <span className="ml-1">{matchWins.player2}</span>}
+                                    </div>
+                                    <div className="text-base md:text-xl font-bold leading-tight">{scores.player2}</div>
+                                </div>
+                            </div>
+
+                            {isGameOver && isOnline && !isSeriesOver && (
+                                <div className="text-center p-1 mt-1 bg-gray-700 rounded-lg border-2 border-yellow-500">
+                                    <div className="text-sm md:text-base font-bold text-white">
+                                        {scores.player1 > scores.player2 ? 'Vyhrál Hráč 1!' : 
+                                         scores.player2 > scores.player1 ? 'Vyhrál Hráč 2!' : 'Remíza!'}
+                                    </div>
+                                    <div className="text-xs text-gray-400 mt-0.5">
                                         Série: {matchWins.player1} - {matchWins.player2}
                                     </div>
                                     <button
                                         onClick={handleReadyForNextRound}
                                         disabled={readyForNextRound[`player${playerNumber}`]}
-                                        className={`mt-2 px-4 py-2 rounded-lg font-bold text-sm ${
+                                        className={`mt-1 px-3 py-1 rounded-lg font-bold text-xs ${
                                             readyForNextRound[`player${playerNumber}`] 
                                                 ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
                                                 : 'bg-green-500 hover:bg-green-600 text-white'
@@ -601,7 +628,7 @@
                                     </button>
                                     {(readyForNextRound.player1 || readyForNextRound.player2) && 
                                      !(readyForNextRound.player1 && readyForNextRound.player2) && (
-                                        <div className="text-xs text-gray-400 mt-1">
+                                        <div className="text-xs text-gray-400 mt-0.5">
                                             Čekám na druhého hráče...
                                         </div>
                                     )}
@@ -609,23 +636,23 @@
                             )}
 
                             {isGameOver && isOnline && isSeriesOver && (
-                                <div className="text-center p-2 mt-1 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-lg border-2 border-yellow-600">
-                                    <div className="text-xl md:text-2xl font-bold text-white mb-1">
+                                <div className="text-center p-1 mt-1 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-lg border-2 border-yellow-600">
+                                    <div className="text-base md:text-lg font-bold text-white mb-0.5">
                                         CELKOVÝ VÍTĚZ!
                                     </div>
-                                    <div className="text-base md:text-xl font-bold text-white">
+                                    <div className="text-sm md:text-base font-bold text-white">
                                         {matchWins.player1 > matchWins.player2 ? 'Hráč 1' : 'Hráč 2'}
                                     </div>
-                                    <div className="text-sm text-white mt-1">
+                                    <div className="text-xs text-white mt-0.5">
                                         Série: {matchWins.player1} - {matchWins.player2}
                                     </div>
                                 </div>
                             )}
 
                             {isGameOver && !isOnline && (
-                                <div className="text-center p-1.5 mt-1 bg-gray-700 rounded-lg border-2 border-yellow-500">
-                                    <div className="text-base md:text-xl font-bold text-white">Konec hry!</div>
-                                    <div className="text-sm md:text-lg text-gray-300">
+                                <div className="text-center p-1 mt-1 bg-gray-700 rounded-lg border-2 border-yellow-500">
+                                    <div className="text-sm md:text-base font-bold text-white">Konec hry!</div>
+                                    <div className="text-xs md:text-sm text-gray-300">
                                         {scores.player1 > scores.player2 ? 'Vyhrál Hráč 1!' : 
                                          scores.player2 > scores.player1 ? 'Vyhrál Hráč 2!' : 
                                          'Remíza!'}
@@ -634,7 +661,7 @@
                             )}
                         </div>
 
-                       <div className="bg-gray-800 rounded-lg shadow-xl p-1.5 flex-1 overflow-hidden border border-gray-700 min-h-0">
+                       <div className="bg-gray-800 rounded-lg shadow-xl p-2 flex-1 overflow-hidden border border-gray-700 min-h-0">
                             <div className="game-grid">
                                 {cards.map((card, index) => {
                                     const isFlipped = flipped.includes(index);
@@ -673,40 +700,4 @@
         ReactDOM.render(<PexesoGame />, document.getElementById('root'));
     </script>
 </body>
-</html>sm font-bold">
-                                        Hráč 1 {isOnline && playerNumber === 1 && '(Ty)'}
-                                        {isOnline && <span className="ml-1">{matchWins.player1}</span>}
-                                    </div>
-                                    <div className="text-lg md:text-2xl font-bold">{scores.player1}</div>
-                                </div>
-                                
-                                {!isOnline && (
-                                    <button
-                                        onClick={initLocalGame}
-                                        className="mx-1 bg-green-500 hover:bg-green-600 text-white p-1.5 rounded-full shadow-lg transition-transform hover:scale-110"
-                                        title="Nová hra"
-                                    >
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <polyline points="23 4 23 10 17 10"></polyline>
-                                            <polyline points="1 20 1 14 7 14"></polyline>
-                                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-                                        </svg>
-                                    </button>
-                                )}
-                                
-                                <div className={`flex-1 p-1 rounded-lg ${currentPlayer === 2 && !isGameOver ? 'bg-red-500 text-white' : 'bg-gray-700 text-gray-300'}`}>
-                                    <div className="text-[10px] md:text-xs font-bold">
-                                        Hráč 2 {isOnline && playerNumber === 2 && '(Ty)'}
-                                        {isOnline && <span className="ml-1">{matchWins.player2}</span>}
-                                    </div>
-                                    <div className="text-base md:text-xl font-bold">{scores.player2}</div>
-                                </div>
-                            </div>
-
-                            {isGameOver && isOnline && !isSeriesOver && (
-                                <div className="text-center p-1.5 mt-1 bg-gray-700 rounded-lg border-2 border-yellow-500">
-                                    <div className="text-base md:text-xl font-bold text-white">
-                                        {scores.player1 > scores.player2 ? 'Vyhrál Hráč 1!' : 
-                                         scores.player2 > scores.player1 ? 'Vyhrál Hráč 2!' : 'Remíza!'}
-                                    </div>
-                                    <div className="text-xs md:text-
+</html>
