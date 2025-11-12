@@ -253,20 +253,14 @@ const launchConfetti = () => {
   const defaults = {
     origin: { x: 0.5, y: 0.5 },
     spread: 360,
-    startVelocity: 20,
+    startVelocity: 5,
     particleCount: 100,
     colors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00'],
     scalar: 1.2,
     zIndex: 999
   };
 
-  const interval = setInterval(() => {
-    if (Date.now() > animationEnd) {
-      clearInterval(interval);
-    } else {
-      confetti(defaults);
-    }
-  }, 250);
+  confetti(defaults);
 
   stopConfetti = () => clearInterval(interval);
 }; 
