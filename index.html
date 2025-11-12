@@ -8,8 +8,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#9333ea">
     <meta name="description" content="Pexeso - A game for two players">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<script type="module" src="https://unpkg.com/@capacitor/core@latest/dist/capacitor.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <script type="module" src="https://unpkg.com/@capacitor/core@latest/dist/capacitor.js"></script>
     <title>Pexeso</title>
     <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
     <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
@@ -35,7 +35,6 @@
     display: block;
 }
 
-/* Základní nastavení pro portrait (mobil) */
 .game-grid {
     display: grid;
     gap: 0.25rem;
@@ -44,18 +43,51 @@
     margin: 0 auto;
 }
 
-/* Mobil/Tablet na výšku: 6 sloupců × 10 řádků */
+/* Easy: 5×4 (portrait) nebo 4×5 (landscape) */
 @media (orientation: portrait) {
-    .game-grid {
+    .game-grid.easy {
+        grid-template-columns: repeat(5, 1fr);
+        grid-template-rows: repeat(4, 1fr);
+        max-width: 50vh;
+    }
+}
+
+@media (orientation: landscape) {
+    .game-grid.easy {
+        grid-template-columns: repeat(4, 1fr);
+        grid-template-rows: repeat(5, 1fr);
+        max-width: 40vh;
+    }
+}
+
+/* Medium: 8×5 (portrait) nebo 5×8 (landscape) */
+@media (orientation: portrait) {
+    .game-grid.medium {
+        grid-template-columns: repeat(8, 1fr);
+        grid-template-rows: repeat(5, 1fr);
+        max-width: 80vh;
+    }
+}
+
+@media (orientation: landscape) {
+    .game-grid.medium {
+        grid-template-columns: repeat(5, 1fr);
+        grid-template-rows: repeat(8, 1fr);
+        max-width: 50vh;
+    }
+}
+
+/* Hard: 10×6 (portrait) nebo 6×10 (landscape) */
+@media (orientation: portrait) {
+    .game-grid.hard {
         grid-template-columns: repeat(6, 1fr);
         grid-template-rows: repeat(10, 1fr);
         max-width: 60vh;
     }
 }
 
-/* Desktop/Tablet na šířku: 10 sloupců × 6 řádků */
 @media (orientation: landscape) {
-    .game-grid {
+    .game-grid.hard {
         grid-template-columns: repeat(10, 1fr);
         grid-template-rows: repeat(6, 1fr);
         max-width: 100vh;
@@ -103,6 +135,13 @@
             firebase.initializeApp(firebaseConfig);
         }
         const database = firebase.database();
+
+        // Konfigurace obtížností
+        const difficultyConfig = {
+            easy: { rows: 5, cols: 4, pairs: 10, name: "Easy" },
+            medium: { rows: 8, cols: 5, pairs: 20, name: "Medium" },
+            hard: { rows: 10, cols: 6, pairs: 30, name: "Hard" }
+        };
 
         // === KATEGORIE OBRÁZKŮ ===
         const categories = {
@@ -158,19 +197,19 @@
             }
         };
 
-        // === FUNKCE PRO PŘIDÁNÍ NOVÉ KATEGORIE (pro budoucnost) ===
-        const addCategory = (key, name, imageArray) => {
-            categories[key] = { name, images: imageArray };
-        };
+        const colors = [
+            '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8',
+            '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B739', '#52BE80',
+            '#EC7063', '#5DADE2', '#F5B041', '#AF7AC5', '#48C9B0',
+            '#EB984E', '#7FB3D5', '#73C6B6', '#F1948A', '#85929E',
+            '#D5DBDB', '#AED6F1', '#FADBD8', '#D7BDE2', '#A9DFBF',
+            '#FAD7A0', '#D6EAF8', '#FCF3CF', '#E8DAEF', '#D1F2EB'
+        ];
 
         const PexesoGame = () => {
-            const ROWS = 10;
-            const COLS = 6;
-            const TOTAL_CARDS = ROWS * COLS;
-            const PAIRS = TOTAL_CARDS / 2;
-
             const [gameMode, setGameMode] = useState('menu');
             const [selectedCategory, setSelectedCategory] = useState('animals');
+            const [selectedDifficulty, setSelectedDifficulty] = useState('hard');
             const [roomCode, setRoomCode] = useState('');
             const [joinCode, setJoinCode] = useState('');
             const [playerNumber, setPlayerNumber] = useState(null);
@@ -189,16 +228,10 @@
             const roomRef = useRef(null);
             const isOnline = gameMode === 'online';
 
-            const colors = [
-                '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8',
-                '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B739', '#52BE80',
-                '#EC7063', '#5DADE2', '#F5B041', '#AF7AC5', '#48C9B0',
-                '#EB984E', '#7FB3D5', '#73C6B6', '#F1948A', '#85929E',
-                '#D5DBDB', '#AED6F1', '#FADBD8', '#D7BDE2', '#A9DFBF',
-                '#FAD7A0', '#D6EAF8', '#FCF3CF', '#E8DAEF', '#D1F2EB'
-            ];
+            const currentConfig = difficultyConfig[selectedDifficulty];
+            const TOTAL_CARDS = currentConfig.rows * currentConfig.cols;
+            const PAIRS = currentConfig.pairs;
 
-            // === Náhodný výběr 30 obrázků z vybrané kategorie ===
             const getRandomImages = (count, categoryKey) => {
                 const cat = categories[categoryKey];
                 if (!cat || cat.images.length < count) return [];
@@ -206,10 +239,9 @@
                 return shuffled.slice(0, count);
             };
 
-           const generateRoomCode = () => {
-    return Math.floor(10000 + Math.random() * 90000).toString();
-};
-
+            const generateRoomCode = () => {
+                return Math.floor(10000 + Math.random() * 90000).toString();
+            };
 
             const createRoom = async () => {
                 const code = generateRoomCode();
@@ -240,6 +272,7 @@
                     readyForNextRound: { player1: false, player2: false },
                     players: { player1: true, player2: false },
                     category: selectedCategory,
+                    difficulty: selectedDifficulty,
                     createdAt: Date.now()
                 });
 
@@ -268,6 +301,7 @@
                 }
 
                 setSelectedCategory(roomData.category || 'animals');
+                setSelectedDifficulty(roomData.difficulty || 'hard');
 
                 await database.ref('rooms/' + code + '/players/player2').set(true);
                 
@@ -292,6 +326,7 @@
                         setMatchWins(data.matchWins || { player1: 0, player2: 0 });
                         setReadyForNextRound(data.readyForNextRound || { player1: false, player2: false });
                         setSelectedCategory(data.category || 'animals');
+                        setSelectedDifficulty(data.difficulty || 'hard');
                         
                         if (data.players.player2) {
                             setWaitingForPlayer(false);
@@ -307,10 +342,11 @@
             };
 
             const startNextRound = async () => {
-                const selectedImages = getRandomImages(PAIRS, selectedCategory);
+                const config = difficultyConfig[selectedDifficulty];
+                const selectedImages = getRandomImages(config.pairs, selectedCategory);
                 
                 const cardValues = [];
-                for (let i = 0; i < PAIRS; i++) {
+                for (let i = 0; i < config.pairs; i++) {
                     cardValues.push(i, i);
                 }
                 
@@ -330,8 +366,7 @@
                     matched: [],
                     currentPlayer: 1,
                     scores: { player1: 0, player2: 0 },
-                    readyForNextRound: { player1: false, player2: false },
-                    category: selectedCategory
+                    readyForNextRound: { player1: false, player2: false }
                 });
             };
 
@@ -472,10 +507,17 @@
             const totalGamesPlayed = matchWins.player1 + matchWins.player2;
 
             if (gameMode === 'menu') {
-                return (
-                    <div className="h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-4 flex items-center justify-center">
-                        <div className="bg-gray-800 rounded-2xl shadow-2xl p-8 max-w-md w-full border border-gray-700">
-                            <h1 className="text-4xl font-bold text-center mb-8 text-purple-400">Pexeso</h1>
+    return (
+        <div className="h-screen p-4 flex items-center justify-center" style={{
+            backgroundImage: 'url(images/meadow.png)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center'
+        }}>
+                        <div className="rounded-2xl shadow-2xl p-8 max-w-md w-full border border-yellow-500" style={{
+    backgroundColor: 'rgba(181, 101, 29, 0.75)',
+    backdropFilter: 'blur(1px)'
+}}>
+                            <h1 className="text-5xl text-center mb-8 text-yellow-500" style={{fontFamily: 'Great Vibes, cursive'}}>Pexeso</h1>
                             
                             <div className="space-y-4">
                                 <div className="mb-4">
@@ -483,10 +525,25 @@
                                     <select
                                         value={selectedCategory}
                                         onChange={(e) => setSelectedCategory(e.target.value)}
-                                        className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-yellow-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
                                     >
                                         {Object.entries(categories).map(([key, cat]) => (
                                             <option key={key} value={key}>{cat.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="mb-4">
+                                    <label className="block text-sm font-medium text-gray-300 mb-2">Difficulty:</label>
+                                    <select
+                                        value={selectedDifficulty}
+                                        onChange={(e) => setSelectedDifficulty(e.target.value)}
+                                        className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-yellow-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                    >
+                                        {Object.entries(difficultyConfig).map(([key, config]) => (
+                                            <option key={key} value={key}>
+                                                {config.name} ({config.pairs} pairs)
+                                            </option>
                                         ))}
                                     </select>
                                 </div>
@@ -498,7 +555,7 @@
                                     2 players on this device
                                 </button>
 
-                                <div className="border-t-2 border-gray-300 my-6"></div>
+                                <div className="border-t-2 border-yellow-300 my-6"></div>
                                 
                                 <button
                                     onClick={createRoom}
@@ -512,17 +569,17 @@
                                         type="text"
                                         placeholder="Game code (5 digits)"
                                         value={joinCode}
-                                         onChange={(e) => setJoinCode(e.target.value)}
-                                        className="w-full px-4 py-3 border-2 border-gray-600 bg-gray-700 text-white rounded-lg text-center text-xl font-mono uppercase placeholder-gray-400"
-                                         maxLength="5"
-  pattern="\d{5}"
-  inputMode="numeric"
-/>
+                                        onChange={(e) => setJoinCode(e.target.value)}
+                                        className="w-full px-4 py-3 border-2 border-yellow-600 bg-gray-700 text-white rounded-lg text-center text-xl font-mono uppercase placeholder-gray-400"
+                                        maxLength="5"
+                                        pattern="\d{5}"
+                                        inputMode="numeric"
+                                    />
 
                                     <button
                                         onClick={joinRoom}
-                                        className="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-4 px-6 rounded-lg text-xl transition-all transform hover:scale-105"
-                                        >
+                                        className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-6 rounded-lg text-xl transition-all transform hover:scale-105"
+                                    >
                                         Join the game
                                     </button>
                                 </div>
@@ -534,14 +591,23 @@
 
             if (waitingForPlayer) {
                 return (
-                    <div className="h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-4 flex items-center justify-center">
-                        <div className="bg-gray-800 rounded-2xl shadow-2xl p-8 max-w-md w-full text-center border border-gray-700">
+    <div className="h-screen p-4 flex items-center justify-center" style={{
+        backgroundImage: 'url(images/meadow.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+    }}>
+                        <div className="bg-gray-800 rounded-2xl shadow-2xl p-8 max-w-md w-full text-center border border-yellow-700">
                             <h2 className="text-3xl font-bold mb-4 text-white">Waiting for player...</h2>
-                            <div className="bg-gray-700 rounded-lg p-6 mb-6 border border-gray-600">
+                            <div className="bg-gray-700 rounded-lg p-6 mb-6 border border-yellow-600">
                                 <p className="text-sm text-gray-400 mb-2">Game code:</p>
                                 <p className="text-4xl font-mono font-bold text-purple-400">{roomCode}</p>
                             </div>
-                            <p className="text-gray-300 mb-6">Share this code with another player!</p>
+                            <div className="text-gray-300 mb-4">
+                                <p className="mb-2">Share this code with another player!</p>
+                                <p className="text-sm text-gray-400">
+                                    {categories[selectedCategory].name} - {difficultyConfig[selectedDifficulty].name}
+                                </p>
+                            </div>
                             <button
                                 onClick={backToMenu}
                                 className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg"
@@ -554,7 +620,11 @@
             }
 
             return (
-                <div className="h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-2 flex flex-col overflow-hidden">
+    <div className="h-screen p-2 flex flex-col overflow-hidden" style={{
+        backgroundImage: 'url(images/meadow.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+    }}>
                     <div className="w-full h-full flex flex-col max-w-2xl mx-auto">
                         <div className="flex items-center justify-between mb-1">
                             <button
@@ -563,15 +633,16 @@
                             >
                                 ← Menu
                             </button>
-                            <h1 className="text-xl md:text-2xl font-bold text-white text-center flex-1">Pexeso</h1>
+                            	<h1 className="text-xl md:text-2xl font-bold text-white text-center flex-1" style={{fontFamily: 'Great Vibes, cursive'}}>Pexeso</h1>
+
                             {isOnline && (
-                                <div className="bg-gray-700 px-3 py-1 rounded-lg text-sm font-mono font-bold text-white border border-gray-600">
+                                <div className="bg-gray-700 px-3 py-1 rounded-lg text-sm font-mono font-bold text-white border border-yellow-600">
                                     {roomCode}
                                 </div>
                             )}
                         </div>
                         
-                        <div className="bg-gray-800 rounded-lg shadow-xl p-1 mb-1 flex-shrink-0 border border-gray-700">
+                        <div className="bg-gray-800 rounded-lg shadow-xl p-1 mb-1 flex-shrink-0 border border-yellow-700">
                             {isOnline && totalGamesPlayed < 3 && (
                                 <div className="flex justify-center gap-1 mb-1">
                                     <div className="text-xs font-bold text-gray-400">Best of 3:</div>
@@ -678,8 +749,8 @@
                             )}
                         </div>
 
-                       <div className="bg-gray-800 rounded-lg shadow-xl p-2 flex-1 overflow-hidden border border-gray-700 min-h-0">
-                            <div className="game-grid">
+                        <div className="bg-gray-800 rounded-lg shadow-xl p-2 flex-1 overflow-hidden border border-gray-700 min-h-0">
+                            <div className={`game-grid ${selectedDifficulty}`}>
                                 {cards.map((card, index) => {
                                     const isFlipped = flipped.includes(index);
                                     const isMatched = matched.includes(index);
@@ -697,7 +768,7 @@
                                             }}
                                             disabled={!canFlip || isFlipped || isMatched || (isOnline && currentPlayer !== playerNumber)}
                                         >
-                                           <div className="w-full h-full flex items-center justify-center">
+                                            <div className="w-full h-full flex items-center justify-center">
                                                 {(isFlipped || isMatched) ? (
                                                     <img src={card.animal} alt="obrázek" className="card-image" />
                                                 ) : (
