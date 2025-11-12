@@ -46,34 +46,34 @@
 /* Easy: 5×4 (portrait) nebo 4×5 (landscape) */
 @media (orientation: portrait) {
     .game-grid.easy {
-        grid-template-columns: repeat(5, 1fr);
-        grid-template-rows: repeat(4, 1fr);
-        max-width: 50vh;
-    }
-}
-
-@media (orientation: landscape) {
-    .game-grid.easy {
         grid-template-columns: repeat(4, 1fr);
         grid-template-rows: repeat(5, 1fr);
         max-width: 40vh;
     }
 }
 
+@media (orientation: landscape) {
+    .game-grid.easy {
+        grid-template-columns: repeat(5, 1fr);
+        grid-template-rows: repeat(4, 1fr);
+        max-width: 50vh;
+    }
+}
+
 /* Medium: 8×5 (portrait) nebo 5×8 (landscape) */
 @media (orientation: portrait) {
     .game-grid.medium {
-        grid-template-columns: repeat(8, 1fr);
-        grid-template-rows: repeat(5, 1fr);
-        max-width: 80vh;
+        grid-template-columns: repeat(5, 1fr);
+        grid-template-rows: repeat(8, 1fr);
+        max-width: 50vh;
     }
 }
 
 @media (orientation: landscape) {
     .game-grid.medium {
-        grid-template-columns: repeat(5, 1fr);
-        grid-template-rows: repeat(8, 1fr);
-        max-width: 50vh;
+        grid-template-columns: repeat(8, 1fr);
+        grid-template-rows: repeat(5, 1fr);
+        max-width: 80vh;
     }
 }
 
