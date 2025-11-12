@@ -247,21 +247,7 @@
 
 let stopConfetti = null;
 
-const launchConfetti = () => {
-  const duration = 2 * 1000;
-  const animationEnd = Date.now() + duration;
-  const defaults = { ... };
 
-  const interval = setInterval(() => {
-    if (Date.now() > animationEnd) {
-      clearInterval(interval);
-    } else {
-      confetti(defaults);
-    }
-  }, 250);
-
-  stopConfetti = () => clearInterval(interval);
-};
 
 const launchConfetti = () => {
   const duration = 2 * 1000;
