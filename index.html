@@ -497,7 +497,18 @@ useEffect(() => {
                                     matchWins: newMatchWins,
                                     flipped: []
                                 });
-                            } else if (isOnline) {
+                            } 
+if (newMatched.length === TOTAL_CARDS && !isOnline) {
+  const newMatchWins = { ...matchWins };
+  if (newScores.player1 > newScores.player2) {
+    newMatchWins.player1 += 1;
+  } else if (newScores.player2 > newScores.player1) {
+    newMatchWins.player2 += 1;
+  }
+
+  setMatchWins(newMatchWins);
+}
+else if (isOnline) {
                                 await updateRoom({
                                     matched: newMatched,
                                     scores: newScores,
@@ -551,6 +562,25 @@ stopConfetti?.();
             const isGameOver = matched.length === TOTAL_CARDS;
             const isSeriesOver = matchWins.player1 >= 2 || matchWins.player2 >= 2;
             const totalGamesPlayed = matchWins.player1 + matchWins.player2;
+
+if (isSeriesOver) {
+  const winner = matchWins.player1 > matchWins.player2 ? 'Player 1' : 'Player 2';
+
+  return (
+    <div className="h-screen flex items-center justify-center bg-black text-white text-center p-6">
+      <div className="bg-purple-900 rounded-2xl shadow-2xl p-8 max-w-md w-full border-4 border-yellow-500">
+        <h2 className="text-4xl font-bold mb-4">🎉 {winner} wins the series!</h2>
+        <p className="text-lg mb-6">Final score: {matchWins.player1} – {matchWins.player2}</p>
+        <button
+          onClick={backToMenu}
+          className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 px-6 rounded-lg text-xl transition-all transform hover:scale-105"
+        >
+          Back to Menu
+        </button>
+      </div>
+    </div>
+  );
+}
 
             if (gameMode === 'menu') {
     return (
