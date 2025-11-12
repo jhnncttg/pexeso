@@ -5,6 +5,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap" rel="stylesheet">
     <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Pexeso">
@@ -123,7 +124,7 @@
     </style>
 </head>
 <body>
-<canvas id="confetti-canvas" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999;"></canvas>
+
     <div id="root"></div>
     
     <script type="text/babel">
@@ -242,6 +243,49 @@
             const currentConfig = difficultyConfig[selectedDifficulty];
             const TOTAL_CARDS = currentConfig.rows * currentConfig.cols;
             const PAIRS = currentConfig.pairs;
+
+
+let stopConfetti = null;
+
+const launchConfetti = () => {
+  const duration = 2 * 1000;
+  const animationEnd = Date.now() + duration;
+  const defaults = { ... };
+
+  const interval = setInterval(() => {
+    if (Date.now() > animationEnd) {
+      clearInterval(interval);
+    } else {
+      confetti(defaults);
+    }
+  }, 250);
+
+  stopConfetti = () => clearInterval(interval);
+};
+
+const launchConfetti = () => {
+  const duration = 2 * 1000;
+  const animationEnd = Date.now() + duration;
+  const defaults = {
+    origin: { x: 0.5, y: 0.5 },
+    spread: 360,
+    startVelocity: 40,
+    particleCount: 100,
+    colors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00'],
+    scalar: 1.2,
+    zIndex: 999
+  };
+
+  const interval = setInterval(() => {
+    const timeLeft = animationEnd - Date.now();
+
+    if (timeLeft <= 0) {
+      return clearInterval(interval);
+    }
+
+    confetti(defaults);
+  }, 250);
+};
 
 useEffect(() => {
   if (isGameOver && scores.player1 !== scores.player2) {
