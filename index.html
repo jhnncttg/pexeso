@@ -244,9 +244,7 @@
             const TOTAL_CARDS = currentConfig.rows * currentConfig.cols;
             const PAIRS = currentConfig.pairs;
 
-
 let stopConfetti = null;
-
 
 
 const launchConfetti = () => {
@@ -263,15 +261,16 @@ const launchConfetti = () => {
   };
 
   const interval = setInterval(() => {
-    const timeLeft = animationEnd - Date.now();
-
-    if (timeLeft <= 0) {
-      return clearInterval(interval);
+    if (Date.now() > animationEnd) {
+      clearInterval(interval);
+    } else {
+      confetti(defaults);
     }
-
-    confetti(defaults);
   }, 250);
-};
+
+  stopConfetti = () => clearInterval(interval);
+}; 
+
 
 useEffect(() => {
   if (isGameOver && scores.player1 !== scores.player2) {
