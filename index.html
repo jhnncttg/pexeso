@@ -353,7 +353,8 @@ useEffect(() => {
             const startNextRound = async () => {
                 const config = difficultyConfig[selectedDifficulty];
                 const selectedImages = getRandomImages(config.pairs, selectedCategory);
-                
+                stopConfetti?.();
+
                 const cardValues = [];
                 for (let i = 0; i < config.pairs; i++) {
                     cardValues.push(i, i);
@@ -396,7 +397,8 @@ useEffect(() => {
 
             const initLocalGame = () => {
                 const selectedImages = getRandomImages(PAIRS, selectedCategory);
-                
+                stopConfetti?.();
+
                 const cardValues = [];
                 for (let i = 0; i < PAIRS; i++) {
                     cardValues.push(i, i);
@@ -801,65 +803,67 @@ useEffect(() => {
         ReactDOM.render(<PexesoGame />, document.getElementById('root'));
     </script>
 <script>
-function launchConfetti(duration = 10000) {
-  const canvas = document.getElementById('confetti-canvas');
-  const ctx = canvas.getContext('2d');
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  let stopConfetti = () => {};
 
-  const confettiCount = 1200;
-  const confetti = [];
+  function launchConfetti(duration = 10000) {
+    const canvas = document.getElementById('confetti-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-  for (let i = 0; i < confettiCount; i++) {
-    confetti.push({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height - canvas.height,
-      r: Math.random() * 6 + 4,
-      d: Math.random() * confettiCount,
-      color: `hsl(${Math.random() * 360}, 100%, 50%)`,
-      tilt: Math.floor(Math.random() * 10) - 10,
-      tiltAngle: 0,
-      tiltAngleIncrement: Math.random() * 0.07 + 0.05
-    });
+    const confettiCount = 1200;
+    const confetti = [];
+
+    for (let i = 0; i < confettiCount; i++) {
+      confetti.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height - canvas.height,
+        r: Math.random() * 6 + 4,
+        d: Math.random() * confettiCount,
+        color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+        tilt: Math.floor(Math.random() * 10) - 10,
+        tiltAngle: 0,
+        tiltAngleIncrement: Math.random() * 0.07 + 0.05
+      });
+    }
+
+    let animationFrame;
+    let stop = false;
+
+    function draw() {
+      if (stop) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      confetti.forEach(c => {
+        c.tiltAngle += c.tiltAngleIncrement;
+        c.y += 1.1;
+        c.x += Math.sin(c.tiltAngle) * 2;
+        ctx.beginPath();
+        ctx.lineWidth = c.r;
+        ctx.strokeStyle = c.color;
+        ctx.moveTo(c.x + c.tilt, c.y);
+        ctx.lineTo(c.x, c.y + c.tilt + c.r);
+        ctx.stroke();
+      });
+      animationFrame = requestAnimationFrame(draw);
+    }
+
+    draw();
+
+    const timer = setTimeout(() => {
+      stopConfetti();
+    }, duration);
+
+    window.addEventListener('keydown', () => {
+      stopConfetti();
+    }, { once: true });
+
+    stopConfetti = () => {
+      stop = true;
+      clearTimeout(timer);
+      cancelAnimationFrame(animationFrame);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    };
   }
-
-  let animationFrame;
-  let stopConfetti = false;
-
-  function draw() {
-    if (stopConfetti) return;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    confetti.forEach(c => {
-      c.tiltAngle += c.tiltAngleIncrement;
-      c.y += 1.1;
-      c.x += Math.sin(c.tiltAngle) * 2;
-      ctx.beginPath();
-      ctx.lineWidth = c.r;
-      ctx.strokeStyle = c.color;
-      ctx.moveTo(c.x + c.tilt, c.y);
-      ctx.lineTo(c.x, c.y + c.tilt + c.r);
-      ctx.stroke();
-    });
-    animationFrame = requestAnimationFrame(draw);
-  }
-
-  draw();
-
-  // Stop after 10 seconds
-  const timer = setTimeout(() => {
-    stopConfetti = true;
-    cancelAnimationFrame(animationFrame);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-  }, duration);
-
-  // Stop on any key press
-  window.addEventListener('keydown', () => {
-    stopConfetti = true;
-    clearTimeout(timer);
-    cancelAnimationFrame(animationFrame);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-  }, { once: true });
-}
 </script>
 </body>
 </html>
