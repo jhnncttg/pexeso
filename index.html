@@ -499,6 +499,7 @@ useEffect(() => {
                 if (roomRef.current) {
                     roomRef.current.off();
                 }
+stopConfetti?.();
                 setGameMode('menu');
                 setRoomCode('');
                 setJoinCode('');
