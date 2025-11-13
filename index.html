@@ -24,7 +24,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
-      body {
+body {
     margin: 0;
     padding: 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
@@ -116,23 +116,20 @@
 
 @keyframes butterfly-flight {
     0% {
-        transform: translate(-100px, -100px) rotate(-15deg);
-        opacity: 0;
-    }
-    20% {
+        transform: translate(0, 0) rotate(0deg);
         opacity: 1;
     }
-    40% {
-        transform: translate(30vw, 10vh) rotate(10deg);
+    25% {
+        transform: translate(-15vw, -8vh) rotate(-12deg);
     }
-    60% {
-        transform: translate(50vw, -5vh) rotate(-5deg);
+    50% {
+        transform: translate(5vw, -15vh) rotate(8deg);
     }
-    80% {
-        transform: translate(70vw, 15vh) rotate(15deg);
+    75% {
+        transform: translate(-10vw, -20vh) rotate(-8deg);
     }
     100% {
-        transform: translate(0, 0) rotate(0deg);
+        transform: translate(0, -25vh) rotate(0deg);
         opacity: 1;
     }
 }
@@ -146,17 +143,31 @@
     }
 }
 
+@keyframes butterfly-wings-stop {
+    0%, 100% {
+        transform: scaleX(1);
+    }
+}
+
 .butterfly-container {
-    position: absolute;
+    position: fixed;
     width: 60px;
     height: 60px;
     pointer-events: none;
-    animation: butterfly-flight 3s ease-in-out forwards;
+    animation: butterfly-flight 5s ease-in-out forwards;
+    z-index: 9999;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
 .butterfly-wings {
-    animation: butterfly-wings 0.3s ease-in-out infinite;
+    animation: butterfly-wings 0.4s ease-in-out infinite;
     transform-origin: center;
+}
+
+.butterfly-wings.stopped {
+    animation: butterfly-wings-stop 0.3s ease-in-out forwards;
 }
     </style>
 </head>
@@ -259,8 +270,9 @@
             const [playerNumber, setPlayerNumber] = useState(null);
             const [waitingForPlayer, setWaitingForPlayer] = useState(false);
             const [showButterfly, setShowButterfly] = useState(true);
+            const [butterflyWingsStopped, setButterflyWingsStopped] = useState(false);
             
-            const categorySelectRef = useRef(null);
+            const difficultySelectRef = useRef(null);
             const [butterflyPosition, setButterflyPosition] = useState({ top: 0, left: 0 });
             
             const [cards, setCards] = useState([]);
@@ -282,18 +294,18 @@
             const PAIRS = currentConfig.pairs;
 
             useEffect(() => {
-                if (gameMode === 'menu' && categorySelectRef.current) {
-                    const rect = categorySelectRef.current.getBoundingClientRect();
+                if (gameMode === 'menu' && difficultySelectRef.current) {
+                    const rect = difficultySelectRef.current.getBoundingClientRect();
                     setButterflyPosition({
-                        top: rect.top - 30,
-                        left: rect.right - 40
+                        top: rect.top + 10,
+                        left: rect.right - 50
                     });
                     
-                    const timer = setTimeout(() => {
-                        setShowButterfly(false);
-                    }, 8000);
+                    const stopWingsTimer = setTimeout(() => {
+                        setButterflyWingsStopped(true);
+                    }, 7000);
                     
-                    return () => clearTimeout(timer);
+                    return () => clearTimeout(stopWingsTimer);
                 }
             }, [gameMode]);
 
@@ -604,6 +616,8 @@
                 setMatchWins({ player1: 0, player2: 0 });
                 setReadyForNextRound({ player1: false, player2: false });
                 setShowRoundResult(false);
+                setShowButterfly(true);
+                setButterflyWingsStopped(false);
             };
 
             const isGameOver = matched.length === TOTAL_CARDS;
@@ -647,27 +661,23 @@
                                 top: `${butterflyPosition.top}px`,
                                 left: `${butterflyPosition.left}px`
                             }}>
-                                <svg className="butterfly-wings" width="60" height="60" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                <svg className={`butterfly-wings ${butterflyWingsStopped ? 'stopped' : ''}`} width="60" height="60" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                                     <g transform="translate(50,50)">
-                                        {/* Levé křídlo */}
-                                        <ellipse cx="-20" cy="-10" rx="25" ry="35" fill="#FF6B9D" opacity="0.9" transform="rotate(-20 -20 -10)"/>
-                                        <ellipse cx="-18" cy="-8" rx="20" ry="28" fill="#FFB6D9" opacity="0.8" transform="rotate(-20 -18 -8)"/>
-                                        <ellipse cx="-25" cy="15" rx="20" ry="25" fill="#FF8EC7" opacity="0.9" transform="rotate(10 -25 15)"/>
+                                        <ellipse cx="-20" cy="-10" rx="25" ry="35" fill="#FFA500" opacity="0.9" transform="rotate(-20 -20 -10)"/>
+                                        <ellipse cx="-18" cy="-8" rx="20" ry="28" fill="#FFD700" opacity="0.8" transform="rotate(-20 -18 -8)"/>
+                                        <ellipse cx="-25" cy="15" rx="20" ry="25" fill="#FFB347" opacity="0.9" transform="rotate(10 -25 15)"/>
                                         <circle cx="-22" cy="-5" r="4" fill="#FFF" opacity="0.6"/>
                                         <circle cx="-28" cy="18" r="3" fill="#FFF" opacity="0.6"/>
                                         
-                                        {/* Pravé křídlo */}
-                                        <ellipse cx="20" cy="-10" rx="25" ry="35" fill="#FF6B9D" opacity="0.9" transform="rotate(20 20 -10)"/>
-                                        <ellipse cx="18" cy="-8" rx="20" ry="28" fill="#FFB6D9" opacity="0.8" transform="rotate(20 18 -8)"/>
-                                        <ellipse cx="25" cy="15" rx="20" ry="25" fill="#FF8EC7" opacity="0.9" transform="rotate(-10 25 15)"/>
+                                        <ellipse cx="20" cy="-10" rx="25" ry="35" fill="#FFA500" opacity="0.9" transform="rotate(20 20 -10)"/>
+                                        <ellipse cx="18" cy="-8" rx="20" ry="28" fill="#FFD700" opacity="0.8" transform="rotate(20 18 -8)"/>
+                                        <ellipse cx="25" cy="15" rx="20" ry="25" fill="#FFB347" opacity="0.9" transform="rotate(-10 25 15)"/>
                                         <circle cx="22" cy="-5" r="4" fill="#FFF" opacity="0.6"/>
                                         <circle cx="28" cy="18" r="3" fill="#FFF" opacity="0.6"/>
                                         
-                                        {/* Tělo */}
                                         <ellipse cx="0" cy="0" rx="3" ry="25" fill="#4A4A4A"/>
                                         <circle cx="0" cy="-15" r="4" fill="#333"/>
                                         
-                                        {/* Tykadla */}
                                         <path d="M 0,-15 Q -5,-25 -7,-30" stroke="#333" strokeWidth="1" fill="none"/>
                                         <path d="M 0,-15 Q 5,-25 7,-30" stroke="#333" strokeWidth="1" fill="none"/>
                                         <circle cx="-7" cy="-30" r="1.5" fill="#333"/>
@@ -686,7 +696,7 @@
                             </h1>
 
                             <div className="space-y-4">
-                                <div className="mb-4" ref={categorySelectRef}>
+                                <div className="mb-4">
                                     <label className="block text-sm font-medium text-gray-300 mb-2">Choose a motive:</label>
                                     <select
                                         value={selectedCategory}
@@ -699,7 +709,7 @@
                                     </select>
                                 </div>
 
-                                <div className="mb-4">
+                                <div className="mb-4" ref={difficultySelectRef}>
                                     <label className="block text-sm font-medium text-gray-300 mb-2">Difficulty:</label>
                                     <select
                                         value={selectedDifficulty}
