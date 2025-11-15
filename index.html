@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-    <link rel="stylesheet" href="butterfly.css">
     <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap" rel="stylesheet">
@@ -15,11 +14,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#9333ea">
     <meta name="description" content="Pexeso - A game for two players">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <script type="module" src="https://unpkg.com/@capacitor/core@latest/dist/capacitor.js"></script>
     <title>Pexeso</title>
     <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
     <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-    <script src="butterfly.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -114,11 +113,67 @@ body {
         border-radius: 0.25rem;
     }
 }
+
+@keyframes butterfly-flight {
+    0% {
+        transform: translate(0, 0) rotate(0deg);
+        opacity: 1;
+    }
+    25% {
+        transform: translate(-15vw, -8vh) rotate(-12deg);
+    }
+    50% {
+        transform: translate(5vw, -15vh) rotate(8deg);
+    }
+    75% {
+        transform: translate(-10vw, -20vh) rotate(-8deg);
+    }
+    100% {
+        transform: translate(0, -25vh) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+@keyframes butterfly-wings {
+    0%, 100% {
+        transform: scaleX(1);
+    }
+    50% {
+        transform: scaleX(0.8);
+    }
+}
+
+@keyframes butterfly-wings-stop {
+    0%, 100% {
+        transform: scaleX(1);
+    }
+}
+
+.butterfly-container {
+    position: fixed;
+    width: 60px;
+    height: 60px;
+    pointer-events: none;
+    animation: butterfly-flight 5s ease-in-out forwards;
+    z-index: 9999;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.butterfly-wings {
+    animation: butterfly-wings 0.4s ease-in-out infinite;
+    transform-origin: center;
+}
+
+.butterfly-wings.stopped {
+    animation: butterfly-wings-stop 0.3s ease-in-out forwards;
+}
     </style>
 </head>
 <body>
     <div id="root"></div>
-  
+    
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
@@ -214,12 +269,11 @@ body {
             const [joinCode, setJoinCode] = useState('');
             const [playerNumber, setPlayerNumber] = useState(null);
             const [waitingForPlayer, setWaitingForPlayer] = useState(false);
-            
             const [showButterfly, setShowButterfly] = useState(true);
             const [butterflyWingsStopped, setButterflyWingsStopped] = useState(false);
+            
             const difficultySelectRef = useRef(null);
             const [butterflyPosition, setButterflyPosition] = useState({ top: 0, left: 0 });
-            
             
             const [cards, setCards] = useState([]);
             const [flipped, setFlipped] = useState([]);
@@ -236,27 +290,24 @@ body {
             const isOnline = gameMode === 'online';
 
             const currentConfig = difficultyConfig[selectedDifficulty];
-            
-            
-            
             const TOTAL_CARDS = currentConfig.rows * currentConfig.cols;
             const PAIRS = currentConfig.pairs;
 
-useEffect(() => {
-    if (gameMode === 'menu' && difficultySelectRef.current) {
-        const rect = difficultySelectRef.current.getBoundingClientRect();
-        setButterflyPosition({
-            top: rect.top + 10,
-            left: rect.right - 50
-        });
-        
-        const stopWingsTimer = setTimeout(() => {
-            setButterflyWingsStopped(true);
-        }, 5500);
-        
-        return () => clearTimeout(stopWingsTimer);
-    }
-}, [gameMode]);
+            useEffect(() => {
+                if (gameMode === 'menu' && difficultySelectRef.current) {
+                    const rect = difficultySelectRef.current.getBoundingClientRect();
+                    setButterflyPosition({
+                        top: rect.top + 10,
+                        left: rect.right - 50
+                    });
+                    
+                    const stopWingsTimer = setTimeout(() => {
+                        setButterflyWingsStopped(true);
+                    }, 7000);
+                    
+                    return () => clearTimeout(stopWingsTimer);
+                }
+            }, [gameMode]);
 
             const launchConfetti = () => {
                 const duration = 2 * 1000;
@@ -584,10 +635,10 @@ useEffect(() => {
 
                 return (
                     <div className="h-screen flex items-center justify-center text-white text-center p-6" style={{
-                        backgroundImage: 'url(images/meadow.png)',
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center'
-                    }}>
+    backgroundImage: 'url(images/meadow.png)',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center'
+}}>
                         <div className="rounded-2xl shadow-2xl p-8 max-w-md w-full border-4 border-yellow-500" style={{backgroundColor: 'rgba(181, 101, 29, 0.75)'}}>
                             <h2 className="text-4xl font-bold mb-4" style={{color: '#FFD700'}}>🎉 {winner} wins the series!</h2>
                             <p className="text-lg mb-6" style={{color: '#FFD700'}}>Final score: {matchWins.player1} – {matchWins.player2}</p>
@@ -609,14 +660,41 @@ useEffect(() => {
                         backgroundSize: 'cover',
                         backgroundPosition: 'center'
                     }}>
-                    
-           <ButterflyComponent position={butterflyPosition} wingsStopped={butterflyWingsStopped} />          
-                    
+                        {showButterfly && (
+                            <div className="butterfly-container" style={{
+                                top: `${butterflyPosition.top}px`,
+                                left: `${butterflyPosition.left}px`
+                            }}>
+                                <svg className={`butterfly-wings ${butterflyWingsStopped ? 'stopped' : ''}`} width="60" height="60" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                    <g transform="translate(50,50)">
+                                        <ellipse cx="-20" cy="-10" rx="25" ry="35" fill="#FFA500" opacity="0.9" transform="rotate(-20 -20 -10)"/>
+                                        <ellipse cx="-18" cy="-8" rx="20" ry="28" fill="#FFD700" opacity="0.8" transform="rotate(-20 -18 -8)"/>
+                                        <ellipse cx="-25" cy="15" rx="20" ry="25" fill="#FFB347" opacity="0.9" transform="rotate(10 -25 15)"/>
+                                        <circle cx="-22" cy="-5" r="4" fill="#FFF" opacity="0.6"/>
+                                        <circle cx="-28" cy="18" r="3" fill="#FFF" opacity="0.6"/>
+                                        
+                                        <ellipse cx="20" cy="-10" rx="25" ry="35" fill="#FFA500" opacity="0.9" transform="rotate(20 20 -10)"/>
+                                        <ellipse cx="18" cy="-8" rx="20" ry="28" fill="#FFD700" opacity="0.8" transform="rotate(20 18 -8)"/>
+                                        <ellipse cx="25" cy="15" rx="20" ry="25" fill="#FFB347" opacity="0.9" transform="rotate(-10 25 15)"/>
+                                        <circle cx="22" cy="-5" r="4" fill="#FFF" opacity="0.6"/>
+                                        <circle cx="28" cy="18" r="3" fill="#FFF" opacity="0.6"/>
+                                        
+                                        <ellipse cx="0" cy="0" rx="3" ry="25" fill="#4A4A4A"/>
+                                        <circle cx="0" cy="-15" r="4" fill="#333"/>
+                                        
+                                        <path d="M 0,-15 Q -5,-25 -7,-30" stroke="#333" strokeWidth="1" fill="none"/>
+                                        <path d="M 0,-15 Q 5,-25 7,-30" stroke="#333" strokeWidth="1" fill="none"/>
+                                        <circle cx="-7" cy="-30" r="1.5" fill="#333"/>
+                                        <circle cx="7" cy="-30" r="1.5" fill="#333"/>
+                                    </g>
+                                </svg>
+                            </div>
+                        )}
+                        
                         <div className="rounded-2xl shadow-2xl p-8 max-w-md w-full border border-yellow-500" style={{
                             backgroundColor: 'rgba(181, 101, 29, 0.75)',
                             backdropFilter: 'blur(1px)'
                         }}>
-                       
                             <h1 className="text-5xl text-center mb-8 text-yellow-500" style={{ fontFamily: 'Great Vibes, cursive' }}>
                                 Pexeso <span className="text-sm align-top text-yellow-400">for Mydli</span>
                             </h1>
