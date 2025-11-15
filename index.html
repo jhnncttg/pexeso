@@ -217,6 +217,12 @@ body {
             const [playerNumber, setPlayerNumber] = useState(null);
             const [waitingForPlayer, setWaitingForPlayer] = useState(false);
             
+            const [showButterfly, setShowButterfly] = useState(true);
+            const [butterflyWingsStopped, setButterflyWingsStopped] = useState(false);
+            const difficultySelectRef = useRef(null);
+            const [butterflyPosition, setButterflyPosition] = useState({ top: 0, left: 0 });
+            
+            
             const [cards, setCards] = useState([]);
             const [flipped, setFlipped] = useState([]);
             const [matched, setMatched] = useState([]);
@@ -232,8 +238,27 @@ body {
             const isOnline = gameMode === 'online';
 
             const currentConfig = difficultyConfig[selectedDifficulty];
+            
+            
+            
             const TOTAL_CARDS = currentConfig.rows * currentConfig.cols;
             const PAIRS = currentConfig.pairs;
+
+useEffect(() => {
+    if (gameMode === 'menu' && difficultySelectRef.current) {
+        const rect = difficultySelectRef.current.getBoundingClientRect();
+        setButterflyPosition({
+            top: rect.top + 10,
+            left: rect.right - 50
+        });
+        
+        const stopWingsTimer = setTimeout(() => {
+            setButterflyWingsStopped(true);
+        }, 5500);
+        
+        return () => clearTimeout(stopWingsTimer);
+    }
+}, [gameMode]);
 
             const launchConfetti = () => {
                 const duration = 2 * 1000;
@@ -542,6 +567,8 @@ body {
                 setMatchWins({ player1: 0, player2: 0 });
                 setReadyForNextRound({ player1: false, player2: false });
                 setShowRoundResult(false);
+                setShowButterfly(true);
+                setButterflyWingsStopped(false);
             };
 
             const isGameOver = matched.length === TOTAL_CARDS;
@@ -610,7 +637,7 @@ body {
                                     </select>
                                 </div>
 
-                                <div className="mb-4">
+                                <div className="mb-4" ref={difficultySelectRef}>
                                     <label className="block text-sm font-medium text-gray-300 mb-2">Difficulty:</label>
                                     <select
                                         value={selectedDifficulty}
