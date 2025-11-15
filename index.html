@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
+    <link rel="stylesheet" href="butterfly.css">
     <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap" rel="stylesheet">
@@ -116,6 +117,9 @@ body {
 </head>
 <body>
     <div id="root"></div>
+    
+    <script src="butterfly.js"></script>
+    
     
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
@@ -580,10 +584,14 @@ body {
                         backgroundSize: 'cover',
                         backgroundPosition: 'center'
                     }}>
+                    
+           <ButterflyComponent position={butterflyPosition} wingsStopped={butterflyWingsStopped} />          
+                    
                         <div className="rounded-2xl shadow-2xl p-8 max-w-md w-full border border-yellow-500" style={{
                             backgroundColor: 'rgba(181, 101, 29, 0.75)',
                             backdropFilter: 'blur(1px)'
                         }}>
+                       
                             <h1 className="text-5xl text-center mb-8 text-yellow-500" style={{ fontFamily: 'Great Vibes, cursive' }}>
                                 Pexeso <span className="text-sm align-top text-yellow-400">for Mydli</span>
                             </h1>
