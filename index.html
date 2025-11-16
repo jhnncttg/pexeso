@@ -217,7 +217,7 @@ body {
             
             const [showButterfly, setShowButterfly] = useState(true);
             const [butterflyWingsStopped, setButterflyWingsStopped] = useState(false);
-            const categorySelectRef = useRef(null);
+            const menuBoxRef = useRef(null);
             const [butterflyPosition, setButterflyPosition] = useState({ top: 0, left: 0 });
             
             
@@ -243,16 +243,16 @@ body {
             const PAIRS = currentConfig.pairs;
 
 useEffect(() => {
-    if (gameMode === 'menu' && categorySelectRef.current) {
-        const rect = categorySelectRef.current.getBoundingClientRect();
+    if (gameMode === 'menu' && menuBoxRef.current) {
+        const rect = menuBoxRef.current.getBoundingClientRect();
         setButterflyPosition({
-            top: rect.top + 10,
-            left: rect.right - 50
+            top: rect.top + 20,
+            left: rect.right - 60
         });
         
         const stopWingsTimer = setTimeout(() => {
             setButterflyWingsStopped(true);
-        }, 7500);
+        }, 8000);
         
         return () => clearTimeout(stopWingsTimer);
     }
@@ -612,7 +612,7 @@ useEffect(() => {
                     
            <ButterflyComponent position={butterflyPosition} wingsStopped={butterflyWingsStopped} />          
                     
-                        <div className="rounded-2xl shadow-2xl p-8 max-w-md w-full border border-yellow-500" style={{
+                        <div ref={menuBoxRef} className="rounded-2xl shadow-2xl p-8 max-w-md w-full border border-yellow-500" style={{
                             backgroundColor: 'rgba(181, 101, 29, 0.75)',
                             backdropFilter: 'blur(1px)'
                         }}>
