@@ -1,0 +1,64 @@
+
+/* Butterfly Styles - butterfly.css */
+
+@keyframes butterfly-flight {
+    0% {
+        transform: translate(0, -50vh) rotate(0deg);
+        opacity: 1;
+    }
+    15% {
+        transform: translate(-8vw, -35vh) rotate(-15deg);
+    }
+    30% {
+        transform: translate(6vw, -25vh) rotate(12deg);
+    }
+    45% {
+        transform: translate(-5vw, -15vh) rotate(-8deg);
+    }
+    60% {
+        transform: translate(4vw, -8vh) rotate(10deg);
+    }
+    80% {
+        transform: translate(-2vw, -3vh) rotate(-5deg);
+    }
+    100% {
+        transform: translate(0, 0) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+@keyframes butterfly-wings {
+    0%, 100% {
+        transform: rotateY(0deg);
+    }
+    50% {
+        transform: rotateY(50deg);
+    }
+}
+
+@keyframes butterfly-wings-stop {
+    0%, 100% {
+        transform: rotateY(0deg);
+    }
+}
+
+.butterfly-container {
+    position: fixed;
+    width: 70px;
+    height: 70px;
+    pointer-events: none;
+    animation: butterfly-flight 3.5s cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards;
+    z-index: 9999;
+    top: 0;
+    left: 50%;
+    transform: translate(-50%, -50vh);
+}
+
+.butterfly-wings {
+    animation: butterfly-wings 0.15s ease-in-out infinite;
+    transform-origin: center;
+}
+
+.butterfly-wings.stopped {
+    animation: butterfly-wings-stop 0.3s ease-in-out forwards;
+}
