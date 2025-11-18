@@ -612,11 +612,26 @@ useEffect(() => {
                     
            <ButterflyComponent position={butterflyPosition} wingsStopped={butterflyWingsStopped} />          
                     
-                        <div ref={menuBoxRef} className="rounded-2xl shadow-2xl p-8 max-w-md w-full border border-yellow-500" style={{
+                        <div ref={menuBoxRef} className="rounded-2xl shadow-2xl p-8 max-w-md w-full border border-yellow-500 relative" style={{
+
                             backgroundColor: 'rgba(181, 101, 29, 0.75)',
                             backdropFilter: 'blur(1px)'
                         }}>
                        
+<button
+    onClick={() => {
+        if (window.confirm('Opravdu chcete ukončit aplikaci?')) {
+            if (typeof Android !== 'undefined' && Android.exitApp) {
+                Android.exitApp();
+            } else {
+                window.close();
+            }
+        }
+    }}
+    className="absolute top-2 left-2 text-yellow-500 hover:text-yellow-400 text-sm font-bold z-10"
+>
+    exit
+</button>
                             <h1 className="text-5xl text-center mb-8 text-yellow-500" style={{ fontFamily: 'Great Vibes, cursive' }}>
                                 Pexeso <span className="text-sm align-top text-yellow-400">for Mydli</span>
                             </h1>
