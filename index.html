@@ -619,16 +619,21 @@ useEffect(() => {
                         }}>
                        
 <button
-    onClick={() => {
-        if (window.confirm('Opravdu chcete ukončit aplikaci?')) {
-            if (typeof Android !== 'undefined' && Android.exitApp) {
-                Android.exitApp();
-            } else {
+    onClick={async () => {
+        if (window.confirm('Are you sure?')) {
+            try {
+                const { Capacitor } = await import('https://unpkg.com/@capacitor/core@latest/dist/esm/index.js');
+                if (Capacitor.isNativePlatform()) {
+                    const { Exit } = Capacitor.Plugins;
+                    await Exit.exitApp();
+                }
+            } catch (e) {
                 window.close();
             }
         }
     }}
     className="absolute top-2 left-2 text-yellow-500 hover:text-yellow-400 text-sm font-bold z-10"
+    
 >
     exit
 </button>
