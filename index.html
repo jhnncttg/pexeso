@@ -132,60 +132,69 @@ class P2PConnection {
     }
 
     async createGame(onConnected, onData) {
-        this.isHost = true;
-        this.onDataReceived = onData;
-        
-        return new Promise((resolve, reject) => {
-            this.peer = new Peer({
-                config: {
-                    iceServers: [
-                        { urls: 'stun:stun.l.google.com:19302' },
-                        { urls: 'stun:stun1.l.google.com:19302' },
-                        {
-                            urls: 'turn:openrelay.metered.ca:80',
-                            username: 'openrelayproject',
-                            credential: 'openrelayproject'
-                        },
-                        {
-                            urls: 'turn:openrelay.metered.ca:443',
-                            username: 'openrelayproject',
-                            credential: 'openrelayproject'
-                        },
-                        {
-                            urls: 'turn:openrelay.metered.ca:443?transport=tcp',
-                            username: 'openrelayproject',
-                            credential: 'openrelayproject'
-                        }
-                    ]
-                }
-            });
+    this.isHost = true;
+    this.onDataReceived = onData;
+    
+    return new Promise((resolve, reject) => {
+        this.peer = new Peer({
+            config: {
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:stun1.l.google.com:19302' },
+                    {
+                        urls: 'turn:openrelay.metered.ca:80',
+                        username: 'openrelayproject',
+                        credential: 'openrelayproject'
+                    },
+                    {
+                        urls: 'turn:openrelay.metered.ca:443',
+                        username: 'openrelayproject',
+                        credential: 'openrelayproject'
+                    },
+                    {
+                        urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+                        username: 'openrelayproject',
+                        credential: 'openrelayproject'
+                    }
+                ]
+            }
+        });
 
-            this.peer.on('open', (id) => {
-                this.peerId = id;
-                const gameCode = id.toUpperCase();
-                console.log('Peer ID:', id, 'Code:', gameCode);
-                resolve(gameCode);
+        this.peer.on('open', (id) => {
+            this.peerId = id;
+            const gameCode = id.toUpperCase();
+            console.log('Peer ID:', id, 'Code:', gameCode);
+            resolve(gameCode);
+        });
+        
+        this.peer.on('connection', (connection) => {
+            console.log('Příchozí připojení od:', connection.peer);
+            this.conn = connection;
+            
+            // ZMĚNA: Počkej na 'open' event
+            this.conn.on('open', () => {
+                console.log('Connection je otevřené, setupuji...');
+                this.setupConnection();
+                onConnected(); // Zavolá se AŽ když je connection ready
             });
             
-            this.peer.on('connection', (connection) => {
-                console.log('Příchozí připojení od:', connection.peer);
-                this.conn = connection;
-                this.setupConnection();
-                onConnected();
+            this.conn.on('error', (err) => {
+                console.error('Connection error:', err);
             });
-
-            this.peer.on('error', (err) => {
-                console.error('Peer error:', err);
-                reject(err);
-            });
-
-            setTimeout(() => {
-                if (!this.peerId) {
-                    reject(new Error('Timeout při vytváření hry'));
-                }
-            }, 15000);
         });
-    }
+
+        this.peer.on('error', (err) => {
+            console.error('Peer error:', err);
+            reject(err);
+        });
+
+        setTimeout(() => {
+            if (!this.peerId) {
+                reject(new Error('Timeout při vytváření hry'));
+            }
+        }, 15000);
+    });
+}
 
     async joinGame(gameCode, onConnected, onData) {
         this.isHost = false;
@@ -257,23 +266,23 @@ class P2PConnection {
     }
 
     setupConnection() {
-        if (!this.conn) return;
-        
-        this.conn.on('data', (data) => {
-            console.log('Přijata data:', data.type);
-            if (this.onDataReceived) {
-                this.onDataReceived(data);
-            }
-        });
+    if (!this.conn) return;
+    
+    this.conn.on('data', (data) => {
+        console.log('Přijata data:', data.type);
+        if (this.onDataReceived) {
+            this.onDataReceived(data);
+        }
+    });
 
-        this.conn.on('close', () => {
-            console.log('Spojení ukončeno');
-        });
+    this.conn.on('close', () => {
+        console.log('Spojení ukončeno');
+    });
 
-        this.conn.on('error', (err) => {
-            console.error('Connection error:', err);
-        });
-    }
+    this.conn.on('error', (err) => {
+        console.error('Connection error:', err);
+    });
+}
 
     send(data) {
         if (this.conn && this.conn.open) {
@@ -466,19 +475,20 @@ useEffect(() => {
     try {
         const code = await p2p.createGame(
             () => {
-                // Hráč se připojil
+                // Hráč se připojil a connection je OPEN
                 setWaitingForPlayer(false);
                 
-                // ZMĚNA: Počkej chvíli než pošleš data
+                // ZMĚNA: Prodloužil jsem delay na 1000ms
                 setTimeout(() => {
                     console.log('Posílám INIT data hráči 2');
-                    p2p.send({
+                    const success = p2p.send({
                         type: 'INIT',
                         cards: initialCards,
                         category: selectedCategory,
                         difficulty: selectedDifficulty
                     });
-                }, 500);
+                    console.log('Send success:', success);
+                }, 1000);
             },
             (data) => handleRemoteUpdate(data)
         );
