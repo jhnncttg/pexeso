@@ -415,7 +415,7 @@ useEffect(() => {
 
             
 
-            const createRoom = async () => {
+           const createRoom = async () => {
     const selectedImages = getRandomImages(PAIRS, selectedCategory);
     
     const cardValues = [];
@@ -441,13 +441,19 @@ useEffect(() => {
     try {
         const code = await p2p.createGame(
             () => {
+                // Hráč se připojil
                 setWaitingForPlayer(false);
-                p2p.send({
-                    type: 'INIT',
-                    cards: initialCards,
-                    category: selectedCategory,
-                    difficulty: selectedDifficulty
-                });
+                
+                // ZMĚNA: Počkej chvíli než pošleš data
+                setTimeout(() => {
+                    console.log('Posílám INIT data hráči 2');
+                    p2p.send({
+                        type: 'INIT',
+                        cards: initialCards,
+                        category: selectedCategory,
+                        difficulty: selectedDifficulty
+                    });
+                }, 500);
             },
             (data) => handleRemoteUpdate(data)
         );
@@ -532,10 +538,17 @@ useEffect(() => {
             };
 
 const handleRemoteUpdate = (data) => {
+    console.log('Přijata data typu:', data.type, data);
+    
     if (data.type === 'INIT') {
+        console.log('Nastavuji karty:', data.cards.length);
         setCards(data.cards);
         setSelectedCategory(data.category);
         setSelectedDifficulty(data.difficulty);
+        setFlipped([]);
+        setMatched([]);
+        setCurrentPlayer(1);
+        setScores({ player1: 0, player2: 0 });
     } else if (data.type === 'UPDATE') {
         if (data.cards !== undefined) setCards(data.cards);
         if (data.flipped !== undefined) setFlipped(data.flipped);
