@@ -1,10 +1,12 @@
 {
-  "name": "Pexeso",
+  "name": "Pexeso - Memory Game",
   "short_name": "Pexeso",
-  "start_url": ".",
+  "description": "A fun memory matching game for two players",
+  "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#1a1a2e",
   "theme_color": "#9333ea",
+  "orientation": "any",
   "icons": [
     {
       "src": "icons/icon-192.png",
