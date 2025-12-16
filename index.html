@@ -918,19 +918,34 @@ const handleRemoteUpdate = (data) => {
                     <button
     onClick={async () => {
         try {
-            // Native Share API - ukáže seznam aplikací
-            await navigator.share({
-                title: 'Join my Pexeso game!',
-                text: `Game Code: ${roomCode}\n\nEnter this code in Pexeso to play together!`
-            });
+            // Zkus Capacitor Share API (funguje v Android APK)
+            if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Share) {
+                await window.Capacitor.Plugins.Share.share({
+                    title: 'Join my Pexeso game!',
+                    text: `${roomCode}`,
+                    dialogTitle: 'Share with friends'
+                });
+            } 
+            // Fallback: Browser Share API
+            else if (navigator.share) {
+                await navigator.share({
+                    title: 'Join my Pexeso game!',
+                    text: `Game Code: ${roomCode}\n\nEnter this code in Pexeso to play together!`
+                });
+            }
+            // Fallback: Copy to clipboard
+            else {
+                await navigator.clipboard.writeText(roomCode);
+                alert('Code copied to clipboard: ' + roomCode);
+            }
         } catch (err) {
-            // User cancelled nebo share není podporováno
-            if (err.name !== 'AbortError') {
-                // Fallback - zkopíruj do clipboardu
+            console.error('Share error:', err);
+            // Pokud user cancel, nic nedělej
+            if (err.message && !err.message.includes('cancel')) {
                 try {
                     await navigator.clipboard.writeText(roomCode);
-                    alert('Code copied to clipboard: ' + roomCode);
-                } catch (clipErr) {
+                    alert('Code copied: ' + roomCode);
+                } catch {
                     alert('Game Code: ' + roomCode);
                 }
             }
