@@ -1148,11 +1148,174 @@ const handleRemoteUpdate = (data) => {
 
         ReactDOM.render(<PexesoGame />, document.getElementById('root'));
     </script>
-    <script>
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js')
-            .catch((err) => console.log('SW not available'));
+  
+
+<!-- Loading screen s progress barem -->
+<div id="loading-screen" style="
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    color: white;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+">
+    <div style="text-align: center; width: 80%; max-width: 400px;">
+        <h1 style="font-size: 3rem; margin-bottom: 1rem; font-family: 'Great Vibes', cursive;">Pexeso</h1>
+        <div id="loading-text" style="font-size: 1.2rem; margin-bottom: 2rem;">Příprava hry...</div>
+        
+        <!-- Progress bar -->
+        <div style="
+            width: 100%;
+            height: 8px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        ">
+            <div id="progress-bar" style="
+                width: 0%;
+                height: 100%;
+                background: linear-gradient(90deg, #4ade80, #22c55e);
+                transition: width 0.3s ease;
+                border-radius: 10px;
+            "></div>
+        </div>
+        
+        <div id="progress-text" style="font-size: 0.9rem; color: rgba(255,255,255,0.8);">0%</div>
+        <div id="file-counter" style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 0.5rem;">0 / 0 souborů</div>
+    </div>
+</div>
+
+<style>
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+#loading-screen {
+    transition: opacity 0.5s ease;
+}
+</style>
+
+<script>
+// Kontrola, jestli je cache připravená
+async function isCacheReady() {
+    if (!('caches' in window)) return false;
+    
+    try {
+        const cache = await caches.open('pexeso-cache-v2');
+        const keys = await cache.keys();
+        return keys.length > 10;
+    } catch (err) {
+        return false;
     }
+}
+
+// Okamžitě zkontrolujeme cache
+isCacheReady().then(isReady => {
+    const loadingScreen = document.getElementById('loading-screen');
+    const progressBar = document.getElementById('progress-bar');
+    const progressText = document.getElementById('progress-text');
+    const loadingText = document.getElementById('loading-text');
+    const fileCounter = document.getElementById('file-counter');
+    
+    if (isReady) {
+        console.log('Cache ready - hiding loading screen immediately');
+        loadingScreen.style.display = 'none';
+    } else {
+        console.log('Cache not ready - showing loading screen with progress');
+        
+        const timeout = setTimeout(() => {
+            console.log('Loading timeout - hiding screen');
+            loadingText.textContent = 'Some files could not be loaded';
+            setTimeout(() => {
+                loadingScreen.style.opacity = '0';
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                }, 500);
+            }, 2000);
+        }, 60000);
+        
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.addEventListener('message', (event) => {
+                if (event.data.type === 'CACHE_PROGRESS') {
+                    const progress = event.data.progress;
+                    const current = event.data.current;
+                    const total = event.data.total;
+                    
+                    progressBar.style.width = progress + '%';
+                    progressText.textContent = progress + '%';
+                    fileCounter.textContent = `${current} / ${total} files`;
+                    
+                    if (progress < 30) {
+                        loadingText.textContent = 'Loading libraries...';
+                    } else if (progress < 70) {
+                        loadingText.textContent = 'Loading images...';
+                    } else if (progress < 100) {
+                        loadingText.textContent = 'Almost done...';
+                    } else {
+                        loadingText.textContent = 'Finishing...';
+                    }
+                    
+                    console.log(`[Loading] Progress: ${progress}% (${current}/${total})`);
+                    
+                } else if (event.data.type === 'CACHE_READY') {
+                    console.log('Cache is ready!');
+                    clearTimeout(timeout);
+                    
+                    loadingText.textContent = 'Done! 🎉';
+                    progressBar.style.width = '100%';
+                    progressText.textContent = '100%';
+                    
+                    setTimeout(() => {
+                        loadingScreen.style.opacity = '0';
+                        setTimeout(() => {
+                            loadingScreen.style.display = 'none';
+                        }, 500);
+                    }, 1000);
+                }
+            });
+        }
+    }
+});
+
+// Service Worker registrace
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js')
+        .then(reg => {
+            console.log('Service Worker registered:', reg);
+            
+            if (reg.active) {
+                isCacheReady().then(isReady => {
+                    if (isReady) {
+                        document.getElementById('loading-screen').style.display = 'none';
+                    }
+                });
+            }
+        })
+        .catch((err) => {
+            console.error('Service Worker registration error:', err);
+            document.getElementById('loading-screen').style.display = 'none';
+        });
+} else {
+    console.warn('Service Worker is not supported');
+    document.getElementById('loading-screen').style.display = 'none';
+}
 </script>
+</body>
+</html>
+
 </body>
 </html>
