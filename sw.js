@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pexeso-cache-v3';
+const CACHE_NAME = 'pexeso-cache-v2';
 
 const urlsToCache = [
   '/',
