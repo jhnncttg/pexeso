@@ -740,51 +740,22 @@ const processFlip = (index) => {
 };
 
 
-            const handleCardClick = (index) => {
-    // Kontrola, zda může hráč kliknout
-    if (isOnline && currentPlayer !== playerNumber) return;
-    if (!canFlip || flipped.includes(index) || matched.includes(index) || flipped.length >= 2) return;
+           const handleCardClick = (index) => {
+                // Kontrola, zda může hráč kliknout
+                if (isOnline && currentPlayer !== playerNumber) return;
+                if (!canFlip || flipped.includes(index) || matched.includes(index) || flipped.length >= 2) return;
 
-    // Pokud je to online hra, pošleme informaci spoluhráči
-    if (isOnline) {
-        p2p.send({
-            type: 'FLIP',
-            cardIndex: index
-        });
-    }
+                // Pokud je to online hra, pošleme informaci spoluhráči
+                if (isOnline) {
+                    p2p.send({
+                        type: 'FLIP',
+                        cardIndex: index
+                    });
+                }
 
-    // Provedeme otočení karty (společné pro lokální i online)
-    processFlip(index);
-};
-                    
-
-    if (newFlipped.length === 2) {
-        setCanFlip(false);
-        const [first, second] = newFlipped;
-
-        if (cards[first].value === cards[second].value) {
-            setTimeout(() => {
-                setMatched(prevMatched => [...prevMatched, first, second]);
-
-                setScores(prevScores => ({
-                    ...prevScores,
-                    [`player${currentPlayer}`]: prevScores[`player${currentPlayer}`] + 1
-                }));
-
-                setFlipped([]);
-                setCanFlip(true);
-            }, 600);
-        } else {
-            setTimeout(() => {
-                setFlipped([]);
-                setCurrentPlayer(prev => prev === 1 ? 2 : 1);
-                setCanFlip(true);
-            }, 600);
-        }
-    }
-
-    return newFlipped;
-});
+                // Provedeme otočení karty (společné pro lokální i online)
+                processFlip(index);
+            };
 
             const backToMenu = () => {
 		p2p.disconnect();
