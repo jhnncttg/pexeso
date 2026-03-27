@@ -500,15 +500,17 @@ useEffect(() => {
                 
                 // ZMĚNA: Prodloužil jsem delay na 1000ms
                 setTimeout(() => {
-                    console.log('Posílám INIT data hráči 2');
-                    const success = p2p.send({
-                        type: 'INIT',
-                        cards: initialCards,
-                        category: selectedCategory,
-                        difficulty: selectedDifficulty
-                    });
-                    console.log('Send success:', success);
-                }, 1000);
+    console.log('Posílám INIT data hráči 2');
+
+    const success = p2p.send({
+        type: 'INIT',
+        cards: initialCards,   // 🔥 KLÍČOVÉ
+        category: selectedCategory,
+        difficulty: selectedDifficulty
+    });
+
+    console.log('Send success:', success);
+}, 1000);
             },
             (data) => handleRemoteUpdate(data)
         );
@@ -539,7 +541,7 @@ useEffect(() => {
 
             
 
-            const updateRoom = async (updates) => {
+           const updateRoom = (updates) => {
     if (updates.cards !== undefined) setCards(updates.cards);
     if (updates.flipped !== undefined) setFlipped(updates.flipped);
     if (updates.matched !== undefined) setMatched(updates.matched);
@@ -547,11 +549,6 @@ useEffect(() => {
     if (updates.scores !== undefined) setScores(updates.scores);
     if (updates.matchWins !== undefined) setMatchWins(updates.matchWins);
     if (updates.readyForNextRound !== undefined) setReadyForNextRound(updates.readyForNextRound);
-    
-    p2p.send({
-        type: 'UPDATE',
-        ...updates
-    });
 };
 
             const startNextRound = () => {
@@ -593,42 +590,94 @@ useEffect(() => {
             };
 
 const handleRemoteUpdate = (data) => {
-    console.log('Přijata data typu:', data.type, data);
+    console.log('Přijata data typu:', data.type);
     
     if (data.type === 'INIT') {
-        console.log('Nastavuji karty:', data.cards.length);
-        setCards(data.cards);
+        console.log('Nastavuji karty:', data.cards?.length);
+        
+
+
         setSelectedCategory(data.category);
         setSelectedDifficulty(data.difficulty);
         setFlipped([]);
+	setCards(data.cards);
         setMatched([]);
         setCurrentPlayer(1);
         setScores({ player1: 0, player2: 0 });
-    } else if (data.type === 'UPDATE') {
-        if (data.cards !== undefined) setCards(data.cards);
-        if (data.flipped !== undefined) setFlipped(data.flipped);
-        if (data.matched !== undefined) setMatched(data.matched);
-        if (data.currentPlayer !== undefined) setCurrentPlayer(data.currentPlayer);
-        if (data.scores !== undefined) setScores(data.scores);
-        if (data.matchWins !== undefined) setMatchWins(data.matchWins);
-        if (data.readyForNextRound !== undefined) setReadyForNextRound(data.readyForNextRound);
+    } 
+
+        
+        // Logika po druhé kartě
+     else if (data.type === 'FLIP') {
+    const index = data.cardIndex;
+
+    setFlipped(prev => {
+        const newFlipped = [...prev, index];
+
+        if (newFlipped.length === 2) {
+            setCanFlip(false);
+
+            setTimeout(() => {
+                setCards(currentCards => {
+                    const [first, second] = newFlipped;
+
+                    if (currentCards[first].value === currentCards[second].value) {
+                        // MATCH
+                        setMatched(prevMatched => [...prevMatched, first, second]);
+
+                        setScores(prevScores => ({
+                            ...prevScores,
+                            [`player${currentPlayer}`]:
+                                prevScores[`player${currentPlayer}`] + 1
+                        }));
+                    } else {
+                        // NO MATCH
+                        setCurrentPlayer(prev => prev === 1 ? 2 : 1);
+                    }
+
+                    return currentCards;
+                });
+
+                setFlipped([]);
+                setCanFlip(true);
+            }, 600);
+        }
+
+        return newFlipped;
+    });
+}
+    else if (data.type === 'READY_NEXT') {
+        // Pro "Next round" tlačítko
+        const newReady = {
+            ...readyForNextRound,
+            [`player${data.playerNumber}`]: true
+        };
+        setReadyForNextRound(newReady);
+        
+        if (newReady.player1 && newReady.player2) {
+            setTimeout(() => startNextRound(), 500);
+        }
     }
 };
 
-            const handleReadyForNextRound = async () => {
-                if (isOnline) {
-                    const newReady = {
-                        ...readyForNextRound,
-                        [`player${playerNumber}`]: true
-                    };
-                    
-                    await updateRoom({ readyForNextRound: newReady });
-                    
-                    if (newReady.player1 && newReady.player2) {
-                        setTimeout(() => {
-                            startNextRound();
-                        }, 500);
-                    }
+           const handleReadyForNextRound = async () => {
+   		 if (isOnline) {
+     		   // Pošli jen akci
+     		   p2p.send({
+      		      type: 'READY_NEXT',
+     		       playerNumber: playerNumber
+  		      });
+        
+  		      // Aplikuj lokálně
+  		      const newReady = {
+  		          ...readyForNextRound,
+ 		           [`player${playerNumber}`]: true
+		        };
+		        setReadyForNextRound(newReady);
+        
+		        if (newReady.player1 && newReady.player2) {
+		            setTimeout(() => startNextRound(), 500);
+  		      }
                 } else {
                     startNextRound();
                 }
@@ -663,85 +712,79 @@ const handleRemoteUpdate = (data) => {
                 setGameMode('local');
             };
 
-            const handleCardClick = async (index) => {
-                if (isOnline && currentPlayer !== playerNumber) return;
-                if (!canFlip || flipped.includes(index) || matched.includes(index) || flipped.length >= 2) {
-                    return;
-                }
-
-                const newFlipped = [...flipped, index];
-                
-                if (isOnline) {
-                    await updateRoom({ flipped: newFlipped });
+const processFlip = (index) => {
+    setFlipped(prev => {
+        const newFlipped = [...prev, index];
+        
+        if (newFlipped.length === 2) {
+            setCanFlip(false);
+            setTimeout(() => {
+                const [first, second] = newFlipped;
+                if (cards[first].value === cards[second].value) {
+                    // Shoda
+                    setMatched(m => [...m, first, second]);
+                    setScores(s => ({
+                        ...s,
+                        [`player${currentPlayer}`]: s[`player${currentPlayer}`] + 1
+                    }));
                 } else {
-                    setFlipped(newFlipped);
+                    // Není shoda - přepneme hráče
+                    setCurrentPlayer(p => p === 1 ? 2 : 1);
                 }
+                setFlipped([]);
+                setCanFlip(true);
+            }, 800);
+        }
+        return newFlipped;
+    });
+};
 
-                if (newFlipped.length === 2) {
-                    setCanFlip(false);
-                    const [first, second] = newFlipped;
+
+            const handleCardClick = (index) => {
+    // Kontrola, zda může hráč kliknout
+    if (isOnline && currentPlayer !== playerNumber) return;
+    if (!canFlip || flipped.includes(index) || matched.includes(index) || flipped.length >= 2) return;
+
+    // Pokud je to online hra, pošleme informaci spoluhráči
+    if (isOnline) {
+        p2p.send({
+            type: 'FLIP',
+            cardIndex: index
+        });
+    }
+
+    // Provedeme otočení karty (společné pro lokální i online)
+    processFlip(index);
+};
                     
-                    if (cards[first].value === cards[second].value) {
-                        setTimeout(async () => {
-                            const newMatched = [...matched, first, second];
-                            const newScores = {
-                                ...scores,
-                                [`player${currentPlayer}`]: scores[`player${currentPlayer}`] + 1
-                            };
-                            
-                            if (newMatched.length === TOTAL_CARDS) {
-                                const newMatchWins = { ...matchWins };
-                                if (newScores.player1 > newScores.player2) {
-                                    newMatchWins.player1 = matchWins.player1 + 1;
-                                } else if (newScores.player2 > newScores.player1) {
-                                    newMatchWins.player2 = matchWins.player2 + 1;
-                                }
 
-                                if (isOnline) {
-                                    await updateRoom({
-                                        matched: newMatched,
-                                        scores: newScores,
-                                        matchWins: newMatchWins,
-                                        flipped: []
-                                    });
-                                } else {
-                                    setMatchWins(newMatchWins);
-                                    setMatched(newMatched);
-                                    setScores(newScores);
-                                    setFlipped([]);
-                                    setShowRoundResult(true);
-                                }
-                            } else if (isOnline) {
-                                await updateRoom({
-                                    matched: newMatched,
-                                    scores: newScores,
-                                    flipped: []
-                                });
-                            } else {
-                                setMatched(newMatched);
-                                setScores(newScores);
-                                setFlipped([]);
-                            }
-                            setCanFlip(true);
-                        }, 600);
-                    } else {
-                        setTimeout(async () => {
-                            const nextPlayer = currentPlayer === 1 ? 2 : 1;
-                            
-                            if (isOnline) {
-                                await updateRoom({
-                                    flipped: [],
-                                    currentPlayer: nextPlayer
-                                });
-                            } else {
-                                setFlipped([]);
-                                setCurrentPlayer(nextPlayer);
-                            }
-                            setCanFlip(true);
-                        }, 600);
-                    }
-                }
-            };
+    if (newFlipped.length === 2) {
+        setCanFlip(false);
+        const [first, second] = newFlipped;
+
+        if (cards[first].value === cards[second].value) {
+            setTimeout(() => {
+                setMatched(prevMatched => [...prevMatched, first, second]);
+
+                setScores(prevScores => ({
+                    ...prevScores,
+                    [`player${currentPlayer}`]: prevScores[`player${currentPlayer}`] + 1
+                }));
+
+                setFlipped([]);
+                setCanFlip(true);
+            }, 600);
+        } else {
+            setTimeout(() => {
+                setFlipped([]);
+                setCurrentPlayer(prev => prev === 1 ? 2 : 1);
+                setCanFlip(true);
+            }, 600);
+        }
+    }
+
+    return newFlipped;
+});
 
             const backToMenu = () => {
 		p2p.disconnect();
@@ -1314,8 +1357,5 @@ if ('serviceWorker' in navigator) {
     document.getElementById('loading-screen').style.display = 'none';
 }
 </script>
-</body>
-</html>
-
 </body>
 </html>
