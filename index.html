@@ -422,8 +422,10 @@ class P2PConnection {
 
             // FIX: Refs pro vyhnutí se stale closure bugům
             const currentPlayerRef = useRef(1);
+            const scoresRef = useRef({ player1: 0, player2: 0 });
             const handleRemoteUpdateRef = useRef(null);
             useEffect(() => { currentPlayerRef.current = currentPlayer; }, [currentPlayer]);
+            useEffect(() => { scoresRef.current = scores; }, [scores]);
 
             const isOnline = gameMode === 'online';
 
@@ -557,6 +559,9 @@ useEffect(() => {
 };
 
             const startNextRound = () => {
+                // FIX: V online módu generuje karty POUZE Player 1 (host)
+                if (isOnline && playerNumber !== 1) return;
+
                 const config = difficultyConfig[selectedDifficulty];
                 const selectedImages = getRandomImages(config.pairs, selectedCategory);
 
@@ -576,22 +581,22 @@ useEffect(() => {
                     .map(({ value, color, animal }) => ({ value, color, animal }));
 
                 if (isOnline) {
-                    updateRoom({
-                        cards: shuffled,
-                        flipped: [],
-                        matched: [],
-                        currentPlayer: 1,
-                        scores: { player1: 0, player2: 0 },
-                        readyForNextRound: { player1: false, player2: false }
+                    // FIX: Pošli karty Player 2, ať mají oba stejné
+                    p2p.send({
+                        type: 'NEW_ROUND',
+                        cards: shuffled
                     });
-                } else {
-                    setCards(shuffled);
-                    setFlipped([]);
-                    setMatched([]);
-                    setCurrentPlayer(1);
-                    setScores({ player1: 0, player2: 0 });
-                    setShowRoundResult(false);
                 }
+
+                // Aplikuj lokálně
+                setCards(shuffled);
+                setFlipped([]);
+                setMatched([]);
+                setCurrentPlayer(1);
+                currentPlayerRef.current = 1;
+                setScores({ player1: 0, player2: 0 });
+                setReadyForNextRound({ player1: false, player2: false });
+                setShowRoundResult(false);
             };
 
 const handleRemoteUpdate = (data) => {
@@ -622,50 +627,34 @@ const handleRemoteUpdate = (data) => {
             setCanFlip(false);
 
             setTimeout(() => {
-                // FIX: funkcionální update pro aktuální karty
-                setCards(currentCards => {
-                    const [first, second] = newFlipped;
-
-                    if (currentCards[first].value === currentCards[second].value) {
-                        // MATCH
-                        setMatched(prevMatched => [...prevMatched, first, second]);
-                        // FIX: currentPlayerRef.current místo stale currentPlayer
-                        setScores(prevScores => ({
-                            ...prevScores,
-                            [`player${currentPlayerRef.current}`]:
-                                prevScores[`player${currentPlayerRef.current}`] + 1
-                        }));
-                    } else {
-                        // NO MATCH
-                        setCurrentPlayer(prev => {
-                            const next = prev === 1 ? 2 : 1;
-                            currentPlayerRef.current = next;
-                            return next;
-                        });
-                    }
-
-                    return currentCards;
-                });
-
-                setFlipped([]);
-                setCanFlip(true);
-            }, 600);
-        }
-
-        return newFlipped;
-    });
+                // FIX: Místo duplicitní logiky voláme stejný processFlip jako lokální hráč
+     else if (data.type === 'FLIP') {
+    processFlip(data.cardIndex);
+}
+    else if (data.type === 'NEW_ROUND') {
+    // FIX: Player 2 dostane karty od Player 1, oba mají stejné
+    setCards(data.cards);
+    setFlipped([]);
+    setMatched([]);
+    setCurrentPlayer(1);
+    currentPlayerRef.current = 1;
+    setScores({ player1: 0, player2: 0 });
+    setReadyForNextRound({ player1: false, player2: false });
+    setShowRoundResult(false);
 }
     else if (data.type === 'READY_NEXT') {
-        // Pro "Next round" tlačítko
-        const newReady = {
-            ...readyForNextRound,
-            [`player${data.playerNumber}`]: true
-        };
-        setReadyForNextRound(newReady);
-        
-        if (newReady.player1 && newReady.player2) {
-            setTimeout(() => startNextRound(), 500);
-        }
+        // FIX: Použij funkcionální update aby readyForNextRound nebyl stale
+        setReadyForNextRound(prev => {
+            const newReady = {
+                ...prev,
+                [`player${data.playerNumber}`]: true
+            };
+            // FIX: startNextRound spouští POUZE Player 1
+            if (newReady.player1 && newReady.player2 && playerNumber === 1) {
+                setTimeout(() => startNextRound(), 500);
+            }
+            return newReady;
+        });
     }
 };
 // FIX: Aktualizujeme ref při každém renderu - vždy ukazuje na nejnovější verzi
@@ -686,7 +675,7 @@ handleRemoteUpdateRef.current = handleRemoteUpdate;
 		        };
 		        setReadyForNextRound(newReady);
         
-		        if (newReady.player1 && newReady.player2) {
+		        if (newReady.player1 && newReady.player2 && playerNumber === 1) {
 		            setTimeout(() => startNextRound(), 500);
   		      }
                 } else {
@@ -805,6 +794,18 @@ const processFlip = (index) => {
                     launchConfetti();
                 }
             }, [isSeriesOver]);
+
+            // FIX: Aktualizace matchWins při konci kola
+            useEffect(() => {
+                if (isGameOver && matched.length > 0) {
+                    const s = scoresRef.current;
+                    if (s.player1 > s.player2) {
+                        setMatchWins(prev => ({ ...prev, player1: prev.player1 + 1 }));
+                    } else if (s.player2 > s.player1) {
+                        setMatchWins(prev => ({ ...prev, player2: prev.player2 + 1 }));
+                    }
+                }
+            }, [isGameOver]);
 
             if (isSeriesOver) {
                 const winner = matchWins.player1 > matchWins.player2 ? 'Player 1' : 'Player 2';
