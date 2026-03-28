@@ -601,55 +601,37 @@ useEffect(() => {
 
 const handleRemoteUpdate = (data) => {
     console.log('Přijata data typu:', data.type);
-    
+
     if (data.type === 'INIT') {
         console.log('Nastavuji karty:', data.cards?.length);
-        
         setSelectedCategory(data.category);
         setSelectedDifficulty(data.difficulty);
+        setCards(data.cards);
         setFlipped([]);
-	setCards(data.cards);
         setMatched([]);
         setCurrentPlayer(1);
         currentPlayerRef.current = 1;
         setScores({ player1: 0, player2: 0 });
-    } 
 
-        
-        // Logika po druhé kartě
-     else if (data.type === 'FLIP') {
-    const index = data.cardIndex;
+    } else if (data.type === 'FLIP') {
+        processFlip(data.cardIndex);
 
-    setFlipped(prev => {
-        const newFlipped = [...prev, index];
+    } else if (data.type === 'NEW_ROUND') {
+        setCards(data.cards);
+        setFlipped([]);
+        setMatched([]);
+        setCurrentPlayer(1);
+        currentPlayerRef.current = 1;
+        setScores({ player1: 0, player2: 0 });
+        setReadyForNextRound({ player1: false, player2: false });
+        setShowRoundResult(false);
 
-        if (newFlipped.length === 2) {
-            setCanFlip(false);
-
-            setTimeout(() => {
-                // FIX: Místo duplicitní logiky voláme stejný processFlip jako lokální hráč
-     else if (data.type === 'FLIP') {
-    processFlip(data.cardIndex);
-}
-    else if (data.type === 'NEW_ROUND') {
-    // FIX: Player 2 dostane karty od Player 1, oba mají stejné
-    setCards(data.cards);
-    setFlipped([]);
-    setMatched([]);
-    setCurrentPlayer(1);
-    currentPlayerRef.current = 1;
-    setScores({ player1: 0, player2: 0 });
-    setReadyForNextRound({ player1: false, player2: false });
-    setShowRoundResult(false);
-}
-    else if (data.type === 'READY_NEXT') {
-        // FIX: Použij funkcionální update aby readyForNextRound nebyl stale
+    } else if (data.type === 'READY_NEXT') {
         setReadyForNextRound(prev => {
             const newReady = {
                 ...prev,
                 [`player${data.playerNumber}`]: true
             };
-            // FIX: startNextRound spouští POUZE Player 1
             if (newReady.player1 && newReady.player2 && playerNumber === 1) {
                 setTimeout(() => startNextRound(), 500);
             }
