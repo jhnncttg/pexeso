@@ -141,9 +141,15 @@ class P2PConnection {
         
 	console.log('🌐 Initializing WebRTC with TURN servers');
 
+        
         return {
             iceServers: [
                 { urls: "stun:stun.relay.metered.ca:80" },
+                {
+                    urls: "turn:global.relay.metered.ca:80",
+                    username: "a0567525fe30addb8c3fa4b9",
+                    credential: "rKNbvdfsia87phBA",
+                },
                 {
                     urls: "turn:global.relay.metered.ca:443",
                     username: "a0567525fe30addb8c3fa4b9",
@@ -156,7 +162,9 @@ class P2PConnection {
                 }
             ],
             iceTransportPolicy: 'all'
-        };
+        }; 
+        
+        
     }
 
     async createGame(onConnected, onData) {
