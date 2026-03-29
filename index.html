@@ -141,34 +141,35 @@ class P2PConnection {
         
 	console.log('🌐 Initializing WebRTC with TURN servers');
 
+        
         return {
             iceServers: [
-      {
-        urls: "stun:stun.relay.metered.ca:80",
-      },
-      {
-        urls: "turn:global.relay.metered.ca:80",
-        username: "a0567525fe30addb8c3fa4b9",
-        credential: "rKNbvdfsia87phBA",
-      },
-      {
-        urls: "turn:global.relay.metered.ca:80?transport=tcp",
-        username: "a0567525fe30addb8c3fa4b9",
-        credential: "rKNbvdfsia87phBA",
-      },
-      {
-        urls: "turn:global.relay.metered.ca:443",
-        username: "a0567525fe30addb8c3fa4b9",
-        credential: "rKNbvdfsia87phBA",
-      },
-      {
-        urls: "turns:global.relay.metered.ca:443?transport=tcp",
-        username: "a0567525fe30addb8c3fa4b9",
-        credential: "rKNbvdfsia87phBA",
+                { urls: "stun:stun.relay.metered.ca:80" },
+                {
+                    urls: "turn:global.relay.metered.ca:80",
+                    username: "a0567525fe30addb8c3fa4b9",
+                    credential: "rKNbvdfsia87phBA",
+                },
+                {
+                    urls: "turn:global.relay.metered.ca:80?transport=tcp",
+                    username: "a0567525fe30addb8c3fa4b9",
+                    credential: "rKNbvdfsia87phBA",
+                },
+                {
+                    urls: "turn:global.relay.metered.ca:443",
+                    username: "a0567525fe30addb8c3fa4b9",
+                    credential: "rKNbvdfsia87phBA",
+                },
+                {
+                    urls: "turns:global.relay.metered.ca:443?transport=tcp",
+                    username: "a0567525fe30addb8c3fa4b9",
+                    credential: "rKNbvdfsia87phBA",
                 }
             ],
             iceTransportPolicy: 'all'
-        };
+        }; 
+        
+        
     }
 
     async createGame(onConnected, onData) {
@@ -178,7 +179,7 @@ class P2PConnection {
         return new Promise((resolve, reject) => {
             this.peer = new Peer({
                 config: this.getIceServers(),
-                debug: 2
+                debug: 0
             });
 
             this.peer.on('open', (id) => {
@@ -227,7 +228,7 @@ class P2PConnection {
         return new Promise((resolve, reject) => {
             this.peer = new Peer({
                 config: this.getIceServers(),
-                debug: 2
+                debug: 0
             });
 
             this.peer.on('open', (myId) => {
@@ -420,6 +421,14 @@ class P2PConnection {
             const [readyForNextRound, setReadyForNextRound] = useState({ player1: false, player2: false });
             const [showRoundResult, setShowRoundResult] = useState(false);
 
+            const handleRemoteRef = useRef(null);
+            const flippedRef = useRef([]);
+            const cardsRef = useRef([]);
+            const matchedRef = useRef([]);
+            const scoresRef = useRef({ player1: 0, player2: 0 });
+            const currentPlayerRef = useRef(1);
+            const matchWinsRef = useRef({ player1: 0, player2: 0 });
+
             const isOnline = gameMode === 'online';
 
             const currentConfig = difficultyConfig[selectedDifficulty];
@@ -444,6 +453,14 @@ useEffect(() => {
         return () => clearTimeout(stopWingsTimer);
     }
 }, [gameMode]);
+
+useEffect(() => { flippedRef.current = flipped; }, [flipped]);
+
+            const setCardsSync = (c) => { cardsRef.current = c; setCards(c); };
+            const setMatchedSync = (m) => { matchedRef.current = m; setMatched(m); };
+            const setScoresSync = (s) => { scoresRef.current = s; setScores(s); };
+            const setCurrentPlayerSync = (p) => { currentPlayerRef.current = p; setCurrentPlayer(p); };
+            const setMatchWinsSync = (w) => { matchWinsRef.current = w; setMatchWins(w); };
 
             const launchConfetti = () => {
                 const duration = 2 * 1000;
@@ -503,6 +520,7 @@ useEffect(() => {
     const seed = Math.floor(Math.random() * 2147483647);
     const initialCards = generateCards(seed, PAIRS, selectedCategory);
     
+    cardsRef.current = initialCards;
     setCards(initialCards);
     setPlayerNumber(1);
     setGameMode('online');
@@ -517,15 +535,15 @@ useEffect(() => {
                 setTimeout(() => {
                     console.log('Posílám INIT data hráči 2');
                     const success = p2p.send({
-                        type: 'INIT',
-                        seed: seed,
-                        category: selectedCategory,
-                        difficulty: selectedDifficulty
+                        t: 'I',
+                        s: seed,
+                        c: selectedCategory,
+                        d: selectedDifficulty
                     });
                     console.log('Send success:', success);
                 }, 1000);
             },
-            (data) => handleRemoteUpdate(data)
+            (data) => handleRemoteRef.current?.(data)
         );
         setRoomCode(code);
     } catch (err) {
@@ -544,7 +562,7 @@ useEffect(() => {
         await p2p.joinGame(
             joinCode.trim(),
             () => setWaitingForPlayer(false),
-            (data) => handleRemoteUpdate(data)
+            (data) => handleRemoteRef.current?.(data)
         );
     } catch (err) {
         alert(err.message);
@@ -573,78 +591,75 @@ useEffect(() => {
                 const seed = Math.floor(Math.random() * 2147483647);
                 const config = difficultyConfig[selectedDifficulty];
                 const shuffled = generateCards(seed, config.pairs, selectedCategory);
-
+                cardsRef.current = shuffled;
+                setCards(shuffled);
+                setFlipped([]);
+                flippedRef.current = [];
+                matchedRef.current = [];
+                setMatched([]);
+                scoresRef.current = { player1: 0, player2: 0 };
+                setScores({ player1: 0, player2: 0 });
+                currentPlayerRef.current = 1;
+                setCurrentPlayer(1);
+                setReadyForNextRound({ player1: false, player2: false });
                 if (isOnline) {
-                    updateRoom({
-                        seed: seed,
-                        flipped: [],
-                        matched: [],
-                        currentPlayer: 1,
-                        scores: { player1: 0, player2: 0 },
-                        readyForNextRound: { player1: false, player2: false }
-                    });
+                    p2p.send({ t: 'N', s: seed });
                 } else {
-                    setCards(shuffled);
-                    setFlipped([]);
-                    setMatched([]);
-                    setCurrentPlayer(1);
-                    setScores({ player1: 0, player2: 0 });
                     setShowRoundResult(false);
-                }
-
-                // Lokálně nastavíme karty okamžitě (pro Player 1)
-                if (isOnline) {
-                    setCards(shuffled);
-                    setFlipped([]);
-                    setMatched([]);
-                    setCurrentPlayer(1);
-                    setScores({ player1: 0, player2: 0 });
-                    setReadyForNextRound({ player1: false, player2: false });
                 }
             };
 
 const handleRemoteUpdate = (data) => {
-    console.log('Přijata data typu:', data.type, data);
-    
-    if (data.type === 'INIT') {
-        const config = difficultyConfig[data.difficulty];
-        const cards = generateCards(data.seed, config.pairs, data.category);
-        console.log('Generuji karty ze seedu:', data.seed, '- počet:', cards.length);
-        setCards(cards);
-        setSelectedCategory(data.category);
-        setSelectedDifficulty(data.difficulty);
+    if (data.t === 'I') {
+        const config = difficultyConfig[data.d];
+        const newCards = generateCards(data.s, config.pairs, data.c);
+        cardsRef.current = newCards;
+        setCards(newCards);
+        setSelectedCategory(data.c);
+        setSelectedDifficulty(data.d);
         setFlipped([]);
+        flippedRef.current = [];
+        matchedRef.current = [];
         setMatched([]);
-        setCurrentPlayer(1);
+        scoresRef.current = { player1: 0, player2: 0 };
         setScores({ player1: 0, player2: 0 });
-    } else if (data.type === 'UPDATE') {
-        if (data.seed !== undefined) {
-            // Nové kolo - vygeneruj karty ze seedu místo přijímání celého pole
-            const config = difficultyConfig[selectedDifficulty];
-            setCards(generateCards(data.seed, config.pairs, selectedCategory));
+        currentPlayerRef.current = 1;
+        setCurrentPlayer(1);
+    } else if (data.t === 'F') {
+        processFlip(data.i);
+    } else if (data.t === 'R') {
+        const remoteKey = playerNumber === 1 ? 'player2' : 'player1';
+        const newReady = { ...readyForNextRound, [remoteKey]: true };
+        setReadyForNextRound(newReady);
+        if (playerNumber === 1 && newReady.player1 && newReady.player2) {
+            setTimeout(() => startNextRound(), 500);
         }
-        if (data.flipped !== undefined) setFlipped(data.flipped);
-        if (data.matched !== undefined) setMatched(data.matched);
-        if (data.currentPlayer !== undefined) setCurrentPlayer(data.currentPlayer);
-        if (data.scores !== undefined) setScores(data.scores);
-        if (data.matchWins !== undefined) setMatchWins(data.matchWins);
-        if (data.readyForNextRound !== undefined) setReadyForNextRound(data.readyForNextRound);
+    } else if (data.t === 'N') {
+        const config = difficultyConfig[selectedDifficulty];
+        const newCards = generateCards(data.s, config.pairs, selectedCategory);
+        cardsRef.current = newCards;
+        setCards(newCards);
+        setFlipped([]);
+        flippedRef.current = [];
+        matchedRef.current = [];
+        setMatched([]);
+        scoresRef.current = { player1: 0, player2: 0 };
+        setScores({ player1: 0, player2: 0 });
+        currentPlayerRef.current = 1;
+        setCurrentPlayer(1);
+        setReadyForNextRound({ player1: false, player2: false });
     }
 };
+handleRemoteRef.current = handleRemoteUpdate;
 
-            const handleReadyForNextRound = async () => {
+            const handleReadyForNextRound = () => {
                 if (isOnline) {
-                    const newReady = {
-                        ...readyForNextRound,
-                        [`player${playerNumber}`]: true
-                    };
-                    
-                    await updateRoom({ readyForNextRound: newReady });
-                    
-                    if (newReady.player1 && newReady.player2) {
-                        setTimeout(() => {
-                            startNextRound();
-                        }, 500);
+                    const newReady = { ...readyForNextRound, [`player${playerNumber}`]: true };
+                    setReadyForNextRound(newReady);
+                    p2p.send({ t: 'R' });
+                    // Pouze host (P1) startuje nové kolo, aby oba měli stejný seed
+                    if (playerNumber === 1 && newReady.player1 && newReady.player2) {
+                        setTimeout(() => startNextRound(), 500);
                     }
                 } else {
                     startNextRound();
@@ -669,95 +684,75 @@ const handleRemoteUpdate = (data) => {
                     .sort((a, b) => a.sort - b.sort)
                     .map(({ value, color, animal }) => ({ value, color, animal }));
                 
+                cardsRef.current = shuffled;
                 setCards(shuffled);
                 setFlipped([]);
+                flippedRef.current = [];
+                matchedRef.current = [];
                 setMatched([]);
+                currentPlayerRef.current = 1;
                 setCurrentPlayer(1);
+                scoresRef.current = { player1: 0, player2: 0 };
                 setScores({ player1: 0, player2: 0 });
+                matchWinsRef.current = { player1: 0, player2: 0 };
                 setMatchWins({ player1: 0, player2: 0 });
                 setCanFlip(true);
                 setShowRoundResult(false);
                 setGameMode('local');
             };
 
-            const handleCardClick = async (index) => {
-                if (isOnline && currentPlayer !== playerNumber) return;
-                if (!canFlip || flipped.includes(index) || matched.includes(index) || flipped.length >= 2) {
-                    return;
-                }
-
-                const newFlipped = [...flipped, index];
-                
-                if (isOnline) {
-                    await updateRoom({ flipped: newFlipped });
-                } else {
-                    setFlipped(newFlipped);
-                }
+            const processFlip = (index) => {
+                const newFlipped = [...flippedRef.current, index];
+                flippedRef.current = newFlipped;
+                setFlipped(newFlipped);
 
                 if (newFlipped.length === 2) {
                     setCanFlip(false);
                     const [first, second] = newFlipped;
-                    
-                    if (cards[first].value === cards[second].value) {
-                        setTimeout(async () => {
-                            const newMatched = [...matched, first, second];
-                            const newScores = {
-                                ...scores,
-                                [`player${currentPlayer}`]: scores[`player${currentPlayer}`] + 1
-                            };
-                            
-                            if (newMatched.length === TOTAL_CARDS) {
-                                const newMatchWins = { ...matchWins };
-                                if (newScores.player1 > newScores.player2) {
-                                    newMatchWins.player1 = matchWins.player1 + 1;
-                                } else if (newScores.player2 > newScores.player1) {
-                                    newMatchWins.player2 = matchWins.player2 + 1;
-                                }
+                    const curCards = cardsRef.current;
+                    const curMatched = matchedRef.current;
+                    const curScores = scoresRef.current;
+                    const curPlayer = currentPlayerRef.current;
+                    const curMatchWins = matchWinsRef.current;
 
-                                if (isOnline) {
-                                    await updateRoom({
-                                        matched: newMatched,
-                                        scores: newScores,
-                                        matchWins: newMatchWins,
-                                        flipped: []
-                                    });
-                                } else {
-                                    setMatchWins(newMatchWins);
-                                    setMatched(newMatched);
-                                    setScores(newScores);
-                                    setFlipped([]);
-                                    setShowRoundResult(true);
-                                }
-                            } else if (isOnline) {
-                                await updateRoom({
-                                    matched: newMatched,
-                                    scores: newScores,
-                                    flipped: []
-                                });
-                            } else {
-                                setMatched(newMatched);
-                                setScores(newScores);
-                                setFlipped([]);
+                    if (curCards[first] && curCards[second] && curCards[first].value === curCards[second].value) {
+                        setTimeout(() => {
+                            const newMatched = [...curMatched, first, second];
+                            const newScores = { ...curScores, [`player${curPlayer}`]: curScores[`player${curPlayer}`] + 1 };
+                            matchedRef.current = newMatched;
+                            scoresRef.current = newScores;
+                            if (newMatched.length === TOTAL_CARDS) {
+                                const nw = { ...curMatchWins };
+                                if (newScores.player1 > newScores.player2) nw.player1++;
+                                else if (newScores.player2 > newScores.player1) nw.player2++;
+                                matchWinsRef.current = nw;
+                                setMatchWins(nw);
+                                if (!isOnline) setShowRoundResult(true);
                             }
+                            setMatched(newMatched);
+                            setScores(newScores);
+                            setFlipped([]);
+                            flippedRef.current = [];
                             setCanFlip(true);
                         }, 600);
-                    } else {
-                        setTimeout(async () => {
-                            const nextPlayer = currentPlayer === 1 ? 2 : 1;
-                            
-                            if (isOnline) {
-                                await updateRoom({
-                                    flipped: [],
-                                    currentPlayer: nextPlayer
-                                });
-                            } else {
-                                setFlipped([]);
-                                setCurrentPlayer(nextPlayer);
-                            }
+                    } else if (curCards[first] && curCards[second]) {
+                        setTimeout(() => {
+                            const nextPlayer = curPlayer === 1 ? 2 : 1;
+                            currentPlayerRef.current = nextPlayer;
+                            setCurrentPlayer(nextPlayer);
+                            setFlipped([]);
+                            flippedRef.current = [];
                             setCanFlip(true);
                         }, 600);
                     }
                 }
+            };
+
+            const handleCardClick = (index) => {
+                if (isOnline && currentPlayer !== playerNumber) return;
+                if (!canFlip || flipped.includes(index) || matched.includes(index)) return;
+                processFlip(index);
+                if (isOnline) p2p.send({ t: 'F', i: index });
             };
 
             const backToMenu = () => {
