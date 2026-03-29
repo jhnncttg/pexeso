@@ -253,11 +253,17 @@ class P2PConnection {
                     }
                     
                     this.conn.on('open', () => {
-                        console.log('✅ Připojeno! Data channel je otevřený');
-                        this.setupConnection();
-                        onConnected();
-                        resolve();
-                    });
+    console.log('✅ Připojeno! Data channel je otevřený');
+    this.setupConnection();
+
+    // 👇 POŠLI READY
+    setTimeout(() => {
+        this.send({ t: 'READY' });
+    }, 300);
+
+    onConnected();
+    resolve();
+});
                     
                     this.conn.on('error', (err) => {
                         console.error('❌ Connection error:', err);
@@ -427,6 +433,7 @@ class P2PConnection {
             const matchedRef = useRef([]);
             const scoresRef = useRef({ player1: 0, player2: 0 });
             const currentPlayerRef = useRef(1);
+            const seedRef = useRef(null);
             const matchWinsRef = useRef({ player1: 0, player2: 0 });
 
             const isOnline = gameMode === 'online';
@@ -517,7 +524,9 @@ useEffect(() => { flippedRef.current = flipped; }, [flipped]);
             
 
            const createRoom = async () => {
+    
     const seed = Math.floor(Math.random() * 2147483647);
+    seedRef.current = seed;
     const initialCards = generateCards(seed, PAIRS, selectedCategory);
     
     cardsRef.current = initialCards;
@@ -532,16 +541,7 @@ useEffect(() => { flippedRef.current = flipped; }, [flipped]);
                 // Hráč se připojil a connection je OPEN
                 setWaitingForPlayer(false);
                 
-                setTimeout(() => {
-                    console.log('Posílám INIT data hráči 2');
-                    const success = p2p.send({
-                        t: 'I',
-                        s: seed,
-                        c: selectedCategory,
-                        d: selectedDifficulty
-                    });
-                    console.log('Send success:', success);
-                }, 1000);
+                
             },
             (data) => handleRemoteRef.current?.(data)
         );
@@ -610,6 +610,23 @@ useEffect(() => { flippedRef.current = flipped; }, [flipped]);
             };
 
 const handleRemoteUpdate = (data) => {
+
+    // ✅ SEM TO PATŘÍ (úplně nahoru)
+
+if (data.t === 'READY') {
+    console.log('📩 Player 2 je READY → posílám INIT');
+
+    p2p.send({
+        t: 'I',
+        s: seedRef.current,
+        c: selectedCategory,
+        d: selectedDifficulty
+    });
+
+    return;
+} 
+
+    // ⬇️ zbytek necháš jak je
     if (data.t === 'I') {
         const config = difficultyConfig[data.d];
         const newCards = generateCards(data.s, config.pairs, data.c);
@@ -625,15 +642,19 @@ const handleRemoteUpdate = (data) => {
         setScores({ player1: 0, player2: 0 });
         currentPlayerRef.current = 1;
         setCurrentPlayer(1);
+
     } else if (data.t === 'F') {
         processFlip(data.i);
+
     } else if (data.t === 'R') {
         const remoteKey = playerNumber === 1 ? 'player2' : 'player1';
         const newReady = { ...readyForNextRound, [remoteKey]: true };
         setReadyForNextRound(newReady);
+
         if (playerNumber === 1 && newReady.player1 && newReady.player2) {
             setTimeout(() => startNextRound(), 500);
         }
+
     } else if (data.t === 'N') {
         const config = difficultyConfig[selectedDifficulty];
         const newCards = generateCards(data.s, config.pairs, selectedCategory);
@@ -650,6 +671,8 @@ const handleRemoteUpdate = (data) => {
         setReadyForNextRound({ player1: false, player2: false });
     }
 };
+
+
 handleRemoteRef.current = handleRemoteUpdate;
 
             const handleReadyForNextRound = () => {
