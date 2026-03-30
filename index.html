@@ -173,7 +173,7 @@ class P2PConnection {
     }
 
     generateGameCode() {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_';
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
         let code = '';
         for (let i = 0; i < 7; i++) {
             code += chars[Math.floor(Math.random() * chars.length)];
@@ -225,7 +225,7 @@ class P2PConnection {
 
             setTimeout(() => {
                 if (!this.peerId) {
-                    reject(new Error('Timeout při vytváření hry'));
+                    reject(new Error('Timeout'));
                 }
             }, 15000);
         });
@@ -1194,7 +1194,7 @@ handleRemoteRef.current = handleRemoteUpdate;
 ">
     <div style="text-align: center; width: 80%; max-width: 400px;">
         <h1 style="font-size: 3rem; margin-bottom: 1rem; font-family: 'Great Vibes', cursive;">Pexeso</h1>
-        <div id="loading-text" style="font-size: 1.2rem; margin-bottom: 2rem;">Příprava hry...</div>
+        <div id="loading-text" style="font-size: 1.2rem; margin-bottom: 2rem;">Setting up the game ...</div>
         
         <!-- Progress bar -->
         <div style="
