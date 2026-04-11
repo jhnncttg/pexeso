@@ -1,1374 +1,1 @@
-<!DOCTYPE html>
-<html lang="cs">
-<head>
-    <link rel="stylesheet" href="butterfly.css">
-    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap" rel="stylesheet">
-    <link rel="manifest" href="manifest.json">
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="Pexeso">
-    <link rel="apple-touch-icon" href="icons/icon-512.png">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#9333ea">
-    <meta name="description" content="Pexeso - A game for two players">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="Pexeso">
-    <script type="module" src="https://unpkg.com/@capacitor/core@latest/dist/capacitor.js"></script>
-    <title>Pexeso</title>
-    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-    <script src="butterfly.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    <style>
-body {
-    margin: 0;
-    padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-    touch-action: manipulation;
-    background-color: #1a1a2e;
-}
-
-.card-image {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    padding: 2px;
-    background-color: transparent;
-    display: block;
-}
-
-.game-grid {
-    display: grid;
-    gap: 0.25rem;
-    width: 100%;
-    height: 100%;
-    margin: 0 auto;
-}
-
-@media (orientation: portrait) {
-    .game-grid.easy {
-        grid-template-columns: repeat(4, 1fr);
-        grid-template-rows: repeat(5, 1fr);
-        max-width: 40vh;
-    }
-}
-
-@media (orientation: landscape) {
-    .game-grid.easy {
-        grid-template-columns: repeat(5, 1fr);
-        grid-template-rows: repeat(4, 1fr);
-        max-width: 50vh;
-    }
-}
-
-@media (orientation: portrait) {
-    .game-grid.medium {
-        grid-template-columns: repeat(5, 1fr);
-        grid-template-rows: repeat(8, 1fr);
-        max-width: 50vh;
-    }
-}
-
-@media (orientation: landscape) {
-    .game-grid.medium {
-        grid-template-columns: repeat(8, 1fr);
-        grid-template-rows: repeat(5, 1fr);
-        max-width: 80vh;
-    }
-}
-
-@media (orientation: portrait) {
-    .game-grid.hard {
-        grid-template-columns: repeat(6, 1fr);
-        grid-template-rows: repeat(10, 1fr);
-        max-width: 60vh;
-    }
-}
-
-@media (orientation: landscape) {
-    .game-grid.hard {
-        grid-template-columns: repeat(10, 1fr);
-        grid-template-rows: repeat(6, 1fr);
-        max-width: 100vh;
-    }
-}
-
-.card-button {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    border-radius: 0.5rem;
-    transition: all 0.3s;
-}
-
-@media (max-width: 640px) {
-    .game-grid {
-        gap: 0.15rem;
-    }
-    .card-button {
-        border-radius: 0.25rem;
-    }
-}
-    </style>
-</head>
-<body>
-    <div id="root"></div>
-  
-    <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
-
-        // P2P Connection class
-class P2PConnection {
-    constructor() {
-        this.peer = null;
-        this.conn = null;
-        this.isHost = false;
-        this.onDataReceived = null;
-        this.peerId = null;
-    }
-
-    getIceServers() {
-        // ========================================
-        // ZMĚŇ TADY: Vlož svůj Metered.ca API key
-        // ========================================
-        const METERED_API_KEY = '00cf55dfb1328e3cddc987d54af34ca473bd';
-        
-	console.log('🌐 Initializing WebRTC with TURN servers');
-
-        
-        return {
-            iceServers: [
-                { urls: "stun:stun.relay.metered.ca:80" },
-                {
-                    urls: "turn:global.relay.metered.ca:80",
-                    username: "a0567525fe30addb8c3fa4b9",
-                    credential: "rKNbvdfsia87phBA",
-                },
-                {
-                    urls: "turn:global.relay.metered.ca:80?transport=tcp",
-                    username: "a0567525fe30addb8c3fa4b9",
-                    credential: "rKNbvdfsia87phBA",
-                },
-                {
-                    urls: "turn:global.relay.metered.ca:443",
-                    username: "a0567525fe30addb8c3fa4b9",
-                    credential: "rKNbvdfsia87phBA",
-                },
-                {
-                    urls: "turns:global.relay.metered.ca:443?transport=tcp",
-                    username: "a0567525fe30addb8c3fa4b9",
-                    credential: "rKNbvdfsia87phBA",
-                }
-            ],
-            iceTransportPolicy: 'all'
-        }; 
-        
-        
-    }
-
-    generateGameCode() {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
-        let code = '';
-        for (let i = 0; i < 7; i++) {
-            code += chars[Math.floor(Math.random() * chars.length)];
-        }
-        return code;
-    }
-
-    async createGame(onConnected, onData) {
-        this.isHost = true;
-        this.onDataReceived = onData;
-        const gameCode = this.generateGameCode();
-        const peerId = gameCode.toLowerCase();
-
-        return new Promise((resolve, reject) => {
-            this.peer = new Peer(peerId, {
-                config: this.getIceServers(),
-                debug: 0
-            });
-
-            this.peer.on('open', (id) => {
-                this.peerId = id;
-                console.log('✅ Host peer vytvořen:', gameCode);
-                resolve(gameCode);
-            });
-            
-            this.peer.on('connection', (connection) => {
-                console.log('📞 Příchozí připojení od:', connection.peer);
-                this.conn = connection;
-                
-                this.conn.on('open', () => {
-                    console.log('✅ Data channel OPEN');
-                    this.setupConnection();
-                    onConnected();
-                });
-                
-                this.conn.on('error', (err) => {
-                    console.error('❌ Connection error:', err);
-                });
-                
-                this.conn.on('close', () => {
-                    console.log('🔴 Connection closed');
-                });
-            });
-
-            this.peer.on('error', (err) => {
-                console.error('❌ Peer error:', err);
-                reject(err);
-            });
-
-            setTimeout(() => {
-                if (!this.peerId) {
-                    reject(new Error('Timeout'));
-                }
-            }, 15000);
-        });
-    }
-
-    async joinGame(gameCode, onConnected, onData) {
-        this.isHost = false;
-        this.onDataReceived = onData;
-        
-        return new Promise((resolve, reject) => {
-            this.peer = new Peer({
-                config: this.getIceServers(),
-                debug: 0
-            });
-
-            this.peer.on('open', (myId) => {
-                console.log('✅ Můj peer ID:', myId);
-                const peerId = gameCode.trim().toLowerCase();
-                console.log('🔍 Hledám peer:', peerId);
-                
-                setTimeout(() => {
-                    console.log('📞 Volám connect()...');
-                    this.conn = this.peer.connect(peerId, {
-                        reliable: true,
-                        serialization: 'json'
-                    });
-                    
-                    if (this.conn.peerConnection) {
-                        this.conn.peerConnection.oniceconnectionstatechange = () => {
-                            console.log('🧊 ICE state:', this.conn.peerConnection.iceConnectionState);
-                        };
-                        this.conn.peerConnection.onconnectionstatechange = () => {
-                            console.log('?? Connection state:', this.conn.peerConnection.connectionState);
-                        };
-                    }
-                    
-                    this.conn.on('open', () => {
-    console.log('✅ Připojeno! Data channel je otevřený');
-    this.setupConnection();
-
-    // 👇 POŠLI READY
-    setTimeout(() => {
-        this.send({ t: 'READY' });
-    }, 300);
-
-    onConnected();
-    resolve();
-});
-                    
-                    this.conn.on('error', (err) => {
-                        console.error('❌ Connection error:', err);
-                        reject(new Error('Chyba připojení: ' + err.type));
-                    });
-                    
-                    this.conn.on('close', () => {
-                        console.log('🔴 Connection byl uzavřen');
-                    });
-                    
-                }, 500);
-            });
-
-            this.peer.on('error', (err) => {
-                console.error('❌ Peer error:', err.type, err.message);
-                if (err.type === 'peer-unavailable') {
-                    reject(new Error('Room not found! Player 1 must have the game open.'));
-                } else if (err.type === 'network') {
-                    reject(new Error('Network problem - check your internet'));
-                } else {
-                    reject(new Error('Chyba: ' + err.type));
-                }
-            });
-
-            setTimeout(() => {
-                if (!this.conn || !this.conn.open) {
-                    console.error('⏱️ Timeout po 30 sekundách');
-                    reject(new Error('Timeout - connection taking too long. Try again.'));
-                }
-            }, 30000);
-        });
-    }
-
-    setupConnection() {
-        if (!this.conn) return;
-        
-        this.conn.on('data', (data) => {
-            console.log('📥 Přijata data:', data.type);
-            if (this.onDataReceived) {
-                this.onDataReceived(data);
-            }
-        });
-    }
-
-    send(data) {
-        if (this.conn && this.conn.open) {
-            console.log('📤 Posílám:', data.type);
-            this.conn.send(data);
-            return true;
-        }
-        console.warn('⚠️ Nelze odeslat - spojení není aktivní');
-        return false;
-    }
-
-    disconnect() {
-        if (this.conn) {
-            this.conn.close();
-            this.conn = null;
-        }
-        if (this.peer) {
-            this.peer.destroy();
-            this.peer = null;
-        }
-        this.peerId = null;
-        console.log('👋 Odpojeno');
-    }
-}
-
-        const difficultyConfig = {
-            easy: { rows: 5, cols: 4, pairs: 10, name: "Easy" },
-            medium: { rows: 8, cols: 5, pairs: 20, name: "Medium" },
-            hard: { rows: 10, cols: 6, pairs: 30, name: "Hard" }
-        };
-
-        const categories = {
-            animals: {
-                name: "Animals",
-                images: [
-                    'images/animals/amstaf.png', 'images/animals/bear.png', 'images/animals/bengal.png',
-                    'images/animals/bird.png', 'images/animals/bonemouth.png', 'images/animals/butterfly.png',
-                    'images/animals/cat.png', 'images/animals/chicken.png', 'images/animals/cobra.png',
-                    'images/animals/dog.png', 'images/animals/dolphin.png', 'images/animals/elephant.png',
-                    'images/animals/fenix.png', 'images/animals/fish.png', 'images/animals/frog.png',
-                    'images/animals/girafe.png', 'images/animals/goat.png', 'images/animals/gorila.png',
-                    'images/animals/hamster.png', 'images/animals/horse.png', 'images/animals/kokr.png',
-                    'images/animals/labrador.png', 'images/animals/labut.png', 'images/animals/leguan.png',
-                    'images/animals/levhart.png', 'images/animals/lion.png', 'images/animals/monkey.png',
-                    'images/animals/motyl.png', 'images/animals/neon.png', 'images/animals/parrot.png',
-                    'images/animals/pav.png', 'images/animals/pelikan.png', 'images/animals/pinguin.png',
-                    'images/animals/retrivr.png', 'images/animals/rotvik.png', 'images/animals/skalar.png',
-                    'images/animals/star.png', 'images/animals/sykora.png', 'images/animals/tiger.png',
-                    'images/animals/turtle.png', 'images/animals/vlcak.png', 'images/animals/wolf.png',
-                    'images/animals/bluecat.png', 'images/animals/catty.png', 'images/animals/duck.png',
-                    'images/animals/holub.png', 'images/animals/jelen.png', 'images/animals/jezek.png',
-                    'images/animals/klaun.png', 'images/animals/krocan.png', 'images/animals/lasice.png',
-                    'images/animals/liska.png', 'images/animals/lvhart.png', 'images/animals/makak.png',
-                    'images/animals/mlok.png', 'images/animals/myval.png', 'images/animals/pelikan2.png',
-                    'images/animals/pitbull.png', 'images/animals/pomci.png', 'images/animals/puma.png',
-                    'images/animals/redpanda.png', 'images/animals/shark.png', 'images/animals/slune.png',
-                    'images/animals/snek.png', 'images/animals/srnce.png', 'images/animals/treska.png',
-                    'images/animals/zajic.png', 'images/animals/zebra.png', 'images/animals/zluva.png'
-                ]
-            },
-            biblical: {
-                name: "Biblical",
-                images: [
-                    "images/biblical/aron.png", "images/biblical/baptizo.png", "images/biblical/Dorkas.png",
-                    "images/biblical/farizeus.png", "images/biblical/fish.png", "images/biblical/fisherman.png",
-                    "images/biblical/grave.png", "images/biblical/herodes.png", "images/biblical/jericho.png",
-                    "images/biblical/jesus.png", "images/biblical/jesuscloud.png", "images/biblical/jesuszjeveni.png",
-                    "images/biblical/jidas.png", "images/biblical/john.png", "images/biblical/Josef.png",
-                    "images/biblical/jozue2.png", "images/biblical/lazar.png", "images/biblical/maria.png",
-                    "images/biblical/moses.png", "images/biblical/natanael.png", "images/biblical/onezim.png",
-                    "images/biblical/oslatko.png", "images/biblical/ovce.png", "images/biblical/palm.png",
-                    "images/biblical/paul.png", "images/biblical/sea.png", "images/biblical/snake.png",
-                    "images/biblical/sun.png", "images/biblical/wine.png", "images/biblical/zebedej.png",
-                    "images/biblical/arch.png", "images/biblical/bloud.png", "images/biblical/JESUSrisen.png",
-                    "images/biblical/krize.png", "images/biblical/net.png", "images/biblical/perla.png",
-                    "images/biblical/prayer.png", "images/biblical/roman.png", "images/biblical/seastorm.png",
-                    "images/biblical/angels.png", "images/biblical/bread.png", "images/biblical/jerusalem.png",
-                    "images/biblical/jesuspilat.png", "images/biblical/koruna.png", "images/biblical/stone.png",
-                    "images/biblical/ucho.png", "images/biblical/uzdraveni.png",
-                    "images/biblical/shalom.png", "images/biblical/stanek.png", "images/biblical/svitek.png"
-                ]
-            }
-        };
-
-        const colors = [
-            '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8',
-            '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B739', '#52BE80',
-            '#EC7063', '#5DADE2', '#F5B041', '#AF7AC5', '#48C9B0',
-            '#EB984E', '#7FB3D5', '#73C6B6', '#F1948A', '#85929E',
-            '#D5DBDB', '#AED6F1', '#FADBD8', '#D7BDE2', '#A9DFBF',
-            '#FAD7A0', '#D6EAF8', '#FCF3CF', '#E8DAEF', '#D1F2EB'
-        ];
-
-        const PexesoGame = () => {
-            const [gameMode, setGameMode] = useState('menu');
-	    const [p2p] = useState(() => new P2PConnection());
-            const [selectedCategory, setSelectedCategory] = useState('animals');
-            const [selectedDifficulty, setSelectedDifficulty] = useState('hard');
-            const [roomCode, setRoomCode] = useState('');
-            const [joinCode, setJoinCode] = useState('');
-            const [playerNumber, setPlayerNumber] = useState(null);
-            const [waitingForPlayer, setWaitingForPlayer] = useState(false);
-            
-            const [showButterfly, setShowButterfly] = useState(true);
-            const [butterflyWingsStopped, setButterflyWingsStopped] = useState(false);
-            const menuBoxRef = useRef(null);
-            const [butterflyPosition, setButterflyPosition] = useState({ top: 0, left: 0 });
-            
-            
-            const [cards, setCards] = useState([]);
-            const [flipped, setFlipped] = useState([]);
-            const [matched, setMatched] = useState([]);
-            const [currentPlayer, setCurrentPlayer] = useState(1);
-            const [scores, setScores] = useState({ player1: 0, player2: 0 });
-            const [canFlip, setCanFlip] = useState(true);
-            
-            const [matchWins, setMatchWins] = useState({ player1: 0, player2: 0 });
-            const [readyForNextRound, setReadyForNextRound] = useState({ player1: false, player2: false });
-            const [showRoundResult, setShowRoundResult] = useState(false);
-
-            const handleRemoteRef = useRef(null);
-            const flippedRef = useRef([]);
-            const cardsRef = useRef([]);
-            const matchedRef = useRef([]);
-            const scoresRef = useRef({ player1: 0, player2: 0 });
-            const currentPlayerRef = useRef(1);
-            const seedRef = useRef(null);
-            const matchWinsRef = useRef({ player1: 0, player2: 0 });
-
-            const isOnline = gameMode === 'online';
-
-            const currentConfig = difficultyConfig[selectedDifficulty];
-            
-            
-            
-            const TOTAL_CARDS = currentConfig.rows * currentConfig.cols;
-            const PAIRS = currentConfig.pairs;
-
-useEffect(() => {
-    if (gameMode === 'menu' && menuBoxRef.current) {
-        const rect = menuBoxRef.current.getBoundingClientRect();
-        setButterflyPosition({
-            top: rect.top + 20,
-            left: rect.right - 80
-        });
-        
-        const stopWingsTimer = setTimeout(() => {
-            setButterflyWingsStopped(true);
-        }, 8000);
-        
-        return () => clearTimeout(stopWingsTimer);
-    }
-}, [gameMode]);
-
-useEffect(() => { flippedRef.current = flipped; }, [flipped]);
-
-
-            const launchConfetti = () => {
-                const duration = 2 * 1000;
-                const defaults = {
-                    origin: { x: 0.5, y: 0.5 },
-                    spread: 360,
-                    startVelocity: 12,
-                    gravity: 0,
-                    particleCount: 100,
-                    colors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00'],
-                    scalar: 1.2,
-                    zIndex: 999
-                };
-                confetti(defaults);
-            }; 
-
-            const getRandomImages = (count, categoryKey) => {
-                const cat = categories[categoryKey];
-                if (!cat || cat.images.length < count) return [];
-                const shuffled = [...cat.images].sort(() => Math.random() - 0.5);
-                return shuffled.slice(0, count);
-            };
-
-            // Deterministické generování karet ze seedu - stejný seed = stejné karty na obou zařízeních
-            const generateCards = (seed, pairs, categoryKey) => {
-                // Seeded RNG (mulberry32)
-                let s = seed;
-                const rng = () => {
-                    s |= 0; s = s + 0x6D2B79F5 | 0;
-                    let t = Math.imul(s ^ s >>> 15, 1 | s);
-                    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
-                    return ((t ^ t >>> 14) >>> 0) / 4294967296;
-                };
-                // Fisher-Yates shuffle - deterministický na rozdíl od .sort(() => rng() - 0.5)
-                const fisherYates = (arr) => {
-                    const a = [...arr];
-                    for (let i = a.length - 1; i > 0; i--) {
-                        const j = Math.floor(rng() * (i + 1));
-                        [a[i], a[j]] = [a[j], a[i]];
-                    }
-                    return a;
-                };
-                const cat = categories[categoryKey];
-                const images = fisherYates(cat.images).slice(0, pairs);
-                const cardValues = [];
-                for (let i = 0; i < pairs; i++) cardValues.push(i, i);
-                return fisherYates(cardValues).map(value => ({
-                    value,
-                    color: colors[value % colors.length],
-                    animal: images[value]
-                }));
-            };
-
-            
-
-           const createRoom = async () => {
-    
-    const seed = Math.floor(Math.random() * 2147483647);
-    seedRef.current = seed;
-    const initialCards = generateCards(seed, PAIRS, selectedCategory);
-    
-    cardsRef.current = initialCards;
-    setCards(initialCards);
-    setPlayerNumber(1);
-    setGameMode('online');
-    setWaitingForPlayer(true);
-    
-    try {
-        const code = await p2p.createGame(
-            () => {
-                // Hráč se připojil a connection je OPEN
-                setWaitingForPlayer(false);
-                
-                
-            },
-            (data) => handleRemoteRef.current?.(data)
-        );
-        setRoomCode(code);
-    } catch (err) {
-        alert('Error creating game: ' + err.message);
-        backToMenu();
-    }
-};
-
-          const joinRoom = async () => {
-    if (!joinCode.trim()) return;
-    
-    setPlayerNumber(2);
-    setGameMode('online');
-    setWaitingForPlayer(true);
-    
-    try {
-        await p2p.joinGame(
-            joinCode.trim(),
-            () => setWaitingForPlayer(false),
-            (data) => handleRemoteRef.current?.(data)
-        );
-    } catch (err) {
-        alert(err.message);
-        backToMenu();
-    }
-};  
-
-            
-
-
-            const startNextRound = () => {
-                const seed = Math.floor(Math.random() * 2147483647);
-                const config = difficultyConfig[selectedDifficulty];
-                const shuffled = generateCards(seed, config.pairs, selectedCategory);
-                cardsRef.current = shuffled;
-                setCards(shuffled);
-                setFlipped([]);
-                flippedRef.current = [];
-                matchedRef.current = [];
-                setMatched([]);
-                scoresRef.current = { player1: 0, player2: 0 };
-                setScores({ player1: 0, player2: 0 });
-                currentPlayerRef.current = 1;
-                setCurrentPlayer(1);
-                setReadyForNextRound({ player1: false, player2: false });
-                if (isOnline) {
-                    p2p.send({ t: 'N', s: seed });
-                } else {
-                    setShowRoundResult(false);
-                }
-            };
-
-const handleRemoteUpdate = (data) => {
-
-if (data.t === 'READY') {
-    p2p.send({ t: 'I', s: seedRef.current, c: selectedCategory, d: selectedDifficulty });
-    return;
-}
-
-    if (data.t === 'I') {
-        const config = difficultyConfig[data.d];
-        const newCards = generateCards(data.s, config.pairs, data.c);
-        cardsRef.current = newCards;
-        setCards(newCards);
-        setSelectedCategory(data.c);
-        setSelectedDifficulty(data.d);
-        setFlipped([]);
-        flippedRef.current = [];
-        matchedRef.current = [];
-        setMatched([]);
-        scoresRef.current = { player1: 0, player2: 0 };
-        setScores({ player1: 0, player2: 0 });
-        currentPlayerRef.current = 1;
-        setCurrentPlayer(1);
-
-    } else if (data.t === 'F') {
-        // Pouze vizualni preklopeni - zadna logika
-        const nf = [...flippedRef.current, data.i];
-        flippedRef.current = nf;
-        setFlipped(nf);
-
-    } else if (data.t === 'NM') {
-        // No match - aktivni hrac rozhodl: karty data.f1, data.f2, pristi hrac data.p
-        flippedRef.current = [data.f1, data.f2];
-        setFlipped([data.f1, data.f2]);
-        setCanFlip(false);
-        setTimeout(() => {
-            flippedRef.current = [];
-            setFlipped([]);
-            currentPlayerRef.current = data.p;
-            setCurrentPlayer(data.p);
-            setCanFlip(true);
-        }, 600);
-
-    } else if (data.t === 'HIT') {
-        // Match - aktivni hrac rozhodl: karty, skore, hrac na tahu
-        flippedRef.current = [data.f1, data.f2];
-        setFlipped([data.f1, data.f2]);
-        setCanFlip(false);
-        setTimeout(() => {
-            const newMatched = [...matchedRef.current, data.f1, data.f2];
-            matchedRef.current = newMatched;
-            scoresRef.current = data.s;
-            matchWinsRef.current = data.mw;
-            setMatched(newMatched);
-            setScores(data.s);
-            setMatchWins(data.mw);
-            currentPlayerRef.current = data.p;
-            setCurrentPlayer(data.p);
-            flippedRef.current = [];
-            setFlipped([]);
-            setCanFlip(true);
-        }, 600);
-
-    } else if (data.t === 'R') {
-        const remoteKey = playerNumber === 1 ? 'player2' : 'player1';
-        const newReady = { ...readyForNextRound, [remoteKey]: true };
-        setReadyForNextRound(newReady);
-        if (playerNumber === 1 && newReady.player1 && newReady.player2) {
-            setTimeout(() => startNextRound(), 500);
-        }
-
-    } else if (data.t === 'N') {
-        const config = difficultyConfig[selectedDifficulty];
-        const newCards = generateCards(data.s, config.pairs, selectedCategory);
-        cardsRef.current = newCards;
-        setCards(newCards);
-        setFlipped([]);
-        flippedRef.current = [];
-        matchedRef.current = [];
-        setMatched([]);
-        scoresRef.current = { player1: 0, player2: 0 };
-        setScores({ player1: 0, player2: 0 });
-        currentPlayerRef.current = 1;
-        setCurrentPlayer(1);
-        setReadyForNextRound({ player1: false, player2: false });
-    }
-};
-
-handleRemoteRef.current = handleRemoteUpdate;
-
-            const handleReadyForNextRound = () => {
-                if (isOnline) {
-                    const newReady = { ...readyForNextRound, [`player${playerNumber}`]: true };
-                    setReadyForNextRound(newReady);
-                    p2p.send({ t: 'R' });
-                    // Pouze host (P1) startuje nové kolo, aby oba měli stejný seed
-                    if (playerNumber === 1 && newReady.player1 && newReady.player2) {
-                        setTimeout(() => startNextRound(), 500);
-                    }
-                } else {
-                    startNextRound();
-                }
-            };
-
-            const initLocalGame = () => {
-                const selectedImages = getRandomImages(PAIRS, selectedCategory);
-
-                const cardValues = [];
-                for (let i = 0; i < PAIRS; i++) {
-                    cardValues.push(i, i);
-                }
-                
-                const shuffled = cardValues
-                    .map(value => ({ 
-                        value, 
-                        color: colors[value % colors.length], 
-                        animal: selectedImages[value],
-                        sort: Math.random() 
-                    }))
-                    .sort((a, b) => a.sort - b.sort)
-                    .map(({ value, color, animal }) => ({ value, color, animal }));
-                
-                cardsRef.current = shuffled;
-                setCards(shuffled);
-                setFlipped([]);
-                flippedRef.current = [];
-                matchedRef.current = [];
-                setMatched([]);
-                currentPlayerRef.current = 1;
-                setCurrentPlayer(1);
-                scoresRef.current = { player1: 0, player2: 0 };
-                setScores({ player1: 0, player2: 0 });
-                matchWinsRef.current = { player1: 0, player2: 0 };
-                setMatchWins({ player1: 0, player2: 0 });
-                setCanFlip(true);
-                setShowRoundResult(false);
-                setGameMode('local');
-            };
-
-            const processFlip = (index) => {
-                const newFlipped = [...flippedRef.current, index];
-                flippedRef.current = newFlipped;
-                setFlipped(newFlipped);
-
-                if (newFlipped.length === 2) {
-                    setCanFlip(false);
-                    const [first, second] = newFlipped;
-                    const curCards = cardsRef.current;
-                    const curMatched = matchedRef.current;
-                    const curScores = scoresRef.current;
-                    const curPlayer = currentPlayerRef.current;
-                    const curMatchWins = matchWinsRef.current;
-
-                    if (curCards[first] && curCards[second] && curCards[first].value === curCards[second].value) {
-                        // SHODA
-                        setTimeout(() => {
-                            const newMatched = [...curMatched, first, second];
-                            const newScores = { ...curScores, [`player${curPlayer}`]: curScores[`player${curPlayer}`] + 1 };
-                            const nw = { ...curMatchWins };
-                            if (newMatched.length === TOTAL_CARDS) {
-                                if (newScores.player1 > newScores.player2) nw.player1++;
-                                else if (newScores.player2 > newScores.player1) nw.player2++;
-                                matchWinsRef.current = nw;
-                                setMatchWins(nw);
-                                if (!isOnline) setShowRoundResult(true);
-                            }
-                            matchedRef.current = newMatched;
-                            scoresRef.current = newScores;
-                            setMatched(newMatched);
-                            setScores(newScores);
-                            flippedRef.current = [];
-                            setFlipped([]);
-                            setCanFlip(true);
-                            if (isOnline) p2p.send({ t: 'HIT', f1: first, f2: second, s: newScores, mw: nw, p: curPlayer });
-                        }, 600);
-                    } else if (curCards[first] && curCards[second]) {
-                        // NESHODA
-                        setTimeout(() => {
-                            const nextPlayer = curPlayer === 1 ? 2 : 1;
-                            currentPlayerRef.current = nextPlayer;
-                            setCurrentPlayer(nextPlayer);
-                            flippedRef.current = [];
-                            setFlipped([]);
-                            setCanFlip(true);
-                            if (isOnline) p2p.send({ t: 'NM', f1: first, f2: second, p: nextPlayer });
-                        }, 600);
-                    }
-                }
-            };
-
-            const handleCardClick = (index) => {
-                if (isOnline && currentPlayerRef.current !== playerNumber) return;
-                if (!canFlip || flippedRef.current.includes(index) || matchedRef.current.includes(index)) return;
-                processFlip(index);
-                if (isOnline) p2p.send({ t: 'F', i: index });
-            };
-
-            const backToMenu = () => {
-		p2p.disconnect();
-                setGameMode('menu');
-                setRoomCode('');
-                setJoinCode('');
-                setPlayerNumber(null);
-                setWaitingForPlayer(false);
-                setCards([]);
-                setFlipped([]);
-                setMatched([]);
-                setCurrentPlayer(1);
-                setScores({ player1: 0, player2: 0 });
-                setMatchWins({ player1: 0, player2: 0 });
-                setReadyForNextRound({ player1: false, player2: false });
-                setShowRoundResult(false);
-                setShowButterfly(true);
-                setButterflyWingsStopped(false);
-            };
-
-            const isGameOver = matched.length === TOTAL_CARDS;
-            const isSeriesOver = matchWins.player1 >= 2 || matchWins.player2 >= 2;
-            const totalGamesPlayed = matchWins.player1 + matchWins.player2;
-
-            useEffect(() => {
-                if (isSeriesOver) {
-                    launchConfetti();
-                }
-            }, [isSeriesOver]);
-
-            if (isSeriesOver) {
-                const winner = matchWins.player1 > matchWins.player2 ? 'Player 1' : 'Player 2';
-
-                return (
-                    <div className="h-screen flex items-center justify-center text-white text-center p-6" style={{
-                        backgroundImage: 'url(images/meadow.png)',
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center'
-                    }}>
-                        <div className="rounded-2xl shadow-2xl p-8 max-w-md w-full border-4 border-yellow-500" style={{backgroundColor: 'rgba(181, 101, 29, 0.75)'}}>
-                            <h2 className="text-4xl font-bold mb-4" style={{color: '#FFD700'}}>🎉 {winner} wins the series!</h2>
-                            <p className="text-lg mb-6" style={{color: '#FFD700'}}>Final score: {matchWins.player1} – {matchWins.player2}</p>
-                            <button
-                                onClick={backToMenu}
-                                className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 px-6 rounded-lg text-xl transition-all transform hover:scale-105"
-                            >
-                                Back to Menu
-                            </button>
-                        </div>
-                    </div>
-                );
-            }
-
-            if (gameMode === 'menu') {
-                return (
-                    <div className="h-screen p-4 flex items-center justify-center" style={{
-                        backgroundImage: 'url(images/meadow.png)',
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center'
-                    }}>
-                    
-           <ButterflyComponent position={butterflyPosition} wingsStopped={butterflyWingsStopped} />          
-                    
-                        <div ref={menuBoxRef} className="rounded-2xl shadow-2xl p-8 max-w-md w-full border border-yellow-500 relative" style={{
-
-                            backgroundColor: 'rgba(181, 101, 29, 0.75)',
-                            backdropFilter: 'blur(1px)'
-                        }}>
-                       
-<button
-    onClick={async () => {
-        if (window.confirm('Do you really want to exit the app?')) {
-            try {
-                // Capacitor 7 - minimalizace
-                if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
-                    await window.Capacitor.Plugins.App.minimizeApp();
-                }
-            } catch (e) {
-                alert('Error: ' + e.message);
-            }
-        }
-    }}
-    className="absolute top-2 left-2 text-yellow-500 hover:text-yellow-400 text-sm font-bold z-10"
-    style={{fontFamily: 'Great Vibes, cursive'}}
->
-    Exit
-</button>
-                            <h1 className="text-5xl text-center mb-8 text-yellow-500" style={{ fontFamily: 'Great Vibes, cursive' }}>
-                                Pexeso <span className="text-sm align-top text-yellow-400">for Mydli</span>
-                            </h1>
-
-                            <div className="space-y-4">
-                                <div className="mb-4">
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">Choose a motive:</label>
-                                    <select
-                                        value={selectedCategory}
-                                        onChange={(e) => setSelectedCategory(e.target.value)}
-                                        className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-yellow-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                    >
-                                        {Object.entries(categories).map(([key, cat]) => (
-                                            <option key={key} value={key}>{cat.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div className="mb-4">
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">Difficulty:</label>
-                                    <select
-                                        value={selectedDifficulty}
-                                        onChange={(e) => setSelectedDifficulty(e.target.value)}
-                                        className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-yellow-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                    >
-                                        {Object.entries(difficultyConfig).map(([key, config]) => (
-                                            <option key={key} value={key}>
-                                                {config.name} ({config.pairs} pairs)
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <button
-                                    onClick={initLocalGame}
-                                    className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-6 rounded-lg text-xl transition-all transform hover:scale-105"
-                                >
-                                    2 players on this device
-                                </button>
-
-                                <div className="border-t-2 border-yellow-300 my-6"></div>
-                                
-                                <button
-                                    onClick={createRoom}
-                                    className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-6 rounded-lg text-xl transition-all transform hover:scale-105"
-                                >
-                                    Play online with a friend
-                                </button>
-
-                                <div className="space-y-2">
-                                    <input
-    type="text"
-    placeholder="Enter game code"
-    value={joinCode}
-    onChange={(e) => setJoinCode(e.target.value)}
-    className="w-full px-4 py-3 border-2 border-yellow-600 bg-gray-700 text-white rounded-lg text-center text-sm font-mono uppercase placeholder-gray-400"
-    maxLength="50"
-/>
-
-                                    <button
-                                        onClick={joinRoom}
-                                        className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-6 rounded-lg text-xl transition-all transform hover:scale-105"
-                                    >
-                                        Join the game
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                );
-            }
-
- if (waitingForPlayer) {       
-    return (
-        <div className="h-screen p-4 flex items-center justify-center" style={{
-            backgroundImage: 'url(images/meadow.png)',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center'
-        }}>
-            <div className="bg-gray-800 rounded-2xl shadow-2xl p-8 max-w-md w-full text-center border border-yellow-700">
-                <h2 className="text-3xl font-bold mb-4 text-white">Waiting for player...</h2>
-                <div className="bg-gray-700 rounded-lg p-6 mb-6 border border-yellow-600">
-                    <p className="text-sm text-gray-400 mb-2">Game code:</p>
-                    <p className="text-3xl font-mono font-bold text-purple-400 mb-4">{roomCode}</p>
-                    
-                    {/* NOVÉ TLAČÍTKO - SHARE */}
-                    <button
-    onClick={async () => {
-        try {
-            // Capacitor Share API (Android APK)
-            if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Share) {
-                await window.Capacitor.Plugins.Share.share({
-                    title: 'Join my Pexeso game!',
-                    text: roomCode,
-                    dialogTitle: 'Share with friends'
-                });
-            }
-            // Browser Share API
-            else if (navigator.share) {
-                await navigator.share({
-                    title: 'Join my Pexeso game!',
-                    text: roomCode
-                });
-            }
-            // Fallback: Copy to clipboard
-            else {
-                await navigator.clipboard.writeText(roomCode);
-                alert('Code copied: ' + roomCode);
-            }
-        } catch (err) {
-            console.error('Share error:', err);
-            if (err.message && !err.message.includes('cancel')) {
-                try {
-                    await navigator.clipboard.writeText(roomCode);
-                    alert('Code copied: ' + roomCode);
-                } catch {
-                    alert('Game Code: ' + roomCode);
-                }
-            }
-        }
-    }}
-    className="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-lg text-lg transition-all transform hover:scale-105 flex items-center justify-center gap-2"
->
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="18" cy="5" r="3"></circle>
-        <circle cx="6" cy="12" r="3"></circle>
-        <circle cx="18" cy="19" r="3"></circle>
-        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-    </svg>
-    Invite Friend
-</button>
-                </div>
-                <div className="text-gray-300 mb-4">
-                    <p className="text-sm text-gray-400">
-                        {categories[selectedCategory].name} - {difficultyConfig[selectedDifficulty].name}
-                    </p>
-                </div>
-                <button
-                    onClick={backToMenu}
-                    className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg"
-                >
-                    ← Back
-                </button>
-            </div>
-        </div>
-    );
-}
-
-            return (
-                <div className="h-screen p-2 flex flex-col overflow-hidden" style={{
-                    backgroundImage: 'url(images/meadow.png)',
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center'
-                }}>
-                    <div className="w-full h-full flex flex-col max-w-2xl mx-auto">
-                        <div className="flex items-center justify-between mb-1">
-                            <button
-                                onClick={backToMenu}
-                                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm font-bold"
-                            >
-                                ← Menu
-                            </button>
-                           <h1 className="text-xl md:text-2xl font-bold text-white text-center flex-1" style={{fontFamily: 'Great Vibes, cursive'}}>
-    Pexeso <span className="text-[10px] text-white/70 relative -top-2 ml-1">for Mydli</span>
-</h1>
-
-                            
-                        </div>
-                        
-                        <div className="bg-gray-800 rounded-lg shadow-xl p-1 mb-1 flex-shrink-0 border border-yellow-700">
-                            {totalGamesPlayed < 3 && (
-                                <div className="flex justify-center gap-1 mb-1">
-                                    <div className="text-xs font-bold text-gray-400">Best of 3:</div>
-                                    <div className="flex gap-1">
-                                        {[0, 1, 2].map((i) => (
-                                            <div key={i} className="w-4 h-4 rounded-full flex items-center justify-center text-xs font-bold" style={{
-                                                backgroundColor: i < matchWins.player1 ? '#3B82F6' : i < matchWins.player1 + matchWins.player2 ? '#EF4444' : '#E5E7EB',
-                                                color: i < matchWins.player1 + matchWins.player2 ? 'white' : '#9CA3AF',
-                                                fontSize: '10px'
-                                            }}>
-                                                {i < matchWins.player1 ? '1' : i < matchWins.player1 + matchWins.player2 ? '2' : '·'}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className="flex justify-between items-center">
-                                <div className={`flex-1 p-1 rounded-lg ${currentPlayer === 1 && !isGameOver ? 'bg-blue-500 text-white' : 'bg-gray-700 text-gray-300'}`}>
-                                    <div className="text-xs font-bold leading-tight">
-                                        Player 1 {isOnline && playerNumber === 1 && '(You)'}
-                                        <span className="ml-1">{matchWins.player1}</span>
-                                    </div>
-                                    <div className="text-base md:text-xl font-bold leading-tight">{scores.player1}</div>
-                                </div>
-                                
-                                {!isOnline && !isSeriesOver && (
-                                    <button
-                                        onClick={initLocalGame}
-                                        className="mx-1 bg-green-500 hover:bg-green-600 text-white p-1.5 rounded-full shadow-lg transition-transform hover:scale-110"
-                                        title="New series"
-                                    >
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <polyline points="23 4 23 10 17 10"></polyline>
-                                            <polyline points="1 20 1 14 7 14"></polyline>
-                                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-                                        </svg>
-                                    </button>
-                                )}
-                                
-                                <div className={`flex-1 p-1 rounded-lg ${currentPlayer === 2 && !isGameOver ? 'bg-red-500 text-white' : 'bg-gray-700 text-gray-300'}`}>
-                                    <div className="text-xs font-bold leading-tight">
-                                        Player 2 {isOnline && playerNumber === 2 && '(You)'}
-                                        <span className="ml-1">{matchWins.player2}</span>
-                                    </div>
-                                    <div className="text-base md:text-xl font-bold leading-tight">{scores.player2}</div>
-                                </div>
-                            </div>
-
-                            {isGameOver && !isSeriesOver && (
-                                <div className="text-center p-1 mt-1 bg-gray-700 rounded-lg border-2 border-yellow-500">
-                                    <div className="text-sm md:text-base font-bold text-white">
-                                        {scores.player1 > scores.player2 ? 'Player 1 won this round!' : 
-                                         scores.player2 > scores.player1 ? 'Player 2 won this round!' : 'Draw!'}
-                                    </div>
-                                    <div className="text-xs text-gray-400 mt-0.5">
-                                        Series: {matchWins.player1} - {matchWins.player2}
-                                    </div>
-                                    {isOnline ? (
-                                        <>
-                                            <button
-                                                onClick={handleReadyForNextRound}
-                                                disabled={readyForNextRound[`player${playerNumber}`]}
-                                                className={`mt-1 px-3 py-1 rounded-lg font-bold text-xs ${
-                                                    readyForNextRound[`player${playerNumber}`] 
-                                                        ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
-                                                        : 'bg-green-500 hover:bg-green-600 text-white'
-                                                }`}
-                                            >
-                                                {readyForNextRound[`player${playerNumber}`] 
-                                                    ? 'Ready' 
-                                                    : 'Next round'}
-                                            </button>
-                                            {(readyForNextRound.player1 || readyForNextRound.player2) && 
-                                             !(readyForNextRound.player1 && readyForNextRound.player2) && (
-                                                <div className="text-xs text-gray-400 mt-0.5">
-                                                    Waiting for the second player...
-                                                </div>
-                                            )}
-                                        </>
-                                    ) : (
-                                        <button
-                                            onClick={handleReadyForNextRound}
-                                            className="mt-1 px-3 py-1 rounded-lg font-bold text-xs bg-green-500 hover:bg-green-600 text-white"
-                                        >
-                                            Next round
-                                        </button>
-                                    )}
-                                </div>
-                            )}
-
-                            {isGameOver && isSeriesOver && (
-                                <div className="text-center p-1 mt-1 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-lg border-2 border-yellow-600">
-                                    <div className="text-base md:text-lg font-bold text-white mb-0.5">
-                                        OVERALL WINNER!
-                                    </div>
-                                    <div className="text-sm md:text-base font-bold text-white">
-                                        {matchWins.player1 > matchWins.player2 ? 'Player 1' : 'Player 2'}
-                                    </div>
-                                    <div className="text-xs text-white mt-0.5">
-                                        Series: {matchWins.player1} - {matchWins.player2}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="bg-gray-800 rounded-lg shadow-xl p-2 flex-1 overflow-hidden border border-gray-700 min-h-0">
-                            <div className={`game-grid ${selectedDifficulty}`}>
-                                {cards.map((card, index) => {
-                                    const isFlipped = flipped.includes(index);
-                                    const isMatched = matched.includes(index);
-                                    
-                                    return (
-                                        <button
-                                            key={index}
-                                            onClick={() => handleCardClick(index)}
-                                            className={`card-button transition-all duration-300 ${
-                                                isMatched ? 'opacity-0 pointer-events-none' : 'opacity-100'
-                                            }`}
-                                            style={{
-                                                backgroundColor: isFlipped || isMatched ? 'transparent' : '#6B7280',
-                                                cursor: canFlip && !isFlipped && !isMatched && (!isOnline || currentPlayer === playerNumber) ? 'pointer' : 'default'
-                                            }}
-                                            disabled={!canFlip || isFlipped || isMatched || (isOnline && currentPlayer !== playerNumber)}
-                                        >
-                                            <div className="w-full h-full flex items-center justify-center">
-                                                {(isFlipped || isMatched) ? (
-                                                    <img src={card.animal} alt="obrázek" className="card-image" />
-                                                ) : (
-                                                    <div className="flex flex-col items-center justify-center h-full">
-    <span className="text-black text-lg md:text-xl leading-tight" style={{fontFamily: 'Great Vibes, cursive'}}>Pexeso</span>
-    <span className="text-black text-[8px] md:text-[10px] leading-none" style={{fontFamily: 'Great Vibes, cursive'}}>for Mydli</span>
-</div>
-                                                )}
-                                            </div>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            );
-        };
-
-        ReactDOM.render(<PexesoGame />, document.getElementById('root'));
-    </script>
-  
-
-<!-- Loading screen s progress barem -->
-<div id="loading-screen" style="
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-    color: white;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-">
-    <div style="text-align: center; width: 80%; max-width: 400px;">
-        <h1 style="font-size: 3rem; margin-bottom: 1rem; font-family: 'Great Vibes', cursive;">Pexeso</h1>
-        <div id="loading-text" style="font-size: 1.2rem; margin-bottom: 2rem;">Setting up the game ...</div>
-        
-        <!-- Progress bar -->
-        <div style="
-            width: 100%;
-            height: 8px;
-            background: rgba(255,255,255,0.3);
-            border-radius: 10px;
-            overflow: hidden;
-            margin-bottom: 1rem;
-        ">
-            <div id="progress-bar" style="
-                width: 0%;
-                height: 100%;
-                background: linear-gradient(90deg, #4ade80, #22c55e);
-                transition: width 0.3s ease;
-                border-radius: 10px;
-            "></div>
-        </div>
-        
-        <div id="progress-text" style="font-size: 0.9rem; color: rgba(255,255,255,0.8);">0%</div>
-        <div id="file-counter" style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 0.5rem;">0 / 0 files</div>
-    </div>
-</div>
-
-<style>
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-}
-
-#loading-screen {
-    transition: opacity 0.5s ease;
-}
-</style>
-
-<script>
-// Kontrola, jestli je cache připravená
-async function isCacheReady() {
-    if (!('caches' in window)) return false;
-    
-    try {
-        const cache = await caches.open('pexeso-cache-v2');
-        const keys = await cache.keys();
-        return keys.length > 10;
-    } catch (err) {
-        return false;
-    }
-}
-
-// Okamžitě zkontrolujeme cache
-isCacheReady().then(isReady => {
-    const loadingScreen = document.getElementById('loading-screen');
-    const progressBar = document.getElementById('progress-bar');
-    const progressText = document.getElementById('progress-text');
-    const loadingText = document.getElementById('loading-text');
-    const fileCounter = document.getElementById('file-counter');
-    
-    if (isReady) {
-        console.log('Cache ready - hiding loading screen immediately');
-        loadingScreen.style.display = 'none';
-    } else {
-        console.log('Cache not ready - showing loading screen with progress');
-        
-        const timeout = setTimeout(() => {
-            console.log('Loading timeout - hiding screen');
-            loadingText.textContent = 'Some files could not be loaded';
-            setTimeout(() => {
-                loadingScreen.style.opacity = '0';
-                setTimeout(() => {
-                    loadingScreen.style.display = 'none';
-                }, 500);
-            }, 2000);
-        }, 60000);
-        
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.addEventListener('message', (event) => {
-                if (event.data.type === 'CACHE_PROGRESS') {
-                    const progress = event.data.progress;
-                    const current = event.data.current;
-                    const total = event.data.total;
-                    
-                    progressBar.style.width = progress + '%';
-                    progressText.textContent = progress + '%';
-                    fileCounter.textContent = `${current} / ${total} files`;
-                    
-                    if (progress < 30) {
-                        loadingText.textContent = 'Loading libraries...';
-                    } else if (progress < 70) {
-                        loadingText.textContent = 'Loading images...';
-                    } else if (progress < 100) {
-                        loadingText.textContent = 'Almost done...';
-                    } else {
-                        loadingText.textContent = 'Finishing...';
-                    }
-                    
-                    console.log(`[Loading] Progress: ${progress}% (${current}/${total})`);
-                    
-                } else if (event.data.type === 'CACHE_READY') {
-                    console.log('Cache is ready!');
-                    clearTimeout(timeout);
-                    
-                    loadingText.textContent = 'Done! 🎉';
-                    progressBar.style.width = '100%';
-                    progressText.textContent = '100%';
-                    
-                    setTimeout(() => {
-                        loadingScreen.style.opacity = '0';
-                        setTimeout(() => {
-                            loadingScreen.style.display = 'none';
-                        }, 500);
-                    }, 1000);
-                }
-            });
-        }
-    }
-});
-
-// Service Worker registrace
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js')
-        .then(reg => {
-            console.log('Service Worker registered:', reg);
-            
-            if (reg.active) {
-                isCacheReady().then(isReady => {
-                    if (isReady) {
-                        document.getElementById('loading-screen').style.display = 'none';
-                    }
-                });
-            }
-        })
-        .catch((err) => {
-            console.error('Service Worker registration error:', err);
-            document.getElementById('loading-screen').style.display = 'none';
-        });
-} else {
-    console.warn('Service Worker is not supported');
-    document.getElementById('loading-screen').style.display = 'none';
-}
-</script>
-</body>
-</html>
-
-</body>
-</html>
+<!DOCTYPE html><html lang="cs"><head>    <link rel="stylesheet" href="butterfly.css">    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap" rel="stylesheet">    <link rel="manifest" href="manifest.json">    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>    <meta name="apple-mobile-web-app-capable" content="yes">    <meta name="apple-mobile-web-app-status-bar-style" content="default">    <meta name="apple-mobile-web-app-title" content="Pexeso">    <link rel="apple-touch-icon" href="icons/icon-512.png">    <meta charset="UTF-8">    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">    <meta name="theme-color" content="#9333ea">    <meta name="description" content="Pexeso - A game for two players">    <meta name="mobile-web-app-capable" content="yes">    <meta name="application-name" content="Pexeso">    <script type="module" src="https://unpkg.com/@capacitor/core@latest/dist/capacitor.js"></script>    <title>Pexeso</title>    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>    <script src="butterfly.js"></script>    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>    <script src="https://cdn.tailwindcss.com"></script>    <script src="https://cdn.ably.com/lib/ably.min-2.js"></script>    <style>body {    margin: 0;    padding: 0;    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;    touch-action: manipulation;    background-color: #1a1a2e;}.card-image {    width: 100%;    height: 100%;    object-fit: contain;    padding: 2px;    background-color: transparent;    display: block;}.game-grid {    display: grid;    gap: 0.25rem;    width: 100%;    height: 100%;    margin: 0 auto;}@media (orientation: portrait) {    .game-grid.easy {        grid-template-columns: repeat(4, 1fr);        grid-template-rows: repeat(5, 1fr);        max-width: 40vh;    }}@media (orientation: landscape) {    .game-grid.easy {        grid-template-columns: repeat(5, 1fr);        grid-template-rows: repeat(4, 1fr);        max-width: 50vh;    }}@media (orientation: portrait) {    .game-grid.medium {        grid-template-columns: repeat(5, 1fr);        grid-template-rows: repeat(8, 1fr);        max-width: 50vh;    }}@media (orientation: landscape) {    .game-grid.medium {        grid-template-columns: repeat(8, 1fr);        grid-template-rows: repeat(5, 1fr);        max-width: 80vh;    }}@media (orientation: portrait) {    .game-grid.hard {        grid-template-columns: repeat(6, 1fr);        grid-template-rows: repeat(10, 1fr);        max-width: 60vh;    }}@media (orientation: landscape) {    .game-grid.hard {        grid-template-columns: repeat(10, 1fr);        grid-template-rows: repeat(6, 1fr);        max-width: 100vh;    }}.card-button {    width: 100%;    height: 100%;    position: relative;    border-radius: 0.5rem;    transition: all 0.3s;}@media (max-width: 640px) {    .game-grid {        gap: 0.15rem;    }    .card-button {        border-radius: 0.25rem;    }}    </style></head><body>    <div id="root"></div>      <script type="text/babel">        const { useState, useEffect, useRef } = React;        // P2P Connection classclass AblyConnection {    constructor() {        this.ably = null;        this.channel = null;        this.isHost = false;        this.onDataReceived = null;        this.myName = null;        this.theirName = null;    }    // ========================================    // VLOZ SEM SVUJ ABLY API KEY:    // https://ably.com -> Dashboard -> API Keys    // ========================================    getApiKey() {        return 'xeaEBQ.fgQc0g:Di3RgDNWsK37WE8z9msXE7aPHP7CH1WCPjgkjuuhwmY';    }    generateGameCode() {        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';        let code = '';        for (let i = 0; i < 7; i++) {            code += chars[Math.floor(Math.random() * chars.length)];        }        return code;    }    async createGame(onConnected, onData) {        this.isHost = true;        this.onDataReceived = onData;        this.myName = 'p1';        this.theirName = 'p2';        const gameCode = this.generateGameCode();        return new Promise((resolve, reject) => {            this.ably = new Ably.Realtime({ key: this.getApiKey() });            this.ably.connection.on('connected', () => {                this.channel = this.ably.channels.get('pexeso-' + gameCode);                this.channel.subscribe('p2', (msg) => {                    if (msg.data && msg.data.t === 'READY') {                        onConnected();                    }                    if (this.onDataReceived) this.onDataReceived(msg.data);                });                resolve(gameCode);            });            this.ably.connection.on('failed', (err) => {                reject(new Error('Ably connection failed: ' + (err && err.message ? err.message : 'unknown')));            });            setTimeout(() => reject(new Error('Connection timeout - check your internet')), 15000);        });    }    async joinGame(gameCode, onConnected, onData) {        this.isHost = false;        this.onDataReceived = onData;        this.myName = 'p2';        this.theirName = 'p1';        const code = gameCode.trim().toUpperCase();        return new Promise((resolve, reject) => {            this.ably = new Ably.Realtime({ key: this.getApiKey() });            this.ably.connection.on('connected', () => {                this.channel = this.ably.channels.get('pexeso-' + code);                let connectedCalled = false;                this.channel.subscribe('p1', (msg) => {                    if (!connectedCalled) {                        connectedCalled = true;                        onConnected();                    }                    if (this.onDataReceived) this.onDataReceived(msg.data);                });                // Send READY to Player 1 after short delay to ensure subscription is active                setTimeout(() => {                    this.channel.publish('p2', { t: 'READY' });                }, 300);                resolve();            });            this.ably.connection.on('failed', (err) => {                reject(new Error('Ably connection failed: ' + (err && err.message ? err.message : 'unknown')));            });            setTimeout(() => {                reject(new Error('Timeout - connection taking too long. Try again.'));            }, 30000);        });    }    send(data) {        if (this.channel && this.myName) {            this.channel.publish(this.myName, data);            return true;        }        return false;    }    disconnect() {        if (this.channel) {            this.channel.unsubscribe();            this.channel.detach();            this.channel = null;        }        if (this.ably) {            this.ably.close();            this.ably = null;        }        this.myName = null;        this.theirName = null;    }}        const difficultyConfig = {            easy: { rows: 5, cols: 4, pairs: 10, name: "Easy" },            medium: { rows: 8, cols: 5, pairs: 20, name: "Medium" },            hard: { rows: 10, cols: 6, pairs: 30, name: "Hard" }        };        const categories = {            animals: {                name: "Animals",                images: [                    'images/animals/amstaf.png', 'images/animals/bear.png', 'images/animals/bengal.png',                    'images/animals/bird.png', 'images/animals/bonemouth.png', 'images/animals/butterfly.png',                    'images/animals/cat.png', 'images/animals/chicken.png', 'images/animals/cobra.png',                    'images/animals/dog.png', 'images/animals/dolphin.png', 'images/animals/elephant.png',                    'images/animals/fenix.png', 'images/animals/fish.png', 'images/animals/frog.png',                    'images/animals/girafe.png', 'images/animals/goat.png', 'images/animals/gorila.png',                    'images/animals/hamster.png', 'images/animals/horse.png', 'images/animals/kokr.png',                    'images/animals/labrador.png', 'images/animals/labut.png', 'images/animals/leguan.png',                    'images/animals/levhart.png', 'images/animals/lion.png', 'images/animals/monkey.png',                    'images/animals/motyl.png', 'images/animals/neon.png', 'images/animals/parrot.png',                    'images/animals/pav.png', 'images/animals/pelikan.png', 'images/animals/pinguin.png',                    'images/animals/retrivr.png', 'images/animals/rotvik.png', 'images/animals/skalar.png',                    'images/animals/star.png', 'images/animals/sykora.png', 'images/animals/tiger.png',                    'images/animals/turtle.png', 'images/animals/vlcak.png', 'images/animals/wolf.png',                    'images/animals/bluecat.png', 'images/animals/catty.png', 'images/animals/duck.png',                    'images/animals/holub.png', 'images/animals/jelen.png', 'images/animals/jezek.png',                    'images/animals/klaun.png', 'images/animals/krocan.png', 'images/animals/lasice.png',                    'images/animals/liska.png', 'images/animals/lvhart.png', 'images/animals/makak.png',                    'images/animals/mlok.png', 'images/animals/myval.png', 'images/animals/pelikan2.png',                    'images/animals/pitbull.png', 'images/animals/pomci.png', 'images/animals/puma.png',                    'images/animals/redpanda.png', 'images/animals/shark.png', 'images/animals/slune.png',                    'images/animals/snek.png', 'images/animals/srnce.png', 'images/animals/treska.png',                    'images/animals/zajic.png', 'images/animals/zebra.png', 'images/animals/zluva.png'                ]            },            biblical: {                name: "Biblical",                images: [                    "images/biblical/aron.png", "images/biblical/baptizo.png", "images/biblical/Dorkas.png",                    "images/biblical/farizeus.png", "images/biblical/fish.png", "images/biblical/fisherman.png",                    "images/biblical/grave.png", "images/biblical/herodes.png", "images/biblical/jericho.png",                    "images/biblical/jesus.png", "images/biblical/jesuscloud.png", "images/biblical/jesuszjeveni.png",                    "images/biblical/jidas.png", "images/biblical/john.png", "images/biblical/Josef.png",                    "images/biblical/jozue2.png", "images/biblical/lazar.png", "images/biblical/maria.png",                    "images/biblical/moses.png", "images/biblical/natanael.png", "images/biblical/onezim.png",                    "images/biblical/oslatko.png", "images/biblical/ovce.png", "images/biblical/palm.png",                    "images/biblical/paul.png", "images/biblical/sea.png", "images/biblical/snake.png",                    "images/biblical/sun.png", "images/biblical/wine.png", "images/biblical/zebedej.png",                    "images/biblical/arch.png", "images/biblical/bloud.png", "images/biblical/JESUSrisen.png",                    "images/biblical/krize.png", "images/biblical/net.png", "images/biblical/perla.png",                    "images/biblical/prayer.png", "images/biblical/roman.png", "images/biblical/seastorm.png",                    "images/biblical/angels.png", "images/biblical/bread.png", "images/biblical/jerusalem.png",                    "images/biblical/jesuspilat.png", "images/biblical/koruna.png", "images/biblical/stone.png",                    "images/biblical/ucho.png", "images/biblical/uzdraveni.png",                    "images/biblical/shalom.png", "images/biblical/stanek.png", "images/biblical/svitek.png"                ]            }        };        const colors = [            '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8',            '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B739', '#52BE80',            '#EC7063', '#5DADE2', '#F5B041', '#AF7AC5', '#48C9B0',            '#EB984E', '#7FB3D5', '#73C6B6', '#F1948A', '#85929E',            '#D5DBDB', '#AED6F1', '#FADBD8', '#D7BDE2', '#A9DFBF',            '#FAD7A0', '#D6EAF8', '#FCF3CF', '#E8DAEF', '#D1F2EB'        ];        const PexesoGame = () => {            const [gameMode, setGameMode] = useState('menu');	    const [p2p] = useState(() => new AblyConnection());            const [selectedCategory, setSelectedCategory] = useState('animals');            const [selectedDifficulty, setSelectedDifficulty] = useState('hard');            const [roomCode, setRoomCode] = useState('');            const [joinCode, setJoinCode] = useState('');            const [playerNumber, setPlayerNumber] = useState(null);            const [waitingForPlayer, setWaitingForPlayer] = useState(false);                        const [showButterfly, setShowButterfly] = useState(true);            const [butterflyWingsStopped, setButterflyWingsStopped] = useState(false);            const menuBoxRef = useRef(null);            const [butterflyPosition, setButterflyPosition] = useState({ top: 0, left: 0 });                                    const [cards, setCards] = useState([]);            const [flipped, setFlipped] = useState([]);            const [matched, setMatched] = useState([]);            const [currentPlayer, setCurrentPlayer] = useState(1);            const [scores, setScores] = useState({ player1: 0, player2: 0 });            const [canFlip, setCanFlip] = useState(true);                        const [matchWins, setMatchWins] = useState({ player1: 0, player2: 0 });            const [readyForNextRound, setReadyForNextRound] = useState({ player1: false, player2: false });            const [showRoundResult, setShowRoundResult] = useState(false);            const handleRemoteRef = useRef(null);            const flippedRef = useRef([]);            const cardsRef = useRef([]);            const matchedRef = useRef([]);            const scoresRef = useRef({ player1: 0, player2: 0 });            const currentPlayerRef = useRef(1);            const seedRef = useRef(null);            const matchWinsRef = useRef({ player1: 0, player2: 0 });            const isOnline = gameMode === 'online';            const currentConfig = difficultyConfig[selectedDifficulty];                                                const TOTAL_CARDS = currentConfig.rows * currentConfig.cols;            const PAIRS = currentConfig.pairs;useEffect(() => {    if (gameMode === 'menu' && menuBoxRef.current) {        const rect = menuBoxRef.current.getBoundingClientRect();        setButterflyPosition({            top: rect.top + 20,            left: rect.right - 80        });                const stopWingsTimer = setTimeout(() => {            setButterflyWingsStopped(true);        }, 8000);                return () => clearTimeout(stopWingsTimer);    }}, [gameMode]);useEffect(() => { flippedRef.current = flipped; }, [flipped]);            const launchConfetti = () => {                const duration = 2 * 1000;                const defaults = {                    origin: { x: 0.5, y: 0.5 },                    spread: 360,                    startVelocity: 12,                    gravity: 0,                    particleCount: 100,                    colors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00'],                    scalar: 1.2,                    zIndex: 999                };                confetti(defaults);            };             const getRandomImages = (count, categoryKey) => {                const cat = categories[categoryKey];                if (!cat || cat.images.length < count) return [];                const shuffled = [...cat.images].sort(() => Math.random() - 0.5);                return shuffled.slice(0, count);            };            // Deterministické generování karet ze seedu - stejný seed = stejné karty na obou zařízeních            const generateCards = (seed, pairs, categoryKey) => {                // Seeded RNG (mulberry32)                let s = seed;                const rng = () => {                    s |= 0; s = s + 0x6D2B79F5 | 0;                    let t = Math.imul(s ^ s >>> 15, 1 | s);                    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;                    return ((t ^ t >>> 14) >>> 0) / 4294967296;                };                // Fisher-Yates shuffle - deterministický na rozdíl od .sort(() => rng() - 0.5)                const fisherYates = (arr) => {                    const a = [...arr];                    for (let i = a.length - 1; i > 0; i--) {                        const j = Math.floor(rng() * (i + 1));                        [a[i], a[j]] = [a[j], a[i]];                    }                    return a;                };                const cat = categories[categoryKey];                const images = fisherYates(cat.images).slice(0, pairs);                const cardValues = [];                for (let i = 0; i < pairs; i++) cardValues.push(i, i);                return fisherYates(cardValues).map(value => ({                    value,                    color: colors[value % colors.length],                    animal: images[value]                }));            };                       const createRoom = async () => {        const seed = Math.floor(Math.random() * 2147483647);    seedRef.current = seed;    const initialCards = generateCards(seed, PAIRS, selectedCategory);        cardsRef.current = initialCards;    setCards(initialCards);    setPlayerNumber(1);    setGameMode('online');    setWaitingForPlayer(true);        try {        const code = await p2p.createGame(            () => {                // Hráč se připojil a connection je OPEN                setWaitingForPlayer(false);                                            },            (data) => handleRemoteRef.current?.(data)        );        setRoomCode(code);    } catch (err) {        alert('Error creating game: ' + err.message);        backToMenu();    }};          const joinRoom = async () => {    if (!joinCode.trim()) return;        setPlayerNumber(2);    setGameMode('online');    setWaitingForPlayer(true);        try {        await p2p.joinGame(            joinCode.trim(),            () => setWaitingForPlayer(false),            (data) => handleRemoteRef.current?.(data)        );    } catch (err) {        alert(err.message);        backToMenu();    }};                          const startNextRound = () => {                const seed = Math.floor(Math.random() * 2147483647);                const config = difficultyConfig[selectedDifficulty];                const shuffled = generateCards(seed, config.pairs, selectedCategory);                cardsRef.current = shuffled;                setCards(shuffled);                setFlipped([]);                flippedRef.current = [];                matchedRef.current = [];                setMatched([]);                scoresRef.current = { player1: 0, player2: 0 };                setScores({ player1: 0, player2: 0 });                currentPlayerRef.current = 1;                setCurrentPlayer(1);                setReadyForNextRound({ player1: false, player2: false });                if (isOnline) {                    p2p.send({ t: 'N', s: seed });                } else {                    setShowRoundResult(false);                }            };const handleRemoteUpdate = (data) => {if (data.t === 'READY') {    p2p.send({ t: 'I', s: seedRef.current, c: selectedCategory, d: selectedDifficulty });    return;}    if (data.t === 'I') {        const config = difficultyConfig[data.d];        const newCards = generateCards(data.s, config.pairs, data.c);        cardsRef.current = newCards;        setCards(newCards);        setSelectedCategory(data.c);        setSelectedDifficulty(data.d);        setFlipped([]);        flippedRef.current = [];        matchedRef.current = [];        setMatched([]);        scoresRef.current = { player1: 0, player2: 0 };        setScores({ player1: 0, player2: 0 });        currentPlayerRef.current = 1;        setCurrentPlayer(1);    } else if (data.t === 'F') {        // Pouze vizualni preklopeni - zadna logika        const nf = [...flippedRef.current, data.i];        flippedRef.current = nf;        setFlipped(nf);    } else if (data.t === 'NM') {        // No match - aktivni hrac rozhodl: karty data.f1, data.f2, pristi hrac data.p        flippedRef.current = [data.f1, data.f2];        setFlipped([data.f1, data.f2]);        setCanFlip(false);        setTimeout(() => {            flippedRef.current = [];            setFlipped([]);            currentPlayerRef.current = data.p;            setCurrentPlayer(data.p);            setCanFlip(true);        }, 600);    } else if (data.t === 'HIT') {        // Match - aktivni hrac rozhodl: karty, skore, hrac na tahu        flippedRef.current = [data.f1, data.f2];        setFlipped([data.f1, data.f2]);        setCanFlip(false);        setTimeout(() => {            const newMatched = [...matchedRef.current, data.f1, data.f2];            matchedRef.current = newMatched;            scoresRef.current = data.s;            matchWinsRef.current = data.mw;            setMatched(newMatched);            setScores(data.s);            setMatchWins(data.mw);            currentPlayerRef.current = data.p;            setCurrentPlayer(data.p);            flippedRef.current = [];            setFlipped([]);            setCanFlip(true);        }, 600);    } else if (data.t === 'R') {        const remoteKey = playerNumber === 1 ? 'player2' : 'player1';        const newReady = { ...readyForNextRound, [remoteKey]: true };        setReadyForNextRound(newReady);        if (playerNumber === 1 && newReady.player1 && newReady.player2) {            setTimeout(() => startNextRound(), 500);        }    } else if (data.t === 'N') {        const config = difficultyConfig[selectedDifficulty];        const newCards = generateCards(data.s, config.pairs, selectedCategory);        cardsRef.current = newCards;        setCards(newCards);        setFlipped([]);        flippedRef.current = [];        matchedRef.current = [];        setMatched([]);        scoresRef.current = { player1: 0, player2: 0 };        setScores({ player1: 0, player2: 0 });        currentPlayerRef.current = 1;        setCurrentPlayer(1);        setReadyForNextRound({ player1: false, player2: false });    }};handleRemoteRef.current = handleRemoteUpdate;            const handleReadyForNextRound = () => {                if (isOnline) {                    const newReady = { ...readyForNextRound, [`player${playerNumber}`]: true };                    setReadyForNextRound(newReady);                    p2p.send({ t: 'R' });                    // Pouze host (P1) startuje nové kolo, aby oba měli stejný seed                    if (playerNumber === 1 && newReady.player1 && newReady.player2) {                        setTimeout(() => startNextRound(), 500);                    }                } else {                    startNextRound();                }            };            const initLocalGame = () => {                const selectedImages = getRandomImages(PAIRS, selectedCategory);                const cardValues = [];                for (let i = 0; i < PAIRS; i++) {                    cardValues.push(i, i);                }                                const shuffled = cardValues                    .map(value => ({                         value,                         color: colors[value % colors.length],                         animal: selectedImages[value],                        sort: Math.random()                     }))                    .sort((a, b) => a.sort - b.sort)                    .map(({ value, color, animal }) => ({ value, color, animal }));                                cardsRef.current = shuffled;                setCards(shuffled);                setFlipped([]);                flippedRef.current = [];                matchedRef.current = [];                setMatched([]);                currentPlayerRef.current = 1;                setCurrentPlayer(1);                scoresRef.current = { player1: 0, player2: 0 };                setScores({ player1: 0, player2: 0 });                matchWinsRef.current = { player1: 0, player2: 0 };                setMatchWins({ player1: 0, player2: 0 });                setCanFlip(true);                setShowRoundResult(false);                setGameMode('local');            };            const processFlip = (index) => {                const newFlipped = [...flippedRef.current, index];                flippedRef.current = newFlipped;                setFlipped(newFlipped);                if (newFlipped.length === 2) {                    setCanFlip(false);                    const [first, second] = newFlipped;                    const curCards = cardsRef.current;                    const curMatched = matchedRef.current;                    const curScores = scoresRef.current;                    const curPlayer = currentPlayerRef.current;                    const curMatchWins = matchWinsRef.current;                    if (curCards[first] && curCards[second] && curCards[first].value === curCards[second].value) {                        // SHODA                        setTimeout(() => {                            const newMatched = [...curMatched, first, second];                            const newScores = { ...curScores, [`player${curPlayer}`]: curScores[`player${curPlayer}`] + 1 };                            const nw = { ...curMatchWins };                            if (newMatched.length === TOTAL_CARDS) {                                if (newScores.player1 > newScores.player2) nw.player1++;                                else if (newScores.player2 > newScores.player1) nw.player2++;                                matchWinsRef.current = nw;                                setMatchWins(nw);                                if (!isOnline) setShowRoundResult(true);                            }                            matchedRef.current = newMatched;                            scoresRef.current = newScores;                            setMatched(newMatched);                            setScores(newScores);                            flippedRef.current = [];                            setFlipped([]);                            setCanFlip(true);                            if (isOnline) p2p.send({ t: 'HIT', f1: first, f2: second, s: newScores, mw: nw, p: curPlayer });                        }, 600);                    } else if (curCards[first] && curCards[second]) {                        // NESHODA                        setTimeout(() => {                            const nextPlayer = curPlayer === 1 ? 2 : 1;                            currentPlayerRef.current = nextPlayer;                            setCurrentPlayer(nextPlayer);                            flippedRef.current = [];                            setFlipped([]);                            setCanFlip(true);                            if (isOnline) p2p.send({ t: 'NM', f1: first, f2: second, p: nextPlayer });                        }, 600);                    }                }            };            const handleCardClick = (index) => {                if (isOnline && currentPlayerRef.current !== playerNumber) return;                if (!canFlip || flippedRef.current.includes(index) || matchedRef.current.includes(index)) return;                processFlip(index);                if (isOnline) p2p.send({ t: 'F', i: index });            };            const backToMenu = () => {		p2p.disconnect();                setGameMode('menu');                setRoomCode('');                setJoinCode('');                setPlayerNumber(null);                setWaitingForPlayer(false);                setCards([]);                setFlipped([]);                setMatched([]);                setCurrentPlayer(1);                setScores({ player1: 0, player2: 0 });                setMatchWins({ player1: 0, player2: 0 });                setReadyForNextRound({ player1: false, player2: false });                setShowRoundResult(false);                setShowButterfly(true);                setButterflyWingsStopped(false);            };            const isGameOver = matched.length === TOTAL_CARDS;            const isSeriesOver = matchWins.player1 >= 2 || matchWins.player2 >= 2;            const totalGamesPlayed = matchWins.player1 + matchWins.player2;            useEffect(() => {                if (isSeriesOver) {                    launchConfetti();                }            }, [isSeriesOver]);            if (isSeriesOver) {                const winner = matchWins.player1 > matchWins.player2 ? 'Player 1' : 'Player 2';                return (                    <div className="h-screen flex items-center justify-center text-white text-center p-6" style={{                        backgroundImage: 'url(images/meadow.png)',                        backgroundSize: 'cover',                        backgroundPosition: 'center'                    }}>                        <div className="rounded-2xl shadow-2xl p-8 max-w-md w-full border-4 border-yellow-500" style={{backgroundColor: 'rgba(181, 101, 29, 0.75)'}}>                            <h2 className="text-4xl font-bold mb-4" style={{color: '#FFD700'}}>🎉 {winner} wins the series!</h2>                            <p className="text-lg mb-6" style={{color: '#FFD700'}}>Final score: {matchWins.player1} – {matchWins.player2}</p>                            <button                                onClick={backToMenu}                                className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 px-6 rounded-lg text-xl transition-all transform hover:scale-105"                            >                                Back to Menu                            </button>                        </div>                    </div>                );            }            if (gameMode === 'menu') {                return (                    <div className="h-screen p-4 flex items-center justify-center" style={{                        backgroundImage: 'url(images/meadow.png)',                        backgroundSize: 'cover',                        backgroundPosition: 'center'                    }}>                               <ButterflyComponent position={butterflyPosition} wingsStopped={butterflyWingsStopped} />                                                      <div ref={menuBoxRef} className="rounded-2xl shadow-2xl p-8 max-w-md w-full border border-yellow-500 relative" style={{                            backgroundColor: 'rgba(181, 101, 29, 0.75)',                            backdropFilter: 'blur(1px)'                        }}>                       <button    onClick={async () => {        if (window.confirm('Do you really want to exit the app?')) {            try {                // Capacitor 7 - minimalizace                if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {                    await window.Capacitor.Plugins.App.minimizeApp();                }            } catch (e) {                alert('Error: ' + e.message);            }        }    }}    className="absolute top-2 left-2 text-yellow-500 hover:text-yellow-400 text-sm font-bold z-10"    style={{fontFamily: 'Great Vibes, cursive'}}>    Exit</button>                            <h1 className="text-5xl text-center mb-8 text-yellow-500" style={{ fontFamily: 'Great Vibes, cursive' }}>                                Pexeso <span className="text-sm align-top text-yellow-400">for Mydli</span>                            </h1>                            <div className="space-y-4">                                <div className="mb-4">                                    <label className="block text-sm font-medium text-gray-300 mb-2">Choose a motive:</label>                                    <select                                        value={selectedCategory}                                        onChange={(e) => setSelectedCategory(e.target.value)}                                        className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-yellow-600 focus:outline-none focus:ring-2 focus:ring-purple-500"                                    >                                        {Object.entries(categories).map(([key, cat]) => (                                            <option key={key} value={key}>{cat.name}</option>                                        ))}                                    </select>                                </div>                                <div className="mb-4">                                    <label className="block text-sm font-medium text-gray-300 mb-2">Difficulty:</label>                                    <select                                        value={selectedDifficulty}                                        onChange={(e) => setSelectedDifficulty(e.target.value)}                                        className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-yellow-600 focus:outline-none focus:ring-2 focus:ring-purple-500"                                    >                                        {Object.entries(difficultyConfig).map(([key, config]) => (                                            <option key={key} value={key}>                                                {config.name} ({config.pairs} pairs)                                            </option>                                        ))}                                    </select>                                </div>                                <button                                    onClick={initLocalGame}                                    className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-6 rounded-lg text-xl transition-all transform hover:scale-105"                                >                                    2 players on this device                                </button>                                <div className="border-t-2 border-yellow-300 my-6"></div>                                                                <button                                    onClick={createRoom}                                    className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-6 rounded-lg text-xl transition-all transform hover:scale-105"                                >                                    Play online with a friend                                </button>                                <div className="space-y-2">                                    <input    type="text"    placeholder="Enter game code"    value={joinCode}    onChange={(e) => setJoinCode(e.target.value)}    className="w-full px-4 py-3 border-2 border-yellow-600 bg-gray-700 text-white rounded-lg text-center text-sm font-mono uppercase placeholder-gray-400"    maxLength="50"/>                                    <button                                        onClick={joinRoom}                                        className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-6 rounded-lg text-xl transition-all transform hover:scale-105"                                    >                                        Join the game                                    </button>                                </div>                            </div>                        </div>                    </div>                );            } if (waitingForPlayer) {           return (        <div className="h-screen p-4 flex items-center justify-center" style={{            backgroundImage: 'url(images/meadow.png)',            backgroundSize: 'cover',            backgroundPosition: 'center'        }}>            <div className="bg-gray-800 rounded-2xl shadow-2xl p-8 max-w-md w-full text-center border border-yellow-700">                <h2 className="text-3xl font-bold mb-4 text-white">Waiting for player...</h2>                <div className="bg-gray-700 rounded-lg p-6 mb-6 border border-yellow-600">                    <p className="text-sm text-gray-400 mb-2">Game code:</p>                    <p className="text-3xl font-mono font-bold text-purple-400 mb-4">{roomCode}</p>                                        {/* NOVÉ TLAČÍTKO - SHARE */}                    <button    onClick={async () => {        try {            // Capacitor Share API (Android APK)            if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Share) {                await window.Capacitor.Plugins.Share.share({                    title: 'Join my Pexeso game!',                    text: roomCode,                    dialogTitle: 'Share with friends'                });            }            // Browser Share API            else if (navigator.share) {                await navigator.share({                    title: 'Join my Pexeso game!',                    text: roomCode                });            }            // Fallback: Copy to clipboard            else {                await navigator.clipboard.writeText(roomCode);                alert('Code copied: ' + roomCode);            }        } catch (err) {            console.error('Share error:', err);            if (err.message && !err.message.includes('cancel')) {                try {                    await navigator.clipboard.writeText(roomCode);                    alert('Code copied: ' + roomCode);                } catch {                    alert('Game Code: ' + roomCode);                }            }        }    }}    className="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-lg text-lg transition-all transform hover:scale-105 flex items-center justify-center gap-2">    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">        <circle cx="18" cy="5" r="3"></circle>        <circle cx="6" cy="12" r="3"></circle>        <circle cx="18" cy="19" r="3"></circle>        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>    </svg>    Invite Friend</button>                </div>                <div className="text-gray-300 mb-4">                    <p className="text-sm text-gray-400">                        {categories[selectedCategory].name} - {difficultyConfig[selectedDifficulty].name}                    </p>                </div>                <button                    onClick={backToMenu}                    className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg"                >                    ← Back                </button>            </div>        </div>    );}            return (                <div className="h-screen p-2 flex flex-col overflow-hidden" style={{                    backgroundImage: 'url(images/meadow.png)',                    backgroundSize: 'cover',                    backgroundPosition: 'center'                }}>                    <div className="w-full h-full flex flex-col max-w-2xl mx-auto">                        <div className="flex items-center justify-between mb-1">                            <button                                onClick={backToMenu}                                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm font-bold"                            >                                ← Menu                            </button>                           <h1 className="text-xl md:text-2xl font-bold text-white text-center flex-1" style={{fontFamily: 'Great Vibes, cursive'}}>    Pexeso <span className="text-[10px] text-white/70 relative -top-2 ml-1">for Mydli</span></h1>                                                    </div>                                                <div className="bg-gray-800 rounded-lg shadow-xl p-1 mb-1 flex-shrink-0 border border-yellow-700">                            {totalGamesPlayed < 3 && (                                <div className="flex justify-center gap-1 mb-1">                                    <div className="text-xs font-bold text-gray-400">Best of 3:</div>                                    <div className="flex gap-1">                                        {[0, 1, 2].map((i) => (                                            <div key={i} className="w-4 h-4 rounded-full flex items-center justify-center text-xs font-bold" style={{                                                backgroundColor: i < matchWins.player1 ? '#3B82F6' : i < matchWins.player1 + matchWins.player2 ? '#EF4444' : '#E5E7EB',                                                color: i < matchWins.player1 + matchWins.player2 ? 'white' : '#9CA3AF',                                                fontSize: '10px'                                            }}>                                                {i < matchWins.player1 ? '1' : i < matchWins.player1 + matchWins.player2 ? '2' : '·'}                                            </div>                                        ))}                                    </div>                                </div>                            )}                            <div className="flex justify-between items-center">                                <div className={`flex-1 p-1 rounded-lg ${currentPlayer === 1 && !isGameOver ? 'bg-blue-500 text-white' : 'bg-gray-700 text-gray-300'}`}>                                    <div className="text-xs font-bold leading-tight">                                        Player 1 {isOnline && playerNumber === 1 && '(You)'}                                        <span className="ml-1">{matchWins.player1}</span>                                    </div>                                    <div className="text-base md:text-xl font-bold leading-tight">{scores.player1}</div>                                </div>                                                                {!isOnline && !isSeriesOver && (                                    <button                                        onClick={initLocalGame}                                        className="mx-1 bg-green-500 hover:bg-green-600 text-white p-1.5 rounded-full shadow-lg transition-transform hover:scale-110"                                        title="New series"                                    >                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">                                            <polyline points="23 4 23 10 17 10"></polyline>                                            <polyline points="1 20 1 14 7 14"></polyline>                                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>                                        </svg>                                    </button>                                )}                                                                <div className={`flex-1 p-1 rounded-lg ${currentPlayer === 2 && !isGameOver ? 'bg-red-500 text-white' : 'bg-gray-700 text-gray-300'}`}>                                    <div className="text-xs font-bold leading-tight">                                        Player 2 {isOnline && playerNumber === 2 && '(You)'}                                        <span className="ml-1">{matchWins.player2}</span>                                    </div>                                    <div className="text-base md:text-xl font-bold leading-tight">{scores.player2}</div>                                </div>                            </div>                            {isGameOver && !isSeriesOver && (                                <div className="text-center p-1 mt-1 bg-gray-700 rounded-lg border-2 border-yellow-500">                                    <div className="text-sm md:text-base font-bold text-white">                                        {scores.player1 > scores.player2 ? 'Player 1 won this round!' :                                          scores.player2 > scores.player1 ? 'Player 2 won this round!' : 'Draw!'}                                    </div>                                    <div className="text-xs text-gray-400 mt-0.5">                                        Series: {matchWins.player1} - {matchWins.player2}                                    </div>                                    {isOnline ? (                                        <>                                            <button                                                onClick={handleReadyForNextRound}                                                disabled={readyForNextRound[`player${playerNumber}`]}                                                className={`mt-1 px-3 py-1 rounded-lg font-bold text-xs ${                                                    readyForNextRound[`player${playerNumber}`]                                                         ? 'bg-gray-600 text-gray-400 cursor-not-allowed'                                                         : 'bg-green-500 hover:bg-green-600 text-white'                                                }`}                                            >                                                {readyForNextRound[`player${playerNumber}`]                                                     ? 'Ready'                                                     : 'Next round'}                                            </button>                                            {(readyForNextRound.player1 || readyForNextRound.player2) &&                                              !(readyForNextRound.player1 && readyForNextRound.player2) && (                                                <div className="text-xs text-gray-400 mt-0.5">                                                    Waiting for the second player...                                                </div>                                            )}                                        </>                                    ) : (                                        <button                                            onClick={handleReadyForNextRound}                                            className="mt-1 px-3 py-1 rounded-lg font-bold text-xs bg-green-500 hover:bg-green-600 text-white"                                        >                                            Next round                                        </button>                                    )}                                </div>                            )}                            {isGameOver && isSeriesOver && (                                <div className="text-center p-1 mt-1 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-lg border-2 border-yellow-600">                                    <div className="text-base md:text-lg font-bold text-white mb-0.5">                                        OVERALL WINNER!                                    </div>                                    <div className="text-sm md:text-base font-bold text-white">                                        {matchWins.player1 > matchWins.player2 ? 'Player 1' : 'Player 2'}                                    </div>                                    <div className="text-xs text-white mt-0.5">                                        Series: {matchWins.player1} - {matchWins.player2}                                    </div>                                </div>                            )}                        </div>                        <div className="bg-gray-800 rounded-lg shadow-xl p-2 flex-1 overflow-hidden border border-gray-700 min-h-0">                            <div className={`game-grid ${selectedDifficulty}`}>                                {cards.map((card, index) => {                                    const isFlipped = flipped.includes(index);                                    const isMatched = matched.includes(index);                                                                        return (                                        <button                                            key={index}                                            onClick={() => handleCardClick(index)}                                            className={`card-button transition-all duration-300 ${                                                isMatched ? 'opacity-0 pointer-events-none' : 'opacity-100'                                            }`}                                            style={{                                                backgroundColor: isFlipped || isMatched ? 'transparent' : '#6B7280',                                                cursor: canFlip && !isFlipped && !isMatched && (!isOnline || currentPlayer === playerNumber) ? 'pointer' : 'default'                                            }}                                            disabled={!canFlip || isFlipped || isMatched || (isOnline && currentPlayer !== playerNumber)}                                        >                                            <div className="w-full h-full flex items-center justify-center">                                                {(isFlipped || isMatched) ? (                                                    <img src={card.animal} alt="obrázek" className="card-image" />                                                ) : (                                                    <div className="flex flex-col items-center justify-center h-full">    <span className="text-black text-lg md:text-xl leading-tight" style={{fontFamily: 'Great Vibes, cursive'}}>Pexeso</span>    <span className="text-black text-[8px] md:text-[10px] leading-none" style={{fontFamily: 'Great Vibes, cursive'}}>for Mydli</span></div>                                                )}                                            </div>                                        </button>                                    );                                })}                            </div>                        </div>                    </div>                </div>            );        };        ReactDOM.render(<PexesoGame />, document.getElementById('root'));    </script>  <!-- Loading screen s progress barem --><div id="loading-screen" style="    position: fixed;    top: 0;    left: 0;    width: 100%;    height: 100%;    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);    display: flex;    flex-direction: column;    align-items: center;    justify-content: center;    z-index: 9999;    color: white;    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;">    <div style="text-align: center; width: 80%; max-width: 400px;">        <h1 style="font-size: 3rem; margin-bottom: 1rem; font-family: 'Great Vibes', cursive;">Pexeso</h1>        <div id="loading-text" style="font-size: 1.2rem; margin-bottom: 2rem;">Setting up the game ...</div>                <!-- Progress bar -->        <div style="            width: 100%;            height: 8px;            background: rgba(255,255,255,0.3);            border-radius: 10px;            overflow: hidden;            margin-bottom: 1rem;        ">            <div id="progress-bar" style="                width: 0%;                height: 100%;                background: linear-gradient(90deg, #4ade80, #22c55e);                transition: width 0.3s ease;                border-radius: 10px;            "></div>        </div>                <div id="progress-text" style="font-size: 0.9rem; color: rgba(255,255,255,0.8);">0%</div>        <div id="file-counter" style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 0.5rem;">0 / 0 files</div>    </div></div><style>@keyframes spin {    0% { transform: rotate(0deg); }    100% { transform: rotate(360deg); }}@keyframes pulse {    0%, 100% { opacity: 1; }    50% { opacity: 0.5; }}#loading-screen {    transition: opacity 0.5s ease;}</style><script>// Kontrola, jestli je cache připravenáasync function isCacheReady() {    if (!('caches' in window)) return false;        try {        const cache = await caches.open('pexeso-cache-v2');        const keys = await cache.keys();        return keys.length > 10;    } catch (err) {        return false;    }}// Okamžitě zkontrolujeme cacheisCacheReady().then(isReady => {    const loadingScreen = document.getElementById('loading-screen');    const progressBar = document.getElementById('progress-bar');    const progressText = document.getElementById('progress-text');    const loadingText = document.getElementById('loading-text');    const fileCounter = document.getElementById('file-counter');        if (isReady) {        console.log('Cache ready - hiding loading screen immediately');        loadingScreen.style.display = 'none';    } else {        console.log('Cache not ready - showing loading screen with progress');                const timeout = setTimeout(() => {            console.log('Loading timeout - hiding screen');            loadingText.textContent = 'Some files could not be loaded';            setTimeout(() => {                loadingScreen.style.opacity = '0';                setTimeout(() => {                    loadingScreen.style.display = 'none';                }, 500);            }, 2000);        }, 60000);                if ('serviceWorker' in navigator) {            navigator.serviceWorker.addEventListener('message', (event) => {                if (event.data.type === 'CACHE_PROGRESS') {                    const progress = event.data.progress;                    const current = event.data.current;                    const total = event.data.total;                                        progressBar.style.width = progress + '%';                    progressText.textContent = progress + '%';                    fileCounter.textContent = `${current} / ${total} files`;                                        if (progress < 30) {                        loadingText.textContent = 'Loading libraries...';                    } else if (progress < 70) {                        loadingText.textContent = 'Loading images...';                    } else if (progress < 100) {                        loadingText.textContent = 'Almost done...';                    } else {                        loadingText.textContent = 'Finishing...';                    }                                        console.log(`[Loading] Progress: ${progress}% (${current}/${total})`);                                    } else if (event.data.type === 'CACHE_READY') {                    console.log('Cache is ready!');                    clearTimeout(timeout);                                        loadingText.textContent = 'Done! 🎉';                    progressBar.style.width = '100%';                    progressText.textContent = '100%';                                        setTimeout(() => {                        loadingScreen.style.opacity = '0';                        setTimeout(() => {                            loadingScreen.style.display = 'none';                        }, 500);                    }, 1000);                }            });        }    }});// Service Worker registraceif ('serviceWorker' in navigator) {    navigator.serviceWorker.register('/sw.js')        .then(reg => {            console.log('Service Worker registered:', reg);                        if (reg.active) {                isCacheReady().then(isReady => {                    if (isReady) {                        document.getElementById('loading-screen').style.display = 'none';                    }                });            }        })        .catch((err) => {            console.error('Service Worker registration error:', err);            document.getElementById('loading-screen').style.display = 'none';        });} else {    console.warn('Service Worker is not supported');    document.getElementById('loading-screen').style.display = 'none';}</script></body></html></body></html>
