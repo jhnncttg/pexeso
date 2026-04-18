@@ -425,12 +425,11 @@ class FirebaseConnection {
         this._initFirebase();
         this.gameRef = this.db.ref('games/' + gameCode);
         this.gameRef.onDisconnect().remove();
-        // Zapis existenci mistnosti + vycisti fronty ze starych her
-        await this.gameRef.set({ status: 'waiting', p1q: null, p2q: null });
+        // Zapis existenci mistnosti aby ji Player 2 nasel
+        this.gameRef.child('status').set('waiting');
 
-        // child_added = kazda zprava ma vlastni klic, zadne prepsani
-        const p2q = this.gameRef.child('p2q');
-        p2q.on('child_added', (snap) => {
+        const p2ref = this.gameRef.child('p2msg');
+        p2ref.on('value', (snap) => {
             const data = snap.val();
             if (!data) return;
             if (data.t === 'READY') onConnected();
@@ -441,7 +440,7 @@ class FirebaseConnection {
             if (this.onDataReceived) this.onDataReceived(data);
         });
 
-        this.unsubscribe = () => p2q.off();
+        this.unsubscribe = () => p2ref.off();
         return gameCode;
     }
 
@@ -460,24 +459,21 @@ class FirebaseConnection {
         const snap = await this.gameRef.once('value');
         if (!snap.exists()) throw new Error('Room not found! Player 1 must have the game open.');
 
-        // child_added = zpravy dorazuji vsechny, v poradi
-        const p1q = this.gameRef.child('p1q');
-        p1q.on('child_added', (snap) => {
+        const p1ref = this.gameRef.child('p1msg');
+        p1ref.on('value', (snap) => {
             const data = snap.val();
             if (!data) return;
             if (!connectedCalled) { connectedCalled = true; onConnected(); }
             if (this.onDataReceived) this.onDataReceived(data);
         });
 
-        this.unsubscribe = () => p1q.off();
-        // push = zprava s unikatnim klicem, neprepise predchozi
-        setTimeout(() => this.gameRef.child('p2q').push({ t: 'READY', _ts: Date.now() }), 300);
+        this.unsubscribe = () => p1ref.off();
+        setTimeout(() => this.gameRef.child('p2msg').set({ t: 'READY', _ts: Date.now() }), 300);
     }
 
     send(data) {
         if (!this.gameRef || !this.myName) return false;
-        // push = unikatni klic pro kazdou zpravu, zadne prepsani
-        this.gameRef.child(this.myName + 'q').push({ ...data, _ts: Date.now() });
+        this.gameRef.child(this.myName + 'msg').set({ ...data, _ts: Date.now() });
         return true;
     }
 
@@ -1060,55 +1056,50 @@ if (data.t === 'SYNC') {
 
     } else if (data.t === 'NM') {
 
-        // No match - aktivni hrac rozhodl: pristi hrac data.p
-        // flipped uz je nastaveno z F zprav, nenastavujeme znovu
+        // No match - filtrujeme jen tyto dve karty, ostatni ve flipped nechame
+        const nmF1 = data.f1;
+        const nmF2 = data.f2;
 
         setCanFlip(false);
 
         setTimeout(() => {
 
-            flippedRef.current = [];
-
-            setFlipped([]);
+            const remaining = flippedRef.current.filter(i => i !== nmF1 && i !== nmF2);
+            flippedRef.current = remaining;
+            setFlipped(remaining);
 
             currentPlayerRef.current = data.p;
-
             setCurrentPlayer(data.p);
-
             setCanFlip(true);
 
         }, 600);
 
     } else if (data.t === 'HIT') {
 
-        // Match - aktivni hrac rozhodl: skore, hrac na tahu
-        // flipped uz je nastaveno z F zprav, nenastavujeme znovu
+        // Match - filtrujeme jen tyto dve karty, ostatni ve flipped nechame
+        const hitF1 = data.f1;
+        const hitF2 = data.f2;
 
         setCanFlip(false);
 
         setTimeout(() => {
 
-            const newMatched = [...matchedRef.current, data.f1, data.f2];
-
+            const newMatched = [...matchedRef.current, hitF1, hitF2];
             matchedRef.current = newMatched;
 
             scoresRef.current = data.s;
-
             matchWinsRef.current = data.mw;
 
             setMatched(newMatched);
-
             setScores(data.s);
-
             setMatchWins(data.mw);
 
             currentPlayerRef.current = data.p;
-
             setCurrentPlayer(data.p);
 
-            flippedRef.current = [];
-
-            setFlipped([]);
+            const remaining = flippedRef.current.filter(i => i !== hitF1 && i !== hitF2);
+            flippedRef.current = remaining;
+            setFlipped(remaining);
 
             setCanFlip(true);
 
