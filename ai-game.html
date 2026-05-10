@@ -425,78 +425,81 @@
 
             // ── GAME SCREEN ──────────────────────────────────────
             return (
-                <div className="min-h-screen flex flex-col"
+                <div className="h-screen p-2 flex flex-col overflow-hidden"
                     style={{ backgroundImage: 'url(images/meadow.png)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
 
-                    {/* Header */}
-                    <div className="flex items-center justify-between px-3 py-2"
-                        style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
-                        <button onClick={() => window.location.href = 'index.html'}
-                            className="text-yellow-400 text-sm font-bold"
-                            style={{ fontFamily: 'Great Vibes, cursive' }}>
-                            ← Menu
-                        </button>
-                        <span className="text-yellow-400 text-lg" style={{ fontFamily: 'Great Vibes, cursive' }}>
-                            Pexeso for Mydli
-                        </span>
-                        <span className="text-gray-300 text-xs">
-                            {config.name}
-                        </span>
-                    </div>
+                    <div className="w-full h-full flex flex-col max-w-2xl mx-auto">
 
-                    {/* Score bar */}
-                    <div className="flex justify-around items-center px-4 py-2"
-                        style={{ backgroundColor: isPlayerTurn ? 'rgba(59,130,246,0.7)' : 'rgba(239,68,68,0.7)' }}>
-                        <div className={`text-center ${isPlayerTurn ? 'scale-110' : 'opacity-70'} transition-all`}>
-                            <div className="text-white text-xs font-bold">👤 You</div>
-                            <div className="text-yellow-300 text-2xl font-bold">{scores.player}</div>
+                        {/* Header */}
+                        <div className="flex items-center justify-between mb-1">
+                            <button onClick={() => window.location.href = 'index.html'}
+                                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm font-bold">
+                                ← Menu
+                            </button>
+                            <h1 className="text-xl md:text-2xl font-bold text-white text-center flex-1"
+                                style={{ fontFamily: 'Great Vibes, cursive' }}>
+                                Pexeso <span className="text-[10px] text-white/70 relative -top-2 ml-1">for Mydli</span>
+                            </h1>
+                            <div className="w-16"></div>
                         </div>
-                        <div className="text-white text-sm font-bold px-3 py-1 rounded-lg"
-                            style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}>
-                            {message}
-                        </div>
-                        <div className={`text-center ${!isPlayerTurn ? 'scale-110' : 'opacity-70'} transition-all`}>
-                            <div className="text-white text-xs font-bold">🤖 AI</div>
-                            <div className="text-yellow-300 text-2xl font-bold">{scores.ai}</div>
-                        </div>
-                    </div>
 
-                    {/* Card grid */}
-                    <div className="flex-1 flex items-center justify-center p-2">
-                        <div className={`game-grid ${difficultyKey}`}
-                            style={{ width: '100%', maxWidth: '500px',
-                                gridTemplateRows: `repeat(${config.rows}, 1fr)`,
-                                aspectRatio: `${config.cols} / ${config.rows}` }}>
-                            {cards.map((card, index) => {
-                                const isFlipped  = flipped.includes(index);
-                                const isMatched  = matched.includes(index);
-                                return (
-                                    <button
-                                        key={index}
-                                        onClick={() => handleCardClick(index)}
-                                        className={`card-button transition-all duration-300 ${isMatched ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
-                                        style={{
-                                            backgroundColor: isFlipped || isMatched ? 'transparent' : '#6B7280',
-                                            cursor: canFlip && isPlayerTurn && !isFlipped && !isMatched ? 'pointer' : 'default',
-                                        }}
-                                        disabled={!canFlip || !isPlayerTurn || isFlipped || isMatched}
-                                    >
-                                        <div className="w-full h-full flex items-center justify-center">
-                                            {(isFlipped || isMatched) ? (
-                                                <img src={card.animal} alt="card" className="card-image" />
-                                            ) : (
-                                                <div className="flex flex-col items-center justify-center h-full">
-                                                    <span className="text-black text-lg md:text-xl leading-tight"
-                                                        style={{ fontFamily: 'Great Vibes, cursive' }}>Pexeso</span>
-                                                    <span className="text-black text-[8px] md:text-[10px] leading-none"
-                                                        style={{ fontFamily: 'Great Vibes, cursive' }}>for Mydli</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </button>
-                                );
-                            })}
+                        {/* Score bar */}
+                        <div className="bg-gray-800 rounded-lg shadow-xl p-1 mb-1 flex-shrink-0 border border-yellow-700">
+                            <div className="flex justify-around items-center">
+                                <div className={`text-center transition-all ${isPlayerTurn ? 'scale-110' : 'opacity-60'}`}>
+                                    <div className="text-xs font-bold text-blue-400">👤 You</div>
+                                    <div className="text-2xl font-bold text-white">{scores.player}</div>
+                                </div>
+                                <div className="text-center px-2">
+                                    <div className="text-white text-xs font-bold px-3 py-1 rounded-lg"
+                                        style={{ backgroundColor: isPlayerTurn ? 'rgba(59,130,246,0.5)' : 'rgba(239,68,68,0.5)' }}>
+                                        {message}
+                                    </div>
+                                    <div className="text-gray-400 text-xs mt-1">{config.name}</div>
+                                </div>
+                                <div className={`text-center transition-all ${!isPlayerTurn ? 'scale-110' : 'opacity-60'}`}>
+                                    <div className="text-xs font-bold text-red-400">🤖 AI</div>
+                                    <div className="text-2xl font-bold text-white">{scores.ai}</div>
+                                </div>
+                            </div>
                         </div>
+
+                        {/* Card grid */}
+                        <div className="bg-gray-800 rounded-lg shadow-xl p-2 flex-1 overflow-hidden border border-gray-700 min-h-0">
+                            <div className={`game-grid ${difficultyKey}`}
+                                style={{ height: '100%', gridTemplateRows: `repeat(${config.rows}, 1fr)` }}>
+                                {cards.map((card, index) => {
+                                    const isFlipped = flipped.includes(index);
+                                    const isMatched = matched.includes(index);
+                                    return (
+                                        <button
+                                            key={index}
+                                            onClick={() => handleCardClick(index)}
+                                            className={`card-button transition-all duration-300 ${isMatched ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+                                            style={{
+                                                backgroundColor: isFlipped || isMatched ? 'transparent' : '#6B7280',
+                                                cursor: canFlip && isPlayerTurn && !isFlipped && !isMatched ? 'pointer' : 'default',
+                                            }}
+                                            disabled={!canFlip || !isPlayerTurn || isFlipped || isMatched}
+                                        >
+                                            <div className="w-full h-full flex items-center justify-center">
+                                                {(isFlipped || isMatched) ? (
+                                                    <img src={card.animal} alt="card" className="card-image" />
+                                                ) : (
+                                                    <div className="flex flex-col items-center justify-center h-full">
+                                                        <span className="text-black text-lg md:text-xl leading-tight"
+                                                            style={{ fontFamily: 'Great Vibes, cursive' }}>Pexeso</span>
+                                                        <span className="text-black text-[8px] md:text-[10px] leading-none"
+                                                            style={{ fontFamily: 'Great Vibes, cursive' }}>for Mydli</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             );
