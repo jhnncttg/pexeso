@@ -6,11 +6,29 @@
 
     <link rel="stylesheet" href="butterfly.css">
 
-    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
-
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
-
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap" rel="stylesheet">
+    <style>
+        @font-face {
+            font-family: 'Great Vibes';
+            src: url('fonts/greatvibes.woff2') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Playfair Display';
+            src: url('fonts/playfair.woff2') format('woff2');
+            font-weight: 700;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Cinzel';
+            src: url('fonts/cinzel.woff2') format('woff2');
+            font-weight: 700;
+            font-style: normal;
+            font-display: swap;
+        }
+    </style>
 
     <link rel="manifest" href="manifest.json">
 
@@ -898,8 +916,6 @@ useEffect(() => { flippedRef.current = flipped; }, [flipped]);
     setGameMode('online');
 
     setWaitingForPlayer(true);
-    setCanFlip(true);
-
 
     
 
@@ -953,8 +969,6 @@ useEffect(() => { flippedRef.current = flipped; }, [flipped]);
     setGameMode('online');
 
     setWaitingForPlayer(true);
-    setCanFlip(true);
-
 
     
 
@@ -1415,8 +1429,6 @@ handleRemoteRef.current = handleRemoteUpdate;
                 setPlayerNumber(null);
 
                 setWaitingForPlayer(false);
-                setCanFlip(true);
-
 
                 setCards([]);
 
