@@ -886,6 +886,282 @@ class FirebaseConnection {
 
         ];
 
+        // ── AI GAME HELPERS ─────────────────────────────────────
+        const aiMemoryChance = { easy: 0.45, medium: 0.72, hard: 0.95 };
+
+        function aiChoose(cards, matched, aiMemory, difficulty) {
+            const unmatched = cards.map((_, i) => i).filter(i => !matched.includes(i));
+            const knownValues = new Map();
+            for (const [idx, val] of aiMemory.entries()) {
+                if (matched.includes(idx)) continue;
+                if (!knownValues.has(val)) knownValues.set(val, []);
+                knownValues.get(val).push(idx);
+            }
+            for (const [, indices] of knownValues.entries()) {
+                if (indices.length >= 2) return { first: indices[0], second: indices[1] };
+            }
+            const unknown = unmatched.filter(i => !aiMemory.has(i));
+            const firstPool = unknown.length > 0 ? unknown : unmatched;
+            const first = firstPool[Math.floor(Math.random() * firstPool.length)];
+            const firstVal = cards[first].value;
+            for (const [idx, val] of aiMemory.entries()) {
+                if (val === firstVal && idx !== first && !matched.includes(idx)) {
+                    return { first, second: idx };
+                }
+            }
+            const secondPool = unmatched.filter(i => i !== first);
+            const second = secondPool[Math.floor(Math.random() * secondPool.length)];
+            return { first, second };
+        }
+
+        function launchConfettiAI() {
+            if (typeof confetti === 'undefined') return;
+            const end = Date.now() + 3000;
+            (function frame() {
+                confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0 } });
+                confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1 } });
+                if (Date.now() < end) requestAnimationFrame(frame);
+            })();
+        }
+
+        // ── AI GAME COMPONENT ───────────────────────────────────
+        function AIGame({ categoryKey, difficultyKey, onBack }) {
+            const config = difficultyConfig[difficultyKey] || difficultyConfig.easy;
+            const PAIRS = config.pairs;
+            const TOTAL_CARDS = PAIRS * 2;
+
+            const [cards, setCards]             = useState([]);
+            const [flipped, setFlipped]         = useState([]);
+            const [matched, setMatched]         = useState([]);
+            const [scores, setScores]           = useState({ player: 0, ai: 0 });
+            const [currentTurn, setCurrentTurn] = useState('player');
+            const [canFlip, setCanFlip]         = useState(true);
+            const [gameOver, setGameOver]       = useState(false);
+            const [message, setMessage]         = useState('');
+
+            const cardsRef       = useRef([]);
+            const matchedRef     = useRef([]);
+            const flippedRef     = useRef([]);
+            const scoresRef      = useRef({ player: 0, ai: 0 });
+            const currentTurnRef = useRef('player');
+            const aiMemory       = useRef(new Map());
+
+            useEffect(() => { startNewGame(); }, []);
+
+            function startNewGame() {
+                const seed = Math.floor(Math.random() * 1e9);
+                const newCards = generateCards(seed, PAIRS, categoryKey);
+                cardsRef.current   = newCards;
+                matchedRef.current = [];
+                flippedRef.current = [];
+                scoresRef.current  = { player: 0, ai: 0 };
+                currentTurnRef.current = 'player';
+                aiMemory.current   = new Map();
+                setCards(newCards);
+                setFlipped([]);
+                setMatched([]);
+                setScores({ player: 0, ai: 0 });
+                setCurrentTurn('player');
+                setCanFlip(true);
+                setGameOver(false);
+                setMessage('Your turn!');
+            }
+
+            function aiLearn(index, value) {
+                const chance = aiMemoryChance[difficultyKey] || 0.7;
+                if (Math.random() < chance) aiMemory.current.set(index, value);
+            }
+
+            function processPair(first, second, actor) {
+                const curCards   = cardsRef.current;
+                const curMatched = matchedRef.current;
+                const curScores  = scoresRef.current;
+                const isMatch = curCards[first].value === curCards[second].value;
+
+                if (isMatch) {
+                    setTimeout(() => {
+                        const newMatched = [...curMatched, first, second];
+                        const newScores  = { ...curScores, [actor]: curScores[actor] + 1 };
+                        matchedRef.current = newMatched;
+                        scoresRef.current  = newScores;
+                        flippedRef.current = [];
+                        setMatched(newMatched);
+                        setScores(newScores);
+                        setFlipped([]);
+                        if (newMatched.length === TOTAL_CARDS) {
+                            setGameOver(true);
+                            if (newScores.player > newScores.ai) launchConfettiAI();
+                            setCanFlip(false);
+                            return;
+                        }
+                        if (actor === 'player') {
+                            setCurrentTurn('player');
+                            currentTurnRef.current = 'player';
+                            setCanFlip(true);
+                            setMessage('Match! Your turn again!');
+                        } else {
+                            setMessage('AI found a match!');
+                            scheduleAITurn(newMatched);
+                        }
+                    }, 700);
+                } else {
+                    setTimeout(() => {
+                        flippedRef.current = [];
+                        setFlipped([]);
+                        const nextTurn = actor === 'player' ? 'ai' : 'player';
+                        currentTurnRef.current = nextTurn;
+                        setCurrentTurn(nextTurn);
+                        if (nextTurn === 'player') {
+                            setCanFlip(true);
+                            setMessage('No match. Your turn!');
+                        } else {
+                            setCanFlip(false);
+                            setMessage("AI's turn...");
+                            scheduleAITurn(curMatched);
+                        }
+                    }, 900);
+                }
+            }
+
+            function scheduleAITurn(currentMatched) {
+                setTimeout(() => {
+                    const curCards   = cardsRef.current;
+                    const curMatched = currentMatched || matchedRef.current;
+                    if (curMatched.length === TOTAL_CARDS) return;
+                    const { first, second } = aiChoose(curCards, curMatched, aiMemory.current, difficultyKey);
+                    if (first === undefined || second === undefined) return;
+                    flippedRef.current = [first];
+                    setFlipped([first]);
+                    aiLearn(first, curCards[first].value);
+                    setTimeout(() => {
+                        flippedRef.current = [first, second];
+                        setFlipped([first, second]);
+                        aiLearn(second, curCards[second].value);
+                        processPair(first, second, 'ai');
+                    }, 700);
+                }, 1000);
+            }
+
+            function handleCardClick(index) {
+                if (currentTurnRef.current !== 'player') return;
+                if (!canFlip) return;
+                if (flippedRef.current.includes(index)) return;
+                if (matchedRef.current.includes(index)) return;
+                const newFlipped = [...flippedRef.current, index];
+                flippedRef.current = newFlipped;
+                setFlipped(newFlipped);
+                aiLearn(index, cardsRef.current[index].value);
+                if (newFlipped.length === 2) {
+                    setCanFlip(false);
+                    processPair(newFlipped[0], newFlipped[1], 'player');
+                }
+            }
+
+            const isPlayerTurn = currentTurn === 'player';
+
+            if (gameOver) {
+                const playerWon = scores.player > scores.ai;
+                const draw      = scores.player === scores.ai;
+                return (
+                    <div className="min-h-screen flex items-center justify-center p-4"
+                        style={{ backgroundImage: 'url(images/meadow.png)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                        <div className="rounded-2xl shadow-2xl p-8 max-w-sm w-full border border-yellow-500 text-center"
+                            style={{ backgroundColor: 'rgba(181,101,29,0.9)' }}>
+                            <h1 className="text-4xl text-yellow-400 mb-4" style={{ fontFamily: 'Great Vibes, cursive' }}>
+                                {draw ? "It's a draw!" : playerWon ? 'You won! 🎉' : 'Computer won!'}
+                            </h1>
+                            <p className="text-white text-xl mb-6">
+                                You: <strong>{scores.player}</strong> &nbsp;|&nbsp; AI: <strong>{scores.ai}</strong>
+                            </p>
+                            <div className="space-y-3">
+                                <button onClick={startNewGame}
+                                    className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg text-lg">
+                                    Play again
+                                </button>
+                                <button onClick={onBack}
+                                    className="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">
+                                    Main menu
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="h-screen p-2 flex flex-col overflow-hidden"
+                    style={{ backgroundImage: 'url(images/meadow.png)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                    <div className="w-full h-full flex flex-col max-w-2xl mx-auto">
+                        <div className="flex items-center justify-between mb-1">
+                            <button onClick={onBack}
+                                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm font-bold">
+                                ← Menu
+                            </button>
+                            <h1 className="text-xl md:text-2xl font-bold text-white text-center flex-1"
+                                style={{ fontFamily: 'Great Vibes, cursive' }}>
+                                Pexeso <span className="text-[10px] text-white/70 relative -top-2 ml-1">for Mydli</span>
+                            </h1>
+                            <div className="w-16"></div>
+                        </div>
+                        <div className="bg-gray-800 rounded-lg shadow-xl p-1 mb-1 flex-shrink-0 border border-yellow-700">
+                            <div className="flex justify-around items-center">
+                                <div className={`text-center transition-all ${isPlayerTurn ? 'scale-110' : 'opacity-60'}`}>
+                                    <div className="text-xs font-bold text-blue-400">👤 You</div>
+                                    <div className="text-2xl font-bold text-white">{scores.player}</div>
+                                </div>
+                                <div className="text-center px-2">
+                                    <div className="text-white text-xs font-bold px-3 py-1 rounded-lg"
+                                        style={{ backgroundColor: isPlayerTurn ? 'rgba(59,130,246,0.5)' : 'rgba(239,68,68,0.5)' }}>
+                                        {message}
+                                    </div>
+                                    <div className="text-gray-400 text-xs mt-1">{config.name}</div>
+                                </div>
+                                <div className={`text-center transition-all ${!isPlayerTurn ? 'scale-110' : 'opacity-60'}`}>
+                                    <div className="text-xs font-bold text-red-400">🤖 AI</div>
+                                    <div className="text-2xl font-bold text-white">{scores.ai}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="bg-gray-800 rounded-lg shadow-xl p-2 flex-1 overflow-hidden border border-gray-700 min-h-0">
+                            <div className={`game-grid ${difficultyKey}`}
+                                style={{ height: '100%', gridTemplateRows: `repeat(${config.rows}, 1fr)` }}>
+                                {cards.map((card, index) => {
+                                    const isFlipped = flipped.includes(index);
+                                    const isMatched = matched.includes(index);
+                                    return (
+                                        <button
+                                            key={index}
+                                            onClick={() => handleCardClick(index)}
+                                            className={`card-button transition-all duration-300 ${isMatched ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+                                            style={{
+                                                backgroundColor: isFlipped || isMatched ? 'transparent' : '#6B7280',
+                                                cursor: canFlip && isPlayerTurn && !isFlipped && !isMatched ? 'pointer' : 'default',
+                                            }}
+                                            disabled={!canFlip || !isPlayerTurn || isFlipped || isMatched}
+                                        >
+                                            <div className="w-full h-full flex items-center justify-center">
+                                                {(isFlipped || isMatched) ? (
+                                                    <img src={card.animal} alt="card" className="card-image" />
+                                                ) : (
+                                                    <div className="flex flex-col items-center justify-center h-full">
+                                                        <span className="text-black text-lg md:text-xl leading-tight"
+                                                            style={{ fontFamily: 'Great Vibes, cursive' }}>Pexeso</span>
+                                                        <span className="text-black text-[8px] md:text-[10px] leading-none"
+                                                            style={{ fontFamily: 'Great Vibes, cursive' }}>for Mydli</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // ── MAIN GAME COMPONENT ─────────────────────────────────
         const PexesoGame = () => {
 
             const [gameMode, setGameMode] = useState('menu');
@@ -1780,6 +2056,12 @@ handleRemoteRef.current = handleRemoteUpdate;
 
             }
 
+            if (gameMode === 'ai') {
+
+                return <AIGame categoryKey={selectedCategory} difficultyKey={selectedDifficulty} onBack={backToMenu} />;
+
+            }
+
             if (gameMode === 'menu') {
 
                 return (
@@ -1929,7 +2211,7 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                                     <button
 
-                                        onClick={() => { const cat = selectedCategory; const diff = selectedDifficulty; window.location.href = `ai-game.html?category=${cat}&difficulty=${diff}`; }}
+                                        onClick={() => setGameMode('ai')}
 
                                         className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-4 rounded-lg text-base transition-all transform hover:scale-105"
 
