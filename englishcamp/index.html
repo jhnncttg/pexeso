@@ -504,6 +504,63 @@
 
   footer a { color: var(--teal); text-decoration: none; }
 
+  /* SUB-NAV under O campu */
+  .sub-nav {
+    display: none;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: -1.5rem;
+    margin-bottom: 2rem;
+    padding: 0.75rem 1rem;
+    background: var(--teal-light);
+    border-radius: 10px;
+    border: 1px solid #9FE1CB;
+  }
+
+  .sub-nav.visible { display: flex; }
+
+  .sub-nav-btn {
+    background: white;
+    border: 1px solid #9FE1CB;
+    border-radius: 100px;
+    padding: 0.3rem 0.9rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--teal);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .sub-nav-btn:hover {
+    background: var(--teal);
+    color: white;
+    border-color: var(--teal);
+  }
+
+  /* BACK TO TOP */
+  .back-to-top {
+    display: block;
+    text-align: center;
+    margin: 2.5rem auto 0;
+    padding: 0.65rem 1.6rem;
+    background: none;
+    border: 1.5px solid var(--border);
+    border-radius: 100px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+    width: fit-content;
+  }
+
+  .back-to-top:hover {
+    border-color: var(--teal);
+    color: var(--teal);
+  }
+
   /* RESPONSIVE */
   @media (max-width: 600px) {
     .hero { padding: 2.5rem 1rem 2rem; }
@@ -549,10 +606,17 @@
     <button class="tab-btn" role="tab" aria-selected="false" data-tab="fotky">Fotky</button>
   </nav>
 
+  <!-- SUB-NAV for O campu -->
+  <div class="sub-nav visible" id="sub-nav-o-campu">
+    <button class="sub-nav-btn" data-target="sec-uvod">↓ Úvod</button>
+    <button class="sub-nav-btn" data-target="sec-informace">↓ Informace</button>
+    <button class="sub-nav-btn" data-target="sec-den">↓ Den na campu</button>
+  </div>
+
   <!-- TAB 1: O CAMPU -->
   <div class="tab-panel active" id="o-campu" role="tabpanel">
 
-    <h2 class="section-title">Co je English Camp?</h2>
+    <h2 class="section-title" id="sec-uvod">Co je English Camp?</h2>
     <p class="section-intro">
     
 English Camp je týdenní výjezd pořádaný ve spolupráci <strong>Křesťanské akademie mladých (KAM)</strong> a sboru <strong>CB Liberec</strong>. Je to jedinečná příležitost potkat se s rodilými mluvčími z USA a přirozenou cestou se posunout v angličtině – ať už se chceš naučit základy, nebo si „jen" pokecat s ,,Amíky“. 
@@ -563,7 +627,7 @@ English Camp je týdenní výjezd pořádaný ve spolupráci <strong>Křesťansk
     </p>
 
     <!-- Základní info -->
-    <div class="info-block">
+    <div class="info-block" id="sec-informace">
       <h3><span class="dot"></span>Základní informace</h3>
       <table class="info-table">
         <tr>
@@ -627,7 +691,7 @@ English Camp je týdenní výjezd pořádaný ve spolupráci <strong>Křesťansk
     </div>
 
     <!-- Den na campu -->
-    <h2 class="section-title" style="margin-top: 2.5rem;">Den na campu</h2>
+    <h2 class="section-title" id="sec-den" style="margin-top: 2.5rem;">Den na campu</h2>
     <p class="section-intro">Takto může vypadat typický den – plný energie, angličtiny a setkávání.</p>
 
     <div class="info-block">
@@ -752,6 +816,8 @@ English Camp je týdenní výjezd pořádaný ve spolupráci <strong>Křesťansk
     </p>
   </div>
 
+  <button class="back-to-top" id="back-to-top">↑ Zpět nahoru</button>
+
 </div>
 
 <!-- CTA -->
@@ -768,18 +834,35 @@ English Camp je týdenní výjezd pořádaný ve spolupráci <strong>Křesťansk
 <script>
   const btns = document.querySelectorAll('.tab-btn');
   const panels = document.querySelectorAll('.tab-panel');
+  const subNav = document.getElementById('sub-nav-o-campu');
+
+  function scrollToId(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const headerH = document.querySelector('header').offsetHeight;
+    const subNavH = subNav.classList.contains('visible') ? subNav.offsetHeight + 16 : 0;
+    const top = el.getBoundingClientRect().top + window.scrollY - headerH - subNavH - 16;
+    window.scrollTo({ top, behavior: 'smooth' });
+  }
 
   btns.forEach(btn => {
     btn.addEventListener('click', () => {
       const target = btn.dataset.tab;
-
       btns.forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
       panels.forEach(p => p.classList.remove('active'));
-
       btn.classList.add('active');
       btn.setAttribute('aria-selected', 'true');
       document.getElementById(target).classList.add('active');
+      subNav.classList.toggle('visible', target === 'o-campu');
     });
+  });
+
+  document.querySelectorAll('.sub-nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => scrollToId(btn.dataset.target));
+  });
+
+  document.getElementById('back-to-top').addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 </script>
 
