@@ -400,13 +400,37 @@ header {
 
 .include-item {
   background: var(--forest-light);
-  border: 1.5px solid #9FE1CB;
+  border: 1.5px solid var(--forest);
   border-radius: var(--radius);
-  padding: 0.75rem 0.9rem;
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--forest);
+  padding: 0.85rem 1rem;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #7dffb3;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  letter-spacing: 0.01em;
+}
+
+.include-item .check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--forest);
+  flex-shrink: 0;
+}
+
+.include-item .check svg {
+  width: 11px; height: 11px;
+  stroke: #7dffb3;
+  stroke-width: 2.5;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 /* ── TIMELINE ── */
@@ -709,10 +733,10 @@ footer a { color: var(--forest); text-decoration: none; }
     <div class="info-block">
       <h3>V ceně</span> Co je zahrnuto</h3>
       <div class="includes-grid">
-        <div class="include-item">🛏️ Ubytování</div>
-        <div class="include-item">🍽️ Strava</div>
-        <div class="include-item">🎯 Program</div>
-        <div class="include-item">👕 Camp tričko</div>
+        <div class="include-item"><span class="check"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></span> Ubytování</div>
+        <div class="include-item"><span class="check"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></span> Strava</div>
+        <div class="include-item"><span class="check"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></span> Program</div>
+        <div class="include-item"><span class="check"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></span> Camp tričko</div>
       </div>
     </div>
 
