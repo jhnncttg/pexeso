@@ -263,7 +263,7 @@ header {
   gap: 0.4rem;
   margin-bottom: 2rem;
 }
-.sub-nav.visible { display: flex; }
+.sub-nav.visible { display: flex; animation: panelIn 0.25s ease both; }
 
 .sub-nav-btn {
   background: var(--sun-light);
@@ -654,20 +654,20 @@ footer a { color: var(--forest); text-decoration: none; }
 <div class="tabs-wrapper">
 
   <nav class="tab-nav" role="tablist">
-    <button class="tab-btn active" role="tab" aria-selected="true" data-tab="o-campu">O campu</button>
+    <button class="tab-btn" role="tab" aria-selected="false" data-tab="o-campu">O campu</button>
     <button class="tab-btn" role="tab" aria-selected="false" data-tab="lide">Koho potkáš</button>
     <button class="tab-btn" role="tab" aria-selected="false" data-tab="fotky">Fotky</button>
   </nav>
 
   <!-- SUB-NAV -->
-  <div class="sub-nav visible" id="sub-nav-o-campu">
+  <div class="sub-nav" id="sub-nav-o-campu">
     <button class="sub-nav-btn" data-target="sec-uvod">↓ Úvod</button>
     <button class="sub-nav-btn" data-target="sec-informace">↓ Informace</button>
     <button class="sub-nav-btn" data-target="sec-den">↓ Den na campu</button>
   </div>
 
   <!-- TAB 1: O CAMPU -->
-  <div class="tab-panel active" id="o-campu" role="tabpanel">
+  <div class="tab-panel" id="o-campu" role="tabpanel">
 
     <h2 class="section-title" id="sec-uvod">Co je English Camp?</h2>
     <p class="section-intro">
@@ -707,7 +707,7 @@ footer a { color: var(--forest); text-decoration: none; }
     </div>
 
     <div class="info-block">
-      <h3>Co je zahrnuto</h3>
+      <h3>V ceně</span> Co je zahrnuto</h3>
       <div class="includes-grid">
         <div class="include-item">🛏️ Ubytování</div>
         <div class="include-item">🍽️ Strava</div>
