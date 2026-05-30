@@ -6,574 +6,597 @@
 <title>English Camp 2026 – CB Liberec</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;600;700;800&family=Caveat:wght@600&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  :root {
-    --teal: #0F6E56;
-    --teal-light: #E1F5EE;
-    --teal-mid: #1D9E75;
-    --amber: #BA7517;
-    --amber-light: #FAEEDA;
-    --text: #2C2C2A;
-    --text-muted: #5F5E5A;
-    --border: #D3D1C7;
-    --bg: #FAFAF8;
-    --white: #ffffff;
-    --radius: 14px;
-  }
-
-  body {
-    font-family: 'DM Sans', sans-serif;
-    color: var(--text);
-    background: var(--bg);
-    line-height: 1.7;
-    font-size: 16px;
-  }
-
-  /* HEADER */
-  header {
-    background: var(--white);
-    border-bottom: 1px solid var(--border);
-    padding: 0;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-
-  .header-inner {
-    max-width: 860px;
-    margin: 0 auto;
-    padding: 0 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    height: 56px;
-  }
-
-  .header-logo {
-    font-family: 'Lora', serif;
-    font-size: 1.05rem;
-    font-weight: 600;
-    color: var(--teal);
-    text-decoration: none;
-    white-space: nowrap;
-  }
-
-  .header-sep {
-    color: var(--border);
-    font-size: 1.2rem;
-  }
-
-  .header-sub {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-  }
-
-  /* HERO */
-  .hero {
-    background: linear-gradient(135deg, #085041 0%, #1D9E75 60%, #5DCAA5 100%);
-    color: white;
-    text-align: center;
-    padding: 4rem 1.5rem 3.5rem;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .hero::before {
-    content: '';
-    position: absolute;
-    top: -40px; right: -40px;
-    width: 200px; height: 200px;
-    background: rgba(255,255,255,0.06);
-    border-radius: 50%;
-  }
-
-  .hero::after {
-    content: '';
-    position: absolute;
-    bottom: -60px; left: -30px;
-    width: 260px; height: 260px;
-    background: rgba(255,255,255,0.04);
-    border-radius: 50%;
-  }
-
-  .hero-badge {
-    display: inline-block;
-    background: rgba(255,255,255,0.18);
-    border: 1px solid rgba(255,255,255,0.3);
-    border-radius: 100px;
-    padding: 0.3rem 1rem;
-    font-size: 0.8rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    margin-bottom: 1.2rem;
-  }
-
-  .hero h1 {
-    font-family: 'Lora', serif;
-    font-size: clamp(2rem, 5vw, 3rem);
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    line-height: 1.2;
-  }
-
-  .hero-sub {
-    font-size: 1.05rem;
-    opacity: 0.85;
-    margin-bottom: 1.8rem;
-  }
-
-  .hero-pills {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 0.6rem;
-  }
-
-  .hero-pill {
-    background: rgba(255,255,255,0.15);
-    border: 1px solid rgba(255,255,255,0.25);
-    border-radius: 100px;
-    padding: 0.35rem 0.9rem;
-    font-size: 0.85rem;
-  }
-
-  /* TABS */
-  .tabs-wrapper {
-    max-width: 860px;
-    margin: 0 auto;
-    padding: 2rem 1.5rem 4rem;
-  }
-
-  .tab-nav {
-    display: flex;
-    border-bottom: 2px solid var(--border);
-    margin-bottom: 2.5rem;
-    gap: 0;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-
-  .tab-nav::-webkit-scrollbar { display: none; }
-
-  .tab-btn {
-    background: none;
-    border: none;
-    border-bottom: 3px solid transparent;
-    margin-bottom: -2px;
-    padding: 0.75rem 1.4rem;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.95rem;
-    font-weight: 500;
-    color: var(--text-muted);
-    cursor: pointer;
-    white-space: nowrap;
-    transition: color 0.2s, border-color 0.2s;
-  }
-
-  .tab-btn:hover { color: var(--text); }
-
-  .tab-btn.active {
-    color: var(--teal);
-    border-bottom-color: var(--teal);
-  }
-
-  .tab-panel { display: none; }
-  .tab-panel.active { display: block; }
-
-  /* TAB 1 – O campu */
-  .section-title {
-    font-family: 'Lora', serif;
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--text);
-    margin-bottom: 0.75rem;
-  }
-
-  .section-intro {
-    color: var(--text-muted);
-    margin-bottom: 2rem;
-    max-width: 640px;
-  }
-
-  .info-block {
-    background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.5rem 1.75rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .info-block h3 {
-    font-family: 'Lora', serif;
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin-bottom: 0.9rem;
-    color: var(--text);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .info-block h3 .dot {
-    width: 10px; height: 10px;
-    background: var(--teal-mid);
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
-  /* INFO TABLE */
-  .info-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.95rem;
-  }
-
-  .info-table tr + tr td { border-top: 1px solid var(--border); }
-
-  .info-table td {
-    padding: 0.55rem 0;
-    vertical-align: top;
-  }
-
-  .info-table td:first-child {
-    color: var(--text-muted);
-    width: 42%;
-    padding-right: 1rem;
-  }
-
-  .info-table td:last-child {
-    font-weight: 500;
-  }
-
-  /* PRICE CARDS */
-  .price-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 0.75rem;
-    margin-bottom: 1rem;
-  }
-
-  .price-card {
-    background: var(--teal-light);
-    border: 1px solid #9FE1CB;
-    border-radius: 10px;
-    padding: 0.9rem 1rem;
-    text-align: center;
-  }
-
-  .price-card .price-label {
-    font-size: 0.78rem;
-    color: #085041;
-    margin-bottom: 0.3rem;
-  }
-
-  .price-card .price-amount {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #04342C;
-  }
-
-  .price-card.highlight {
-    background: var(--amber-light);
-    border-color: #FAC775;
-  }
-
-  .price-card.highlight .price-label { color: #633806; }
-  .price-card.highlight .price-amount { color: #412402; }
-
-  .notice-box {
-    background: var(--amber-light);
-    border: 1px solid #FAC775;
-    border-radius: 10px;
-    padding: 0.9rem 1.1rem;
-    font-size: 0.9rem;
-    color: #633806;
-    font-weight: 500;
-    margin-top: 0.75rem;
-  }
-
-  .includes-list {
-    list-style: none;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-    gap: 0.5rem;
-    font-size: 0.9rem;
-  }
-
-  .includes-list li {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    color: var(--text);
-  }
-
-  .includes-list li::before {
-    content: '✓';
-    color: var(--teal-mid);
-    font-weight: 700;
-    flex-shrink: 0;
-  }
-
-  /* DEN NA CAMPU */
-  .day-timeline {
-    position: relative;
-    padding-left: 2rem;
-  }
-
-  .day-timeline::before {
-    content: '';
-    position: absolute;
-    left: 8px; top: 8px; bottom: 8px;
-    width: 2px;
-    background: linear-gradient(to bottom, var(--teal-mid), #9FE1CB);
-    border-radius: 2px;
-  }
-
-  .day-item {
-    position: relative;
-    margin-bottom: 1.3rem;
-  }
-
-  .day-item::before {
-    content: '';
-    position: absolute;
-    left: -1.57rem;
-    top: 0.45rem;
-    width: 10px; height: 10px;
-    border-radius: 50%;
-    background: var(--teal-mid);
-    border: 2px solid var(--white);
-    box-shadow: 0 0 0 2px var(--teal-mid);
-  }
-
-  .day-time {
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-    color: var(--teal);
-    text-transform: uppercase;
-    margin-bottom: 0.1rem;
-  }
-
-  .day-activity {
-    font-weight: 500;
-    color: var(--text);
-    font-size: 0.95rem;
-  }
-
-  .day-desc {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    margin-top: 0.1rem;
-  }
-
-  /* TAB 2 – LIDÉ */
-  .people-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 1.2rem;
-  }
-
-  .person-card {
-    background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.4rem 1.2rem;
-    text-align: center;
-    transition: border-color 0.2s, transform 0.2s;
-  }
-
-  .person-card:hover {
-    border-color: var(--teal-mid);
-    transform: translateY(-2px);
-  }
-
-  .person-avatar {
-    width: 72px; height: 72px;
-    border-radius: 50%;
-    background: var(--teal-light);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Lora', serif;
-    font-size: 1.3rem;
-    font-weight: 600;
-    color: #085041;
-    margin: 0 auto 0.9rem;
-    border: 3px solid #9FE1CB;
-  }
-
-  .person-name {
-    font-weight: 600;
-    font-size: 0.95rem;
-    color: var(--text);
-    margin-bottom: 0.15rem;
-  }
-
-  .person-role {
-    font-size: 0.8rem;
-    color: var(--teal);
-    font-weight: 500;
-    margin-bottom: 0.6rem;
-  }
-
-  .person-bio {
-    font-size: 0.82rem;
-    color: var(--text-muted);
-    line-height: 1.55;
-  }
-
-  .person-flag {
-    font-size: 1.1rem;
-    margin-bottom: 0.3rem;
-  }
-
-  /* TAB 3 – FOTKY */
-  .photos-placeholder {
-    text-align: center;
-    padding: 4rem 1.5rem;
-  }
-
-  .photos-icon {
-    font-size: 4rem;
-    margin-bottom: 1rem;
-    opacity: 0.25;
-  }
-
-  .photos-placeholder h3 {
-    font-family: 'Lora', serif;
-    font-size: 1.3rem;
-    margin-bottom: 0.5rem;
-    color: var(--text);
-  }
-
-  .photos-placeholder p {
-    color: var(--text-muted);
-    font-size: 0.9rem;
-    max-width: 380px;
-    margin: 0 auto;
-  }
-
-  /* CTA */
-  .cta-bar {
-    background: var(--teal);
-    color: white;
-    text-align: center;
-    padding: 2.5rem 1.5rem;
-    margin-top: 2rem;
-  }
-
-  .cta-bar h2 {
-    font-family: 'Lora', serif;
-    font-size: 1.5rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .cta-bar p {
-    opacity: 0.85;
-    margin-bottom: 1.5rem;
-    font-size: 0.95rem;
-  }
-
-  .cta-btn {
-    display: inline-block;
-    background: white;
-    color: var(--teal);
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 600;
-    font-size: 0.95rem;
-    padding: 0.75rem 2rem;
-    border-radius: 100px;
-    text-decoration: none;
-    transition: opacity 0.2s;
-  }
-
-  .cta-btn:hover { opacity: 0.9; }
-
-  /* FOOTER */
-  footer {
-    text-align: center;
-    padding: 1.5rem;
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    border-top: 1px solid var(--border);
-  }
-
-  footer a { color: var(--teal); text-decoration: none; }
-
-  /* SUB-NAV under O campu */
-  .sub-nav {
-    display: none;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    margin-top: -1.5rem;
-    margin-bottom: 2rem;
-    padding: 0.75rem 1rem;
-    background: var(--teal-light);
-    border-radius: 10px;
-    border: 1px solid #9FE1CB;
-  }
-
-  .sub-nav.visible { display: flex; }
-
-  .sub-nav-btn {
-    background: white;
-    border: 1px solid #9FE1CB;
-    border-radius: 100px;
-    padding: 0.3rem 0.9rem;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.82rem;
-    font-weight: 500;
-    color: var(--teal);
-    cursor: pointer;
-    transition: background 0.15s, color 0.15s;
-  }
-
-  .sub-nav-btn:hover {
-    background: var(--teal);
-    color: white;
-    border-color: var(--teal);
-  }
-
-  /* BACK TO TOP */
-  .back-to-top {
-    display: block;
-    text-align: center;
-    margin: 2.5rem auto 0;
-    padding: 0.65rem 1.6rem;
-    background: none;
-    border: 1.5px solid var(--border);
-    border-radius: 100px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.88rem;
-    font-weight: 500;
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: border-color 0.2s, color 0.2s;
-    width: fit-content;
-  }
-
-  .back-to-top:hover {
-    border-color: var(--teal);
-    color: var(--teal);
-  }
-
-  /* RESPONSIVE */
-  @media (max-width: 600px) {
-    .hero { padding: 2.5rem 1rem 2rem; }
-    .tab-btn { padding: 0.7rem 1rem; font-size: 0.88rem; }
-    .tabs-wrapper { padding: 1.5rem 1rem 3rem; }
-    .info-block { padding: 1.1rem 1.1rem; }
-    .people-grid { grid-template-columns: 1fr 1fr; }
-    .price-grid { grid-template-columns: 1fr 1fr; }
-  }
-
-  @media (max-width: 380px) {
-    .people-grid { grid-template-columns: 1fr; }
-  }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --sun: #F5A623;
+  --sun-light: #FFF3DC;
+  --sky: #1B6CA8;
+  --sky-light: #E3F0FB;
+  --forest: #2D6A4F;
+  --forest-light: #D8F3DC;
+  --coral: #E8614A;
+  --sand: #FDF6EC;
+  --text: #1A1A2E;
+  --text-muted: #5a5a7a;
+  --border: #E8E4DC;
+  --white: #ffffff;
+  --radius: 16px;
+  --radius-lg: 24px;
+}
+
+body {
+  font-family: 'Nunito', sans-serif;
+  color: var(--text);
+  background: var(--sand);
+  line-height: 1.65;
+  font-size: 16px;
+  overflow-x: hidden;
+}
+
+/* ── HEADER ── */
+header {
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 2px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 200;
+}
+
+.header-inner {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  height: 58px;
+}
+
+.header-logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.3rem;
+  letter-spacing: 0.06em;
+  color: var(--forest);
+  text-decoration: none;
+}
+
+.header-sep { color: var(--border); font-size: 1.3rem; }
+
+.header-sub {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ── HERO ── */
+.hero {
+  background: var(--forest);
+  color: white;
+  text-align: center;
+  padding: 5rem 1.5rem 0;
+  position: relative;
+  overflow: hidden;
+  min-height: 520px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* SVG landscape at bottom */
+.hero-landscape {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  width: 100%;
+  display: block;
+  line-height: 0;
+}
+
+/* sun rays */
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -80px; left: 50%;
+  transform: translateX(-50%);
+  width: 600px; height: 600px;
+  background: conic-gradient(from 0deg, transparent 0deg, rgba(245,166,35,0.12) 15deg, transparent 30deg, rgba(245,166,35,0.08) 45deg, transparent 60deg, rgba(245,166,35,0.12) 75deg, transparent 90deg, rgba(245,166,35,0.08) 105deg, transparent 120deg, rgba(245,166,35,0.12) 135deg, transparent 150deg, rgba(245,166,35,0.08) 165deg, transparent 180deg, rgba(245,166,35,0.12) 195deg, transparent 210deg, rgba(245,166,35,0.08) 225deg, transparent 240deg, rgba(245,166,35,0.12) 255deg, transparent 270deg, rgba(245,166,35,0.08) 285deg, transparent 300deg, rgba(245,166,35,0.12) 315deg, transparent 330deg, rgba(245,166,35,0.08) 345deg, transparent 360deg);
+  border-radius: 50%;
+  animation: rotateSun 40s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes rotateSun { to { transform: translateX(-50%) rotate(360deg); } }
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  padding-bottom: 120px;
+}
+
+.hero-eyebrow {
+  font-family: 'Caveat', cursive;
+  font-size: 1.4rem;
+  color: var(--sun);
+  margin-bottom: 0.5rem;
+  display: block;
+  animation: fadeUp 0.7s ease both;
+}
+
+.hero h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(3.5rem, 12vw, 7rem);
+  letter-spacing: 0.04em;
+  line-height: 0.92;
+  margin-bottom: 1rem;
+  color: white;
+  animation: fadeUp 0.7s 0.1s ease both;
+}
+
+.hero h1 span {
+  color: var(--sun);
+  display: block;
+}
+
+.hero-sub {
+  font-size: 1rem;
+  font-weight: 600;
+  opacity: 0.8;
+  margin-bottom: 1.8rem;
+  animation: fadeUp 0.7s 0.2s ease both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* countdown */
+.countdown {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  animation: fadeUp 0.7s 0.3s ease both;
+}
+
+.cd-item {
+  background: rgba(255,255,255,0.12);
+  border: 1.5px solid rgba(255,255,255,0.25);
+  border-radius: 12px;
+  padding: 0.6rem 1rem;
+  min-width: 62px;
+  text-align: center;
+}
+
+.cd-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2rem;
+  line-height: 1;
+  color: var(--sun);
+  display: block;
+}
+
+.cd-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.7;
+  margin-top: 2px;
+  display: block;
+}
+
+.hero-pills {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  animation: fadeUp 0.7s 0.4s ease both;
+}
+
+.hero-pill {
+  background: rgba(255,255,255,0.14);
+  border: 1px solid rgba(255,255,255,0.22);
+  border-radius: 100px;
+  padding: 0.3rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+/* ── TABS ── */
+.tabs-wrapper {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 5rem;
+}
+
+.tab-nav {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 0.25rem;
+}
+.tab-nav::-webkit-scrollbar { display: none; }
+
+.tab-btn {
+  background: white;
+  border: 2px solid var(--border);
+  border-radius: 100px;
+  padding: 0.55rem 1.3rem;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  letter-spacing: 0.01em;
+}
+
+.tab-btn:hover {
+  border-color: var(--forest);
+  color: var(--forest);
+}
+
+.tab-btn.active {
+  background: var(--forest);
+  border-color: var(--forest);
+  color: white;
+}
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; animation: panelIn 0.3s ease both; }
+@keyframes panelIn { from { opacity:0; transform:translateY(8px);} to { opacity:1; transform:translateY(0);} }
+
+/* SUB-NAV */
+.sub-nav {
+  display: none;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 2rem;
+}
+.sub-nav.visible { display: flex; }
+
+.sub-nav-btn {
+  background: var(--sun-light);
+  border: 1.5px solid var(--sun);
+  border-radius: 100px;
+  padding: 0.3rem 0.85rem;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #7a4d00;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.sub-nav-btn:hover {
+  background: var(--sun);
+  color: white;
+}
+
+/* ── SECTION TITLES ── */
+.section-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.2rem;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  margin-bottom: 0.4rem;
+  line-height: 1.1;
+}
+
+.section-intro {
+  color: var(--text-muted);
+  margin-bottom: 1.8rem;
+  max-width: 640px;
+  font-size: 0.97rem;
+}
+
+/* ── INFO BLOCKS ── */
+.info-block {
+  background: var(--white);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem 1.75rem;
+  margin-bottom: 1.25rem;
+  transition: border-color 0.2s;
+}
+.info-block:hover { border-color: #c8c4bc; }
+
+.info-block h3 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.25rem;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.9rem;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.info-block h3 .tag {
+  background: var(--forest-light);
+  color: var(--forest);
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  padding: 0.15rem 0.55rem;
+  border-radius: 100px;
+}
+
+/* INFO TABLE */
+.info-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+.info-table tr + tr td { border-top: 1px solid var(--border); }
+.info-table td { padding: 0.55rem 0; vertical-align: top; }
+.info-table td:first-child { color: var(--text-muted); width: 40%; padding-right: 1rem; font-weight: 600; }
+.info-table td:last-child { font-weight: 700; }
+
+/* PRICE CARDS */
+.price-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.price-card {
+  background: var(--sky-light);
+  border: 2px solid #B5D4F4;
+  border-radius: var(--radius);
+  padding: 1rem;
+  text-align: center;
+  position: relative;
+}
+
+.price-card .price-label { font-size: 0.75rem; font-weight: 700; color: var(--sky); margin-bottom: 0.3rem; }
+.price-card .price-amount { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; color: #0C447C; letter-spacing: 0.03em; }
+
+.price-card.best {
+  background: var(--sun-light);
+  border-color: var(--sun);
+}
+.price-card.best .price-label { color: #8a5500; }
+.price-card.best .price-amount { color: #412402; }
+.price-card.best::before {
+  content: 'Nejlepší cena';
+  position: absolute;
+  top: -10px; left: 50%; transform: translateX(-50%);
+  background: var(--sun);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.2rem 0.6rem;
+  border-radius: 100px;
+  white-space: nowrap;
+}
+
+.notice-box {
+  background: #FFF3DC;
+  border: 2px solid var(--sun);
+  border-radius: var(--radius);
+  padding: 0.85rem 1.1rem;
+  font-size: 0.88rem;
+  color: #7a4d00;
+  font-weight: 700;
+  margin-top: 0.75rem;
+}
+
+.includes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.6rem;
+}
+
+.include-item {
+  background: var(--forest-light);
+  border: 1.5px solid #9FE1CB;
+  border-radius: var(--radius);
+  padding: 0.75rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--forest);
+  text-align: center;
+}
+
+/* ── TIMELINE ── */
+.day-timeline { position: relative; padding-left: 2.2rem; }
+
+.day-timeline::before {
+  content: '';
+  position: absolute;
+  left: 10px; top: 12px; bottom: 8px;
+  width: 3px;
+  background: linear-gradient(to bottom, var(--sun), var(--forest));
+  border-radius: 4px;
+}
+
+.day-item { position: relative; margin-bottom: 1.4rem; }
+
+.day-item::before {
+  content: '';
+  position: absolute;
+  left: -1.65rem; top: 0.42rem;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--sun);
+  border: 3px solid white;
+  box-shadow: 0 0 0 2.5px var(--sun);
+}
+
+.day-time {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  color: var(--forest);
+  text-transform: uppercase;
+  margin-bottom: 0.05rem;
+}
+
+.day-activity { font-weight: 800; font-size: 0.97rem; color: var(--text); }
+.day-desc { font-size: 0.84rem; color: var(--text-muted); margin-top: 0.1rem; }
+
+/* ── PEOPLE ── */
+.people-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.person-card {
+  background: white;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.4rem 1.1rem;
+  text-align: center;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.person-card:hover { border-color: var(--forest); transform: translateY(-3px); }
+
+.person-avatar {
+  width: 68px; height: 68px;
+  border-radius: 50%;
+  background: var(--forest-light);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.5rem;
+  letter-spacing: 0.05em;
+  color: var(--forest);
+  margin: 0 auto 0.75rem;
+  border: 3px solid var(--forest);
+}
+
+.person-flag { font-size: 1.2rem; margin-bottom: 0.25rem; }
+.person-name { font-weight: 800; font-size: 0.95rem; color: var(--text); margin-bottom: 0.1rem; }
+.person-role { font-size: 0.78rem; font-weight: 700; color: var(--forest); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.person-bio { font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; }
+
+/* ── PHOTOS ── */
+.photos-placeholder {
+  text-align: center;
+  padding: 4rem 1.5rem;
+  background: white;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-lg);
+}
+.photos-icon { font-size: 3.5rem; margin-bottom: 1rem; }
+.photos-placeholder h3 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.8rem;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.5rem;
+}
+.photos-placeholder p { color: var(--text-muted); font-size: 0.92rem; max-width: 380px; margin: 0 auto; }
+
+/* ── CTA ── */
+.cta-bar {
+  background: var(--forest);
+  color: white;
+  text-align: center;
+  padding: 3rem 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+.cta-bar::before {
+  content: 'ENGLISH CAMP';
+  position: absolute;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 9rem;
+  letter-spacing: 0.06em;
+  color: rgba(255,255,255,0.04);
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.cta-eyebrow {
+  font-family: 'Caveat', cursive;
+  font-size: 1.3rem;
+  color: var(--sun);
+  display: block;
+  margin-bottom: 0.3rem;
+}
+
+.cta-bar h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.5rem;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+.cta-bar p { opacity: 0.8; margin-bottom: 1.5rem; font-size: 0.95rem; font-weight: 600; }
+
+.cta-btn {
+  display: inline-block;
+  background: var(--sun);
+  color: #3d2200;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 1rem;
+  padding: 0.8rem 2.2rem;
+  border-radius: 100px;
+  text-decoration: none;
+  letter-spacing: 0.02em;
+  transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 4px 16px rgba(245,166,35,0.35);
+}
+.cta-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(245,166,35,0.45); }
+
+/* ── BACK TO TOP ── */
+.back-to-top {
+  display: block;
+  margin: 2.5rem auto 0;
+  padding: 0.65rem 1.6rem;
+  background: white;
+  border: 2px solid var(--border);
+  border-radius: 100px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+  width: fit-content;
+}
+.back-to-top:hover { border-color: var(--forest); color: var(--forest); }
+
+/* ── FOOTER ── */
+footer {
+  text-align: center;
+  padding: 1.5rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  border-top: 2px solid var(--border);
+  background: white;
+}
+footer a { color: var(--forest); text-decoration: none; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+  .hero { padding: 3.5rem 1rem 0; min-height: 440px; }
+  .hero h1 { font-size: clamp(3rem, 16vw, 5rem); }
+  .tabs-wrapper { padding: 1.5rem 1rem 3.5rem; }
+  .info-block { padding: 1.1rem 1.1rem; }
+  .people-grid { grid-template-columns: 1fr 1fr; }
+  .countdown { gap: 0.5rem; }
+  .cd-item { padding: 0.5rem 0.65rem; min-width: 52px; }
+  .cd-num { font-size: 1.6rem; }
+}
+
+@media (max-width: 380px) {
+  .people-grid { grid-template-columns: 1fr; }
+}
 </style>
 </head>
 <body>
@@ -586,18 +609,48 @@
   </div>
 </header>
 
+<!-- HERO -->
 <div class="hero">
-  <div class="hero-badge">4. – 11. července 2026</div>
-  <h1>English Camp 2026</h1>
-  <p class="hero-sub">Týden angličtiny, přátelství a víry v RS AERO Holany</p>
-  <div class="hero-pills">
-    <span class="hero-pill">🇺🇸 Rodilí mluvčí</span>
-    <span class="hero-pill">🏕️ RS AERO Holany</span>
-    <span class="hero-pill">👥 15–27 let</span>
-    <span class="hero-pill">KAM &amp; CB Liberec</span>
+  <div class="hero-content">
+    <span class="hero-eyebrow">4. – 11. července 2026</span>
+    <h1>English<span>Camp</span></h1>
+    <p class="hero-sub">Týden angličtiny, přátelství a víry · RS AERO Holany</p>
+
+    <div class="countdown" id="countdown">
+      <div class="cd-item"><span class="cd-num" id="cd-d">--</span><span class="cd-label">dní</span></div>
+      <div class="cd-item"><span class="cd-num" id="cd-h">--</span><span class="cd-label">hodin</span></div>
+      <div class="cd-item"><span class="cd-num" id="cd-m">--</span><span class="cd-label">minut</span></div>
+      <div class="cd-item"><span class="cd-num" id="cd-s">--</span><span class="cd-label">sekund</span></div>
+    </div>
+
+    <div class="hero-pills">
+      <span class="hero-pill">🇺🇸 Rodilí mluvčí</span>
+      <span class="hero-pill">🏕️ RS AERO Holany</span>
+      <span class="hero-pill">👥 15–27 let</span>
+      <span class="hero-pill">KAM &amp; CB Liberec</span>
+    </div>
   </div>
+
+  <!-- landscape silhouette SVG -->
+  <svg class="hero-landscape" viewBox="0 0 1440 130" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+    <path d="M0,130 L0,80 Q80,40 160,65 Q240,85 300,50 Q370,10 440,40 Q510,65 560,45 Q640,15 720,55 Q800,90 860,60 Q930,25 1000,50 Q1080,75 1140,45 Q1220,10 1300,50 Q1370,80 1440,60 L1440,130 Z" fill="#2D6A4F" opacity="0.6"/>
+    <path d="M0,130 L0,95 Q100,70 180,88 Q260,105 340,78 Q420,50 500,75 Q560,95 620,72 Q700,45 780,70 Q860,95 940,75 Q1020,55 1100,78 Q1180,100 1260,80 Q1340,60 1440,90 L1440,130 Z" fill="#1A3A2A"/>
+    <!-- trees -->
+    <polygon points="80,95 95,55 110,95" fill="#2D6A4F"/>
+    <polygon points="90,80 100,50 110,80" fill="#3A8A65"/>
+    <polygon points="350,78 368,35 386,78" fill="#2D6A4F"/>
+    <polygon points="360,65 372,28 384,65" fill="#3A8A65"/>
+    <polygon points="700,70 716,30 732,70" fill="#2D6A4F"/>
+    <polygon points="708,58 718,24 728,58" fill="#3A8A65"/>
+    <polygon points="1100,78 1118,36 1136,78" fill="#2D6A4F"/>
+    <polygon points="1110,65 1120,29 1130,65" fill="#3A8A65"/>
+    <!-- moon/sun -->
+    <circle cx="1350" cy="30" r="18" fill="#F5A623" opacity="0.9"/>
+    <circle cx="1350" cy="30" r="24" fill="none" stroke="#F5A623" stroke-width="1.5" opacity="0.35"/>
+  </svg>
 </div>
 
+<!-- TABS -->
 <div class="tabs-wrapper">
 
   <nav class="tab-nav" role="tablist">
@@ -606,7 +659,7 @@
     <button class="tab-btn" role="tab" aria-selected="false" data-tab="fotky">Fotky</button>
   </nav>
 
-  <!-- SUB-NAV for O campu -->
+  <!-- SUB-NAV -->
   <div class="sub-nav visible" id="sub-nav-o-campu">
     <button class="sub-nav-btn" data-target="sec-uvod">↓ Úvod</button>
     <button class="sub-nav-btn" data-target="sec-informace">↓ Informace</button>
@@ -618,42 +671,26 @@
 
     <h2 class="section-title" id="sec-uvod">Co je English Camp?</h2>
     <p class="section-intro">
-    
-English Camp je týdenní výjezd pořádaný ve spolupráci <strong>Křesťanské akademie mladých (KAM)</strong> a sboru <strong>CB Liberec</strong>. Je to jedinečná příležitost potkat se s rodilými mluvčími z USA a přirozenou cestou se posunout v angličtině – ať už se chceš naučit základy, nebo si „jen" pokecat s ,,Amíky“. 
-
+      English Camp je týdenní výjezd pořádaný ve spolupráci <strong>Křesťanské akademie mladých (KAM)</strong> a sboru <strong>CB Liberec</strong>. Je to jedinečná příležitost potkat se s rodilými mluvčími z USA a přirozenou cestou se posunout v angličtině – ať už se chceš naučit základy, nebo si „jen" pokecat s „Amíky".
     </p>
-    <p class="section-intro" style="margin-top: -1.2rem;">
-      Přes den tě čekají nadupané sportovní a kreativní workshopy, kde angličtinu zažiješ v reálných situacích. Večery pak otevřou prostor pro hlubší témata – společně se podíváme na svět z křesťanské perspektivy. Potom bude prostor pro otázky a diskuzi. 
+    <p class="section-intro" style="margin-top: -1rem;">
+      Přes den tě čekají nadupané sportovní a kreativní workshopy, kde angličtinu zažiješ v reálných situacích. Večery pak otevřou prostor pro hlubší témata – společně se podíváme na svět z křesťanské perspektivy. Potom bude prostor pro otázky a diskuzi.
     </p>
 
-    <!-- Základní info -->
     <div class="info-block" id="sec-informace">
-      <h3><span class="dot"></span>Základní informace</h3>
+      <h3>Základní informace</h3>
       <table class="info-table">
-        <tr>
-          <td>Termín</td>
-          <td>4. 7. – 11. 7. 2026</td>
-        </tr>
-        <tr>
-          <td>Místo</td>
-          <td>RS AERO Holany</td>
-        </tr>
-        <tr>
-          <td>Pro koho</td>
-          <td>Mladí lidé od 15 do 27 let</td>
-        </tr>
-        <tr>
-          <td>Pořadatelé</td>
-          <td>KAM &amp; CB Liberec</td>
-        </tr>
+        <tr><td>Termín</td><td>4. 7. – 11. 7. 2026</td></tr>
+        <tr><td>Místo</td><td>RS AERO Holany</td></tr>
+        <tr><td>Pro koho</td><td>Mladí lidé od 15 do 27 let</td></tr>
+        <tr><td>Pořadatelé</td><td>KAM &amp; CB Liberec</td></tr>
       </table>
     </div>
 
-    <!-- Ceny -->
     <div class="info-block">
-      <h3><span class="dot"></span>Cena účasti</h3>
+      <h3>Cena účasti</h3>
       <div class="price-grid">
-        <div class="price-card highlight">
+        <div class="price-card best">
           <div class="price-label">Do konce února</div>
           <div class="price-amount">5 200 Kč</div>
         </div>
@@ -666,31 +703,26 @@ English Camp je týdenní výjezd pořádaný ve spolupráci <strong>Křesťansk
           <div class="price-amount">5 700 Kč</div>
         </div>
       </div>
-      <div class="notice-box">
-        ⚠️ Přihláška je platná až po zaplacení!
+      <div class="notice-box">⚠️ Přihláška je platná až po zaplacení!</div>
+    </div>
+
+    <div class="info-block">
+      <h3>Co je zahrnuto</h3>
+      <div class="includes-grid">
+        <div class="include-item">🛏️ Ubytování</div>
+        <div class="include-item">🍽️ Strava</div>
+        <div class="include-item">🎯 Program</div>
+        <div class="include-item">👕 Camp tričko</div>
       </div>
     </div>
 
-    <!-- V ceně -->
     <div class="info-block">
-      <h3><span class="dot"></span>V ceně je zahrnuto</h3>
-      <ul class="includes-list">
-        <li>Ubytování</li>
-        <li>Strava</li>
-        <li>Program</li>
-        <li>Campové tričko</li>
-      </ul>
-    </div>
-
-    <!-- Follow-up -->
-    <div class="info-block">
-      <h3><span class="dot"></span>Follow-up víkend</h3>
+      <h3>Follow-up víkend</h3>
       <p style="font-size:0.93rem; color: var(--text-muted);">
-        Po skončení English Campu se uskuteční ještě follow-up víkend, na který jsou všichni kempáci srdečně zváni. Probíhat bude od sobotního odpoledne 11.7. do neděle 12.7. a bude to skvělá příležitost strávit více času společně, pobýt s Američany, zahrát si hry, navázat na to, co jsme během kempu prožili, a jednoduše si to spolu ještě užít. Pokud máš zájem, počítej s tímto termínem. 
+        Po skončení English Campu se uskuteční ještě follow-up víkend, na který jsou všichni kempáci srdečně zváni. Probíhat bude od sobotního odpoledne 11. 7. do neděle 12. 7. Bude to skvělá příležitost strávit více času společně, pobýt s Američany, zahrát si hry, navázat na zážitky z kempu a jednoduše si to spolu ještě užít. Pokud máš zájem, počítej s tímto termínem.
       </p>
     </div>
 
-    <!-- Den na campu -->
     <h2 class="section-title" id="sec-den" style="margin-top: 2.5rem;">Den na campu</h2>
     <p class="section-intro">Takto může vypadat typický den – plný energie, angličtiny a setkávání.</p>
 
@@ -747,7 +779,6 @@ English Camp je týdenní výjezd pořádaný ve spolupráci <strong>Křesťansk
     <p class="section-intro">Tady bude prostor pro fotky, jména a krátké medailonky vedoucích, amerických hostů a týmu. Zatím připravené jako ukázka – doplň skutečné lidi!</p>
 
     <div class="people-grid">
-
       <div class="person-card">
         <div class="person-avatar">MN</div>
         <div class="person-flag">🇨🇿</div>
@@ -755,7 +786,6 @@ English Camp je týdenní výjezd pořádaný ve spolupráci <strong>Křesťansk
         <div class="person-role">Hlavní vedoucí kempu</div>
         <div class="person-bio">Organizátor, nadšenec do angličtiny a kavárenský filosof. English Camp pořádá potřetí.</div>
       </div>
-
       <div class="person-card">
         <div class="person-avatar">KH</div>
         <div class="person-flag">🇺🇸</div>
@@ -763,7 +793,6 @@ English Camp je týdenní výjezd pořádaný ve spolupráci <strong>Křesťansk
         <div class="person-role">Americká hostitelka</div>
         <div class="person-bio">Z Colorada, studuje teologii, miluje hory, kytaru a dobré konverzace u kávy.</div>
       </div>
-
       <div class="person-card">
         <div class="person-avatar">JP</div>
         <div class="person-flag">🇺🇸</div>
@@ -771,7 +800,6 @@ English Camp je týdenní výjezd pořádaný ve spolupráci <strong>Křesťansk
         <div class="person-role">Americký host</div>
         <div class="person-bio">Z Texasu, basketbal, worship music a hluboké otázky. Těší se na setkání s Čechy.</div>
       </div>
-
       <div class="person-card">
         <div class="person-avatar">LK</div>
         <div class="person-flag">🇨🇿</div>
@@ -779,7 +807,6 @@ English Camp je týdenní výjezd pořádaný ve spolupráci <strong>Křesťansk
         <div class="person-role">Vedoucí workshopů</div>
         <div class="person-bio">Angličtinářka, kreativní duše, workshopy připravuje s láskou a spoustu humoru.</div>
       </div>
-
       <div class="person-card">
         <div class="person-avatar">TM</div>
         <div class="person-flag">🇺🇸</div>
@@ -787,7 +814,6 @@ English Camp je týdenní výjezd pořádaný ve spolupráci <strong>Křesťansk
         <div class="person-role">Americká hostitelka</div>
         <div class="person-bio">Miluje umění, sport a vyprávění příběhů. Poprvé v Čechách – nadšená!</div>
       </div>
-
       <div class="person-card">
         <div class="person-avatar">PŠ</div>
         <div class="person-flag">🇨🇿</div>
@@ -795,7 +821,6 @@ English Camp je týdenní výjezd pořádaný ve spolupráci <strong>Křesťansk
         <div class="person-role">Duchovní vedení</div>
         <div class="person-bio">Kazatel CB Liberec. Večerní program a otázky víry – jeho home turf.</div>
       </div>
-
     </div>
 
     <p style="margin-top: 1.5rem; font-size:0.82rem; color: var(--text-muted); font-style: italic;">
@@ -810,9 +835,9 @@ English Camp je týdenní výjezd pořádaný ve spolupráci <strong>Křesťansk
       <h3>Fotky přijdou brzy</h3>
       <p>Galerie z letošního English Campu bude doplněna po skončení kempu (po 11. 7. 2026). Těšte se!</p>
     </div>
-    <p style="text-align:center; font-size:0.85rem; color:var(--text-muted); margin-top:1rem;">
+    <p style="text-align:center; font-size:0.85rem; color:var(--text-muted); margin-top:1.25rem;">
       Fotky z předchozích ročníků? Napiš nám na
-      <a href="mailto:info@cbliberec.cz" style="color:var(--teal);">info@cbliberec.cz</a>
+      <a href="mailto:info@cbliberec.cz" style="color:var(--forest); font-weight:700;">info@cbliberec.cz</a>
     </p>
   </div>
 
@@ -822,8 +847,9 @@ English Camp je týdenní výjezd pořádaný ve spolupráci <strong>Křesťansk
 
 <!-- CTA -->
 <div class="cta-bar">
+  <span class="cta-eyebrow">nezmeškej to!</span>
   <h2>Chceš jet s námi?</h2>
-  <p>Přihlášky jsou otevřené – nezapomeň, platnost přihlášky potvrzuje zaplacení!</p>
+  <p>Přihlášky jsou otevřené – platnost potvrzuje zaplacení!</p>
   <a href="mailto:info@cbliberec.cz" class="cta-btn">Přihlásit se →</a>
 </div>
 
@@ -832,10 +858,24 @@ English Camp je týdenní výjezd pořádaný ve spolupráci <strong>Křesťansk
 </footer>
 
 <script>
+  // TABS
   const btns = document.querySelectorAll('.tab-btn');
   const panels = document.querySelectorAll('.tab-panel');
   const subNav = document.getElementById('sub-nav-o-campu');
 
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.tab;
+      btns.forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
+      panels.forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected','true');
+      document.getElementById(target).classList.add('active');
+      subNav.classList.toggle('visible', target === 'o-campu');
+    });
+  });
+
+  // SUB-NAV scroll
   function scrollToId(id) {
     const el = document.getElementById(id);
     if (!el) return;
@@ -845,18 +885,6 @@ English Camp je týdenní výjezd pořádaný ve spolupráci <strong>Křesťansk
     window.scrollTo({ top, behavior: 'smooth' });
   }
 
-  btns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const target = btn.dataset.tab;
-      btns.forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
-      panels.forEach(p => p.classList.remove('active'));
-      btn.classList.add('active');
-      btn.setAttribute('aria-selected', 'true');
-      document.getElementById(target).classList.add('active');
-      subNav.classList.toggle('visible', target === 'o-campu');
-    });
-  });
-
   document.querySelectorAll('.sub-nav-btn').forEach(btn => {
     btn.addEventListener('click', () => scrollToId(btn.dataset.target));
   });
@@ -864,7 +892,28 @@ English Camp je týdenní výjezd pořádaný ve spolupráci <strong>Křesťansk
   document.getElementById('back-to-top').addEventListener('click', () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
-</script>
 
+  // COUNTDOWN
+  function updateCountdown() {
+    const target = new Date('2026-07-04T08:00:00');
+    const now = new Date();
+    const diff = target - now;
+    if (diff <= 0) {
+      document.getElementById('countdown').innerHTML = '<div style="font-family:Bebas Neue,sans-serif;font-size:1.5rem;letter-spacing:.05em;color:var(--sun)">Camp právě probíhá! 🎉</div>';
+      return;
+    }
+    const d = Math.floor(diff / 86400000);
+    const h = Math.floor((diff % 86400000) / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    document.getElementById('cd-d').textContent = d;
+    document.getElementById('cd-h').textContent = String(h).padStart(2,'0');
+    document.getElementById('cd-m').textContent = String(m).padStart(2,'0');
+    document.getElementById('cd-s').textContent = String(s).padStart(2,'0');
+  }
+
+  updateCountdown();
+  setInterval(updateCountdown, 1000);
+</script>
 </body>
 </html>
