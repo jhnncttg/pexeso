@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="cs">
+<html lang="cs" style="color-scheme: dark;">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,17 +12,17 @@
 
 :root {
   --sun: #F5A623;
-  --sun-light: #FFF3DC;
-  --sky: #1B6CA8;
-  --sky-light: #E3F0FB;
-  --forest: #2D6A4F;
-  --forest-light: #D8F3DC;
+  --sun-light: #2a1e00;
+  --sky: #5aabf0;
+  --sky-light: #0d1f2e;
+  --forest: #3d9970;
+  --forest-light: #0d2218;
   --coral: #E8614A;
-  --sand: #FDF6EC;
-  --text: #1A1A2E;
-  --text-muted: #5a5a7a;
-  --border: #E8E4DC;
-  --white: #ffffff;
+  --sand: #111418;
+  --text: #f0ede8;
+  --text-muted: #8a9aaa;
+  --border: #2a2f35;
+  --white: #1a1f24;
   --radius: 16px;
   --radius-lg: 24px;
 }
@@ -38,7 +38,7 @@ body {
 
 /* ── HEADER ── */
 header {
-  background: rgba(255,255,255,0.92);
+  background: rgba(20,25,30,0.95);
   backdrop-filter: blur(12px);
   border-bottom: 2px solid var(--border);
   position: sticky;
@@ -227,7 +227,7 @@ header {
 .tab-nav::-webkit-scrollbar { display: none; }
 
 .tab-btn {
-  background: white;
+  background: var(--white);
   border: 2px solid var(--border);
   border-radius: 100px;
   padding: 0.55rem 1.3rem;
@@ -273,7 +273,7 @@ header {
   font-family: 'Nunito', sans-serif;
   font-size: 0.8rem;
   font-weight: 800;
-  color: #7a4d00;
+  color: #d4920a;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
@@ -308,7 +308,7 @@ header {
   margin-bottom: 1.25rem;
   transition: border-color 0.2s;
 }
-.info-block:hover { border-color: #c8c4bc; }
+.info-block:hover { border-color: #3d9970; }
 
 .info-block h3 {
   font-family: 'Bebas Neue', sans-serif;
@@ -358,14 +358,14 @@ header {
 }
 
 .price-card .price-label { font-size: 0.75rem; font-weight: 700; color: var(--sky); margin-bottom: 0.3rem; }
-.price-card .price-amount { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; color: #0C447C; letter-spacing: 0.03em; }
+.price-card .price-amount { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; color: var(--sky); letter-spacing: 0.03em; }
 
 .price-card.best {
   background: var(--sun-light);
   border-color: var(--sun);
 }
-.price-card.best .price-label { color: #8a5500; }
-.price-card.best .price-amount { color: #412402; }
+.price-card.best .price-label { color: #d4920a; }
+.price-card.best .price-amount { color: var(--sun); }
 .price-card.best::before {
   content: 'Nejlepší cena';
   position: absolute;
@@ -382,12 +382,12 @@ header {
 }
 
 .notice-box {
-  background: #FFF3DC;
+  background: var(--sun-light);
   border: 2px solid var(--sun);
   border-radius: var(--radius);
   padding: 0.85rem 1.1rem;
   font-size: 0.88rem;
-  color: #7a4d00;
+  color: #e8a830;
   font-weight: 700;
   margin-top: 0.75rem;
 }
@@ -430,7 +430,7 @@ header {
   width: 12px; height: 12px;
   border-radius: 50%;
   background: var(--sun);
-  border: 3px solid white;
+  border: 3px solid var(--sand);
   box-shadow: 0 0 0 2.5px var(--sun);
 }
 
@@ -454,7 +454,7 @@ header {
 }
 
 .person-card {
-  background: white;
+  background: var(--white);
   border: 2px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 1.4rem 1.1rem;
@@ -485,7 +485,7 @@ header {
 .photos-placeholder {
   text-align: center;
   padding: 4rem 1.5rem;
-  background: white;
+  background: var(--white);
   border: 2px dashed var(--border);
   border-radius: var(--radius-lg);
 }
@@ -557,7 +557,7 @@ header {
   display: block;
   margin: 2.5rem auto 0;
   padding: 0.65rem 1.6rem;
-  background: white;
+  background: var(--white);
   border: 2px solid var(--border);
   border-radius: 100px;
   font-family: 'Nunito', sans-serif;
@@ -578,7 +578,7 @@ footer {
   font-weight: 700;
   color: var(--text-muted);
   border-top: 2px solid var(--border);
-  background: white;
+  background: var(--white);
 }
 footer a { color: var(--forest); text-decoration: none; }
 
@@ -614,7 +614,7 @@ footer a { color: var(--forest); text-decoration: none; }
   <div class="hero-content">
     <span class="hero-eyebrow">4. – 11. července 2026</span>
     <h1>English<span>Camp</span></h1>
-    <p class="hero-sub">Týden angličtiny, přátelství a víry · RS AERO Holany</p>
+    <p class="hero-sub">Týden angličtiny, přátelství a osobních rozhovorů · RS AERO Holany</p>
 
     <div class="countdown" id="countdown">
       <div class="cd-item"><span class="cd-num" id="cd-d">--</span><span class="cd-label">dní</span></div>
@@ -729,43 +729,48 @@ footer a { color: var(--forest); text-decoration: none; }
     <div class="info-block">
       <div class="day-timeline">
         <div class="day-item">
-          <div class="day-time">08:00</div>
+          <div class="day-time">8:00</div>
           <div class="day-activity">Snídaně</div>
           <div class="day-desc">Dobré ráno se společnou snídaní a kávou</div>
         </div>
         <div class="day-item">
-          <div class="day-time">09:00</div>
+          <div class="day-time">9:15</div>
           <div class="day-activity">Morning session</div>
           <div class="day-desc">Úvodní setkání celé skupiny – anglická devoce nebo icebreaker</div>
         </div>
         <div class="day-item">
-          <div class="day-time">10:00 – 12:30</div>
-          <div class="day-activity">Workshopy dopoledne</div>
-          <div class="day-desc">Kreativní nebo jazykové workshopy v malých skupinkách s Američany</div>
+          <div class="day-time">9:30</div>
+          <div class="day-activity">English konverzace</div>
+          <div class="day-desc">V malých skupinkách si procvičíš angličtinu přirozenou a zábavnou formou s Američany. Nemusíš se bát chyb – cílem je mluvit, poznávat nové lidi a získat větší jistotu</div>
         </div>
         <div class="day-item">
-          <div class="day-time">12:30</div>
+          <div class="day-time">12:15</div>
           <div class="day-activity">Oběd</div>
           <div class="day-desc">Společný oběd – ideální čas na konverzaci</div>
         </div>
         <div class="day-item">
-          <div class="day-time">14:00 – 17:00</div>
-          <div class="day-activity">Sportovní a volnočasový program</div>
+          <div class="day-time">13:15</div>
+          <div class="day-activity">Relax time</div>
           <div class="day-desc">Sporty, hry, procházky – vše v angličtině a s Amíky</div>
+        </div>
+        <div class="day-item">
+          <div class="day-time">15:30</div>
+          <div class="day-activity">Sporty a workshopy</div>
+          <div class="day-desc">Odpoledne plné pohybu, kreativity a nových zkušeností. Vybereš si z různých sportů a workshopů podle toho, co tě nejvíc baví</div>
         </div>
         <div class="day-item">
           <div class="day-time">18:00</div>
           <div class="day-activity">Večeře</div>
-          <div class="day-desc">Večeře a příprava na večerní program</div>
+          <div class="day-desc">Společné zakončení aktivního odpoledne u dobrého jídla</div>
         </div>
-        <div class="day-item">
-          <div class="day-time">19:30</div>
+ 	<div class="day-item">
+          <div class="day-time">19:15</div>
           <div class="day-activity">Večerní program</div>
           <div class="day-desc">Hlubší témata ze světa víry – přednáška, diskuze, otázky</div>
         </div>
         <div class="day-item">
           <div class="day-time">21:00</div>
-          <div class="day-activity">Volný čas a small groups</div>
+          <div class="day-activity">Diskuze a free time</div>
           <div class="day-desc">Neformální pokec, hry, kytara u ohně – to nejlepší na závěr dne</div>
         </div>
       </div>
@@ -850,7 +855,7 @@ footer a { color: var(--forest); text-decoration: none; }
   <span class="cta-eyebrow">nezmeškej to!</span>
   <h2>Chceš jet s námi?</h2>
   <p>Přihlášky jsou otevřené – platnost potvrzuje zaplacení!</p>
-  <a href="mailto:info@cbliberec.cz" class="cta-btn">Přihlásit se →</a>
+  <a href="https://www.emsreg.eu/public_otm/events/17235/registrations/landing_page?group_id=14111" class="cta-btn">Přihlásit se →</a>
 </div>
 
 <footer>
