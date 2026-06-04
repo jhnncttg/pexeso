@@ -914,6 +914,42 @@ class FirebaseConnection {
             }));
         }
 
+        // ── TRANSLATIONS ────────────────────────────────────────
+        const translations = {
+            en: {
+                chooseMotive: "Choose a motive:", difficulty: "Difficulty:",
+                twoPlayers: "2 players on this device", vsComputer: "1 player vs computer",
+                playOnline: "Play online with a friend", enterCode: "Enter game code",
+                joinGame: "Join the game", waitingForPlayer: "Waiting for player...",
+                gameCode: "Game code:", menuBtn: "← Menu", backBtn: "← Back",
+                confirmExit: "Do you really want to leave the game?",
+                confirmYes: "Yes, leave", confirmNo: "No, continue",
+                yourTurn: "Your turn!", matchAgain: "Match! Your turn again!",
+                aiMatch: "AI found a match!", noMatch: "No match. Your turn!",
+                aiTurn: "AI's turn...", youWon: "You won! 🎉",
+                aiWon: "Computer won!", draw: "It's a draw!",
+                playAgain: "Play again", mainMenu: "Main menu",
+                you: "(You)", pairs: "pairs", player1: "Player 1", player2: "Player 2",
+                exitApp: "Do you really want to exit the app?",
+            },
+            cs: {
+                chooseMotive: "Vyber motiv:", difficulty: "Obtížnost:",
+                twoPlayers: "2 hráči na tomto zařízení", vsComputer: "1 hráč vs počítač",
+                playOnline: "Hrát online s přítelem", enterCode: "Zadej kód hry",
+                joinGame: "Připojit se ke hře", waitingForPlayer: "Čekám na hráče...",
+                gameCode: "Kód hry:", menuBtn: "← Menu", backBtn: "← Zpět",
+                confirmExit: "Opravdu chceš opustit hru?",
+                confirmYes: "Ano, odejít", confirmNo: "Ne, pokračovat",
+                yourTurn: "Tvůj tah!", matchAgain: "Pár! Jedeš znovu!",
+                aiMatch: "Počítač našel pár!", noMatch: "Nenašel. Tvůj tah!",
+                aiTurn: "Tah počítače...", youWon: "Vyhrál jsi! 🎉",
+                aiWon: "Počítač vyhrál!", draw: "Remíza!",
+                playAgain: "Hrát znovu", mainMenu: "Hlavní menu",
+                you: "(Ty)", pairs: "párů", player1: "Hráč 1", player2: "Hráč 2",
+                exitApp: "Opravdu chceš zavřít aplikaci?",
+            }
+        };
+
         // ── AI GAME HELPERS ─────────────────────────────────────
         const aiMemoryChance = { easy: 0.45, medium: 0.72, hard: 0.95 };
 
@@ -953,7 +989,8 @@ class FirebaseConnection {
         }
 
         // ── AI GAME COMPONENT ───────────────────────────────────
-        function AIGame({ categoryKey, difficultyKey, onBack }) {
+        function AIGame({ categoryKey, difficultyKey, onBack, lang }) {
+            const t = translations[lang] || translations.en;
             const config = difficultyConfig[difficultyKey] || difficultyConfig.easy;
             const PAIRS = config.pairs;
             const TOTAL_CARDS = PAIRS * 2;
@@ -966,6 +1003,7 @@ class FirebaseConnection {
             const [canFlip, setCanFlip]         = useState(true);
             const [gameOver, setGameOver]       = useState(false);
             const [message, setMessage]         = useState('');
+            const [showConfirm, setShowConfirm] = useState(false);
 
             const cardsRef       = useRef([]);
             const matchedRef     = useRef([]);
@@ -992,7 +1030,7 @@ class FirebaseConnection {
                 setCurrentTurn('player');
                 setCanFlip(true);
                 setGameOver(false);
-                setMessage('Your turn!');
+                setMessage(translations[lang] ? translations[lang].yourTurn : 'Your turn!');
             }
 
             function aiLearn(index, value) {
@@ -1026,9 +1064,9 @@ class FirebaseConnection {
                             setCurrentTurn('player');
                             currentTurnRef.current = 'player';
                             setCanFlip(true);
-                            setMessage('Match! Your turn again!');
+                            setMessage(t.matchAgain);
                         } else {
-                            setMessage('AI found a match!');
+                            setMessage(t.aiMatch);
                             scheduleAITurn(newMatched);
                         }
                     }, 700);
@@ -1041,10 +1079,10 @@ class FirebaseConnection {
                         setCurrentTurn(nextTurn);
                         if (nextTurn === 'player') {
                             setCanFlip(true);
-                            setMessage('No match. Your turn!');
+                            setMessage(t.noMatch);
                         } else {
                             setCanFlip(false);
-                            setMessage("AI's turn...");
+                            setMessage(t.aiTurn);
                             scheduleAITurn(curMatched);
                         }
                     }, 900);
@@ -1096,19 +1134,19 @@ class FirebaseConnection {
                         <div className="rounded-2xl shadow-2xl p-8 max-w-sm w-full border border-yellow-500 text-center"
                             style={{ backgroundColor: 'rgba(181,101,29,0.9)' }}>
                             <h1 className="text-4xl text-yellow-400 mb-4" style={{ fontFamily: 'Great Vibes, cursive' }}>
-                                {draw ? "It's a draw!" : playerWon ? 'You won! 🎉' : 'Computer won!'}
+                                {draw ? t.draw : playerWon ? t.youWon : t.aiWon}
                             </h1>
                             <p className="text-white text-xl mb-6">
-                                You: <strong>{scores.player}</strong> &nbsp;|&nbsp; AI: <strong>{scores.ai}</strong>
+                                {t.you.replace('(','').replace(')','')}: <strong>{scores.player}</strong> &nbsp;|&nbsp; AI: <strong>{scores.ai}</strong>
                             </p>
                             <div className="space-y-3">
                                 <button onClick={startNewGame}
                                     className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg text-lg">
-                                    Play again
+                                    {t.playAgain}
                                 </button>
                                 <button onClick={onBack}
                                     className="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">
-                                    Main menu
+                                    {t.mainMenu}
                                 </button>
                             </div>
                         </div>
@@ -1119,11 +1157,22 @@ class FirebaseConnection {
             return (
                 <div className="h-screen p-2 flex flex-col overflow-hidden"
                     style={{ backgroundImage: 'url(images/meadow.png)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                    {showConfirm && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{backgroundColor:'rgba(0,0,0,0.7)'}}>
+                            <div className="bg-gray-800 rounded-2xl p-6 mx-4 max-w-sm w-full border border-yellow-600 text-center">
+                                <p className="text-white text-lg font-bold mb-5">{t.confirmExit}</p>
+                                <div className="flex gap-3">
+                                    <button onClick={onBack} className="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded-lg">{t.confirmYes}</button>
+                                    <button onClick={() => setShowConfirm(false)} className="flex-1 bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 rounded-lg">{t.confirmNo}</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                     <div className="w-full h-full flex flex-col max-w-2xl mx-auto">
                         <div className="flex items-center justify-between mb-1">
-                            <button onClick={onBack}
+                            <button onClick={() => setShowConfirm(true)}
                                 className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm font-bold">
-                                ← Menu
+                                {t.menuBtn}
                             </button>
                             <h1 className="text-xl md:text-2xl font-bold text-white text-center flex-1"
                                 style={{ fontFamily: 'Great Vibes, cursive' }}>
@@ -1193,6 +1242,8 @@ class FirebaseConnection {
         const PexesoGame = () => {
 
             const [gameMode, setGameMode] = useState('menu');
+            const [lang, setLang] = useState('en');
+            const [showExitConfirm, setShowExitConfirm] = useState(false);
 
 	    const [p2p] = useState(() => getActiveBackend() === 'ably' ? new AblyConnection() : new FirebaseConnection());
 
@@ -1259,7 +1310,7 @@ class FirebaseConnection {
             const matchWinsRef = useRef({ player1: 0, player2: 0 });
 
             const isOnline = gameMode === 'online';
-
+            const t = translations[lang];
             const currentConfig = difficultyConfig[selectedDifficulty];
 
             
@@ -2030,7 +2081,7 @@ handleRemoteRef.current = handleRemoteUpdate;
 
             if (gameMode === 'ai') {
 
-                return <AIGame categoryKey={selectedCategory} difficultyKey={selectedDifficulty} onBack={backToMenu} />;
+                return <AIGame categoryKey={selectedCategory} difficultyKey={selectedDifficulty} onBack={backToMenu} lang={lang} />;
 
             }
 
@@ -2066,7 +2117,7 @@ handleRemoteRef.current = handleRemoteUpdate;
 
     onClick={async () => {
 
-        if (window.confirm('Do you really want to exit the app?')) {
+        if (window.confirm(t.exitApp)) {
 
             try {
 
@@ -2096,7 +2147,12 @@ handleRemoteRef.current = handleRemoteUpdate;
 
 </button>
 
-                            <span className="absolute bottom-0 right-3 text-gray-400" style={{fontSize: '0.7rem'}}>v1.05</span>
+<div className="absolute top-2 right-2 flex flex-col gap-1 z-10">
+    <button onClick={() => setLang('en')} className={`text-lg leading-none ${lang === 'en' ? 'opacity-100' : 'opacity-40'}`} title="English">🇬🇧</button>
+    <button onClick={() => setLang('cs')} className={`text-lg leading-none ${lang === 'cs' ? 'opacity-100' : 'opacity-40'}`} title="Čeština">🇨🇿</button>
+</div>
+
+                            <span className="absolute bottom-0 right-3 text-gray-400" style={{fontSize: '0.7rem'}}>v1.06</span>
                             <span className="absolute bottom-0 left-3 text-gray-400" style={{fontSize: '0.7rem'}}>Made by John1:12</span>
 
                             <h1 className="text-5xl text-center mb-4 text-yellow-500" style={{ fontFamily: 'Great Vibes, cursive' }}>
@@ -2109,7 +2165,7 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                                 <div>
 
-                                    <label className="block text-sm font-medium text-gray-300 mb-1">Choose a motive:</label>
+                                    <label className="block text-sm font-medium text-gray-300 mb-1">{t.chooseMotive}</label>
 
                                     <select
 
@@ -2133,7 +2189,7 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                                 <div>
 
-                                    <label className="block text-sm font-medium text-gray-300 mb-1">Difficulty:</label>
+                                    <label className="block text-sm font-medium text-gray-300 mb-1">{t.difficulty}</label>
 
                                     <select
 
@@ -2149,7 +2205,7 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                                             <option key={key} value={key}>
 
-                                                {config.name} ({config.pairs} pairs)
+                                                {config.name} ({config.pairs} {t.pairs})
 
                                             </option>
 
@@ -2173,7 +2229,7 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                                     >
 
-                                        2 players on this device
+                                        {t.twoPlayers}
 
                                     </button>
 
@@ -2189,7 +2245,7 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                                     >
 
-                                        1 player vs computer
+                                        {t.vsComputer}
 
                                     </button>
 
@@ -2205,7 +2261,7 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                                     >
 
-                                        Play online with a friend
+                                        {t.playOnline}
 
                                     </button>
 
@@ -2215,7 +2271,7 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                                             type="text"
 
-                                            placeholder="Enter game code"
+                                            placeholder={t.enterCode}
 
                                             value={joinCode}
 
@@ -2235,7 +2291,7 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                                         >
 
-                                            Join the game
+                                            {t.joinGame}
 
                                         </button>
 
@@ -2387,13 +2443,13 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                 <button
 
-                    onClick={backToMenu}
+                    onClick={() => setShowExitConfirm(true)}
 
                     className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg"
 
                 >
 
-                    ← Back
+                    {t.backBtn}
 
                 </button>
 
@@ -2417,19 +2473,31 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                 }}>
 
+                    {showExitConfirm && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{backgroundColor:'rgba(0,0,0,0.7)'}}>
+                            <div className="bg-gray-800 rounded-2xl p-6 mx-4 max-w-sm w-full border border-yellow-600 text-center">
+                                <p className="text-white text-lg font-bold mb-5">{t.confirmExit}</p>
+                                <div className="flex gap-3">
+                                    <button onClick={() => { setShowExitConfirm(false); backToMenu(); }} className="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded-lg">{t.confirmYes}</button>
+                                    <button onClick={() => setShowExitConfirm(false)} className="flex-1 bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 rounded-lg">{t.confirmNo}</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="w-full h-full flex flex-col max-w-2xl mx-auto">
 
                         <div className="flex items-center justify-between mb-1">
 
                             <button
 
-                                onClick={backToMenu}
+                                onClick={() => setShowExitConfirm(true)}
 
                                 className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm font-bold"
 
                             >
 
-                                ← Menu
+                                {t.menuBtn}
 
                             </button>
 
@@ -2485,7 +2553,7 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                                     <div className="text-xs font-bold leading-tight">
 
-                                        Player 1 {isOnline && playerNumber === 1 && '(You)'}
+                                        {t.player1} {isOnline && playerNumber === 1 && t.you}
 
                                         <span className="ml-1">{matchWins.player1}</span>
 
@@ -2529,7 +2597,7 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                                     <div className="text-xs font-bold leading-tight">
 
-                                        Player 2 {isOnline && playerNumber === 2 && '(You)'}
+                                        {t.player2} {isOnline && playerNumber === 2 && t.you}
 
                                         <span className="ml-1">{matchWins.player2}</span>
 
