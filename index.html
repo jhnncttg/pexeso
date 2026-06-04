@@ -925,11 +925,11 @@ class FirebaseConnection {
                 confirmExit: "Do you really want to leave the game?",
                 confirmYes: "Yes, leave", confirmNo: "No, continue",
                 yourTurn: "Your turn!", matchAgain: "Match! Your turn again!",
-                aiMatch: "AI found a match!", noMatch: "No match. Your turn!",
-                aiTurn: "AI's turn...", youWon: "You won! 🎉",
-                aiWon: "Computer won!", draw: "It's a draw!",
+                aiMatch: "PC found a match!", noMatch: "No match. Your turn!",
+                aiTurn: "PC's turn...", youWon: "You won! 🎉",
+                aiWon: "PC won!", draw: "It's a draw!",
                 playAgain: "Play again", mainMenu: "Main menu",
-                you: "(You)", pairs: "pairs", player1: "Player 1", player2: "Player 2",
+                you: "(You)", youLabel: "You", pcLabel: "PC", pairs: "pairs", player1: "Player 1", player2: "Player 2",
                 exitApp: "Do you really want to exit the app?",
                 easy: "Easy", medium: "Medium", hard: "Hard",
                 animals: "Animals", biblical: "Biblical", puppies: "Puppies",
@@ -944,11 +944,11 @@ class FirebaseConnection {
                 confirmExit: "Opravdu chceš opustit hru?",
                 confirmYes: "Ano, odejít", confirmNo: "Ne, pokračovat",
                 yourTurn: "Tvůj tah!", matchAgain: "Pár! Jedeš znovu!",
-                aiMatch: "Počítač našel pár!", noMatch: "Nenašel. Tvůj tah!",
-                aiTurn: "Tah počítače...", youWon: "Vyhrál jsi! 🎉",
-                aiWon: "Počítač vyhrál!", draw: "Remíza!",
+                aiMatch: "PC našlo pár!", noMatch: "Nenašel. Tvůj tah!",
+                aiTurn: "Tah PC...", youWon: "Vyhrál jsi! 🎉",
+                aiWon: "PC vyhrálo!", draw: "Remíza!",
                 playAgain: "Hrát znovu", mainMenu: "Hlavní menu",
-                you: "(Ty)", pairs: "párů", player1: "Hráč 1", player2: "Hráč 2",
+                you: "(Ty)", youLabel: "Vy", pcLabel: "PC", pairs: "párů", player1: "Hráč 1", player2: "Hráč 2",
                 exitApp: "Opravdu chceš zavřít aplikaci?",
                 easy: "Lehká", medium: "Střední", hard: "Těžká",
                 animals: "Zvířata", biblical: "Biblická", puppies: "Štěňata",
@@ -1143,7 +1143,7 @@ class FirebaseConnection {
                                 {draw ? t.draw : playerWon ? t.youWon : t.aiWon}
                             </h1>
                             <p className="text-white text-xl mb-6">
-                                {t.you.replace('(','').replace(')','')}: <strong>{scores.player}</strong> &nbsp;|&nbsp; AI: <strong>{scores.ai}</strong>
+                                {t.youLabel}: <strong>{scores.player}</strong> &nbsp;|&nbsp; {t.pcLabel}: <strong>{scores.ai}</strong>
                             </p>
                             <div className="space-y-3">
                                 <button onClick={startNewGame}
@@ -1189,7 +1189,7 @@ class FirebaseConnection {
                         <div className="bg-gray-800 rounded-lg shadow-xl p-1 mb-1 flex-shrink-0 border border-yellow-700">
                             <div className="flex justify-around items-center">
                                 <div className={`text-center transition-all ${isPlayerTurn ? 'scale-110' : 'opacity-60'}`}>
-                                    <div className="text-xs font-bold text-blue-400">👤 You</div>
+                                    <div className="text-xs font-bold text-blue-400">👤 {t.youLabel}</div>
                                     <div className="text-2xl font-bold text-white">{scores.player}</div>
                                 </div>
                                 <div className="text-center px-2">
@@ -1200,7 +1200,7 @@ class FirebaseConnection {
                                     <div className="text-gray-400 text-xs mt-1">{config.name}</div>
                                 </div>
                                 <div className={`text-center transition-all ${!isPlayerTurn ? 'scale-110' : 'opacity-60'}`}>
-                                    <div className="text-xs font-bold text-red-400">🤖 AI</div>
+                                    <div className="text-xs font-bold text-red-400">🤖 {t.pcLabel}</div>
                                     <div className="text-2xl font-bold text-white">{scores.ai}</div>
                                 </div>
                             </div>
@@ -2125,7 +2125,7 @@ handleRemoteRef.current = handleRemoteUpdate;
     <button onClick={() => setLang('cs')} className={`text-lg leading-none ${lang === 'cs' ? 'opacity-100' : 'opacity-40'}`} title="Čeština">🇨🇿</button>
 </div>
 
-                            <span className="absolute bottom-0 right-3 text-gray-400" style={{fontSize: '0.7rem'}}>v1.07</span>
+                            <span className="absolute bottom-0 right-3 text-gray-400" style={{fontSize: '0.7rem'}}>v1.08</span>
                             <span className="absolute bottom-0 left-3 text-gray-400" style={{fontSize: '0.7rem'}}>Made by John1:12</span>
 
                             <h1 className="text-5xl text-center mb-4 text-yellow-500" style={{ fontFamily: 'Great Vibes, cursive' }}>
