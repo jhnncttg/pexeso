@@ -2121,7 +2121,7 @@ handleRemoteRef.current = handleRemoteUpdate;
 
 <div className="absolute top-2 left-2 flex flex-col items-start z-10">
     <button onClick={async () => { if (window.confirm(t.exitApp)) { try { if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) { await window.Capacitor.Plugins.App.minimizeApp(); } } catch (e) {} } }} className="text-white-500 hover:text-yellow-400 text-xl font-bold" style={{fontFamily: 'Great Vibes, cursive'}}>exit</button>
-    <div className="flex flex-col items-start mt-3">
+    <div className="flex flex-col items-start mt-1">
         <button onClick={() => setLang('en')} className={`text-xl leading-none ${lang === 'en' ? 'opacity-100' : 'opacity-40'}`} title="English">🇬🇧</button>
         <button onClick={() => setLang('cs')} className={`text-xl leading-none mt-1 ${lang === 'cs' ? 'opacity-100' : 'opacity-40'}`} title="Čeština">🇨🇿</button>
     </div>
