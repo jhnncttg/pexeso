@@ -931,6 +931,9 @@ class FirebaseConnection {
                 playAgain: "Play again", mainMenu: "Main menu",
                 you: "(You)", pairs: "pairs", player1: "Player 1", player2: "Player 2",
                 exitApp: "Do you really want to exit the app?",
+                easy: "Easy", medium: "Medium", hard: "Hard",
+                animals: "Animals", biblical: "Biblical", puppies: "Puppies",
+                bestOf: "Best of 3:",
             },
             cs: {
                 chooseMotive: "Vyber motiv:", difficulty: "Obtížnost:",
@@ -947,6 +950,9 @@ class FirebaseConnection {
                 playAgain: "Hrát znovu", mainMenu: "Hlavní menu",
                 you: "(Ty)", pairs: "párů", player1: "Hráč 1", player2: "Hráč 2",
                 exitApp: "Opravdu chceš zavřít aplikaci?",
+                easy: "Lehká", medium: "Střední", hard: "Těžká",
+                animals: "Zvířata", biblical: "Biblická", puppies: "Štěňata",
+                bestOf: "Na 3 výhry:",
             }
         };
 
@@ -2113,46 +2119,13 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                         }}>
 
-<button
-
-    onClick={async () => {
-
-        if (window.confirm(t.exitApp)) {
-
-            try {
-
-                if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
-
-                    await window.Capacitor.Plugins.App.minimizeApp();
-
-                }
-
-            } catch (e) {
-
-                alert('Error: ' + e.message);
-
-            }
-
-        }
-
-    }}
-
-    className="absolute top-2 left-2 text-white-500 hover:text-yellow-400 text-xl font-bold z-10"
-
-    style={{fontFamily: 'Great Vibes, cursive'}}
-
->
-
-    exit
-
-</button>
-
-<div className="absolute top-2 right-2 flex flex-col gap-1 z-10">
+<div className="absolute top-2 left-2 flex items-center gap-2 z-10">
+    <button onClick={async () => { if (window.confirm(t.exitApp)) { try { if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) { await window.Capacitor.Plugins.App.minimizeApp(); } } catch (e) {} } }} className="text-white-500 hover:text-yellow-400 text-xl font-bold" style={{fontFamily: 'Great Vibes, cursive'}}>exit</button>
     <button onClick={() => setLang('en')} className={`text-lg leading-none ${lang === 'en' ? 'opacity-100' : 'opacity-40'}`} title="English">🇬🇧</button>
     <button onClick={() => setLang('cs')} className={`text-lg leading-none ${lang === 'cs' ? 'opacity-100' : 'opacity-40'}`} title="Čeština">🇨🇿</button>
 </div>
 
-                            <span className="absolute bottom-0 right-3 text-gray-400" style={{fontSize: '0.7rem'}}>v1.06</span>
+                            <span className="absolute bottom-0 right-3 text-gray-400" style={{fontSize: '0.7rem'}}>v1.07</span>
                             <span className="absolute bottom-0 left-3 text-gray-400" style={{fontSize: '0.7rem'}}>Made by John1:12</span>
 
                             <h1 className="text-5xl text-center mb-4 text-yellow-500" style={{ fontFamily: 'Great Vibes, cursive' }}>
@@ -2179,7 +2152,7 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                                         {Object.entries(categories).map(([key, cat]) => (
 
-                                            <option key={key} value={key}>{cat.name}</option>
+                                            <option key={key} value={key}>{t[key] || cat.name}</option>
 
                                         ))}
 
@@ -2205,7 +2178,7 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                                             <option key={key} value={key}>
 
-                                                {config.name} ({config.pairs} {t.pairs})
+                                                {t[key] || config.name} ({config.pairs} {t.pairs})
 
                                             </option>
 
@@ -2519,7 +2492,7 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                                 <div className="flex justify-center gap-1 mb-1">
 
-                                    <div className="text-xs font-bold text-gray-400">Best of 3:</div>
+                                    <div className="text-xs font-bold text-gray-400">{t.bestOf}</div>
 
                                     <div className="flex gap-1">
 
