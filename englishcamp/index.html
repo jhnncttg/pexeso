@@ -505,6 +505,42 @@ header {
 .person-role { font-size: 0.78rem; font-weight: 700; color: var(--forest); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.04em; }
 .person-bio { font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; }
 
+.leaders-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.1rem;
+}
+
+.leader-card {
+  background: var(--white);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.6rem 1.3rem;
+  text-align: center;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.leader-card:hover { border-color: var(--forest); transform: translateY(-3px); }
+
+.leader-photo {
+  width: 110px; height: 110px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  margin: 0 auto 0.9rem;
+  border: 3px solid var(--forest);
+  background: var(--forest-light);
+}
+
+.leader-name { font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; letter-spacing: 0.03em; color: var(--text); margin-bottom: 0.15rem; }
+.leader-role { font-size: 0.78rem; font-weight: 700; color: var(--forest); margin-bottom: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.leader-bio { font-size: 0.86rem; color: var(--text-muted); line-height: 1.6; text-align: left; }
+.leader-bio p { margin-bottom: 0.6rem; }
+.leader-bio p:last-child { margin-bottom: 0; }
+
+@media (max-width: 640px) {
+  .leaders-grid { grid-template-columns: 1fr; }
+}
+
 /* ── PHOTOS ── */
 .photos-placeholder {
   text-align: center;
@@ -805,56 +841,77 @@ footer a { color: var(--forest); text-decoration: none; }
   <!-- TAB 2: KOHO POTKÁŠ -->
   <div class="tab-panel" id="lide" role="tabpanel">
     <h2 class="section-title">Koho potkáš na campu</h2>
-    <p class="section-intro">Tady bude prostor pro fotky, jména a krátké medailonky vedoucích, amerických hostů a týmu. Zatím připravené jako ukázka – doplň skutečné lidi!</p>
+    <p class="section-intro">Toto je náš core tým, který se na tebe už teď těší a připravuje pro tebe celý týden plný angličtiny, zážitků a dobré parties.</p>
 
-    <div class="people-grid">
-      <div class="person-card">
-        <div class="person-avatar">MN</div>
-        <div class="person-flag">🇨🇿</div>
-        <div class="person-name">Martin Novák</div>
-        <div class="person-role">Hlavní vedoucí kempu</div>
-        <div class="person-bio">Organizátor, nadšenec do angličtiny a kavárenský filosof. English Camp pořádá potřetí.</div>
+    <div class="leaders-grid">
+      <div class="leader-card">
+        <img class="leader-photo" src="vedouci/jony.jpeg" alt="Jony">
+        <div class="leader-name">Jony</div>
+        <div class="leader-role">Hlavní vedoucí kempu</div>
+        <div class="leader-bio">
+          <p>Ahoj, já jsem Jonatan a jsem hlavní vedoucím kempu.</p>
+          <p>Velmi rád se během jarních a letních měsíců vydávám na projížďku po trailech. Mojí srdcovkou je hra na cajon a relativně nově i hra na kytaru. Občas mě popadne tvořivost, kterou vložím do 3D modelování.</p>
+          <p>Existuje ale pár věcí, na které se těším jako malý dítě na sladkost. Je to krásný zvuk motoru sportovního auta s V8 nebo V12 a cesta do zahraničí.</p>
+          <p>Při tom všem se snažím nezapomínat na Ježíše. Těším se, až se potkáme na English Campu.</p>
+        </div>
       </div>
-      <div class="person-card">
-        <div class="person-avatar">KH</div>
-        <div class="person-flag">🇺🇸</div>
-        <div class="person-name">Katie Henderson</div>
-        <div class="person-role">Americká hostitelka</div>
-        <div class="person-bio">Z Colorada, studuje teologii, miluje hory, kytaru a dobré konverzace u kávy.</div>
+
+      <div class="leader-card">
+        <img class="leader-photo" src="vedouci/fila.jpeg" alt="Fíla">
+        <div class="leader-name">Fíla</div>
+        <div class="leader-role">Kapela &amp; zábava</div>
+        <div class="leader-bio">
+          <p>Čau všichni, jmenuju se Fíla.</p>
+          <p>Na English campu mě uvidíte v kapele za elektrikou, ale taky jako energetickou bombu, která je pro každou srandu a výzvu. Miluju hudbu, jídlo a spontánní nápady. Zároveň rád poznávám nové lidi.</p>
+          <p>No a co je k tomu lepší než dobré kafe, že? ☕️</p>
+        </div>
       </div>
-      <div class="person-card">
-        <div class="person-avatar">JP</div>
-        <div class="person-flag">🇺🇸</div>
-        <div class="person-name">Josh Parker</div>
-        <div class="person-role">Americký host</div>
-        <div class="person-bio">Z Texasu, basketbal, worship music a hluboké otázky. Těší se na setkání s Čechy.</div>
+
+      <div class="leader-card">
+        <img class="leader-photo" src="vedouci/eli.jpeg" alt="Eli">
+        <div class="leader-name">Eli</div>
+        <div class="leader-role">Sociální sítě &amp; program</div>
+        <div class="leader-bio">
+          <p>Ahojkyyy, já jsem Eli 🌸 miluju cestování, hudbu, cokoliv kreativního, čtení, pečení, chvály, kafčo a růžovou! 🩷</p>
+          <p>Ráda se učím novým věcem a cizím jazykům. Studuji cestovní ruch a doufám, že za pár měsíců úspěšně dokončím bakalářské studium.</p>
+          <p>Jsem kreativní a pozitivně naladěna, baví mě tvořit content na sociální sítě a poznávat nové lidi, takže na English Campu mě většinou najdeš jak edituju a natáčím videa na sociální sítě nebo překládám programy 🌸</p>
+          <p>Těším se, až se poznáme na campu! 🎀</p>
+        </div>
       </div>
-      <div class="person-card">
-        <div class="person-avatar">LK</div>
-        <div class="person-flag">🇨🇿</div>
-        <div class="person-name">Lenka Krejčí</div>
-        <div class="person-role">Vedoucí workshopů</div>
-        <div class="person-bio">Angličtinářka, kreativní duše, workshopy připravuje s láskou a spoustu humoru.</div>
+
+      <div class="leader-card">
+        <img class="leader-photo" src="vedouci/eliskak.jpeg" alt="Eliška K.">
+        <div class="leader-name">Eliška K.</div>
+        <div class="leader-role">Organizace programu</div>
+        <div class="leader-bio">
+          <p>Ahojky, já jsem Eliška 🤗 Mám ráda sporty, soutěžení, chození na výlety, pečení, poznávání nových lidí, zvířátka, západy slunce, poslouchání písniček a samozřejmě i tancování na Just Dance.</p>
+          <p>Co mám ale nejraději, je trávení času s kamarády a dělání spontánních věcí 😎</p>
+          <p>Na english campu se budu starat o to, aby šlo vše podle plánu a vy jste si to mohli co nejvíc užít 😁 Těším se na každého z vás! 🤩</p>
+        </div>
       </div>
-      <div class="person-card">
-        <div class="person-avatar">TM</div>
-        <div class="person-flag">🇺🇸</div>
-        <div class="person-name">Taylor Moore</div>
-        <div class="person-role">Americká hostitelka</div>
-        <div class="person-bio">Miluje umění, sport a vyprávění příběhů. Poprvé v Čechách – nadšená!</div>
+
+      <div class="leader-card">
+        <img class="leader-photo" src="vedouci/klarka.jpeg" alt="Klárka">
+        <div class="leader-name">Klárka</div>
+        <div class="leader-role">Administrativa &amp; workshopy</div>
+        <div class="leader-bio">
+          <p>Ahojky, já jsem Klárka 🪷 Jsem dobrodruh celým srdcem a vždycky připravená na každý sidequest 👀! Miluju hory, lezení a adrenalin, ale taky kytičky, pečení, hudbu a jakékoliv tvoření 🌸.</p>
+          <p>Ze všeho nejvíc mě ale naplňují zvířátka všeho druhu a cestování 🗺️. Ve svém volném čase se ráda zapojuji do různých dobrovolnických činností, protože upřímná práce pro druhé mi dává velký smysl.</p>
+          <p>Ohledně kempu mám na starost administrativu a přímo na místě budu vést workshopy. Moc se na vás všechny těším 🥰</p>
+        </div>
       </div>
-      <div class="person-card">
-        <div class="person-avatar">PŠ</div>
-        <div class="person-flag">🇨🇿</div>
-        <div class="person-name">Pavel Šimánek</div>
-        <div class="person-role">Duchovní vedení</div>
-        <div class="person-bio">Kazatel CB Liberec. Večerní program a otázky víry – jeho home turf.</div>
+
+      <div class="leader-card">
+        <img class="leader-photo" src="vedouci/anet.jpeg" alt="Anet">
+        <div class="leader-name">Anet</div>
+        <div class="leader-role">Zdravotnice</div>
+        <div class="leader-bio">
+          <p>Ahojky, jsem Anet 🌻 Na kempu i mimo něj mě potkáte se stetoskopem kolem krku a baterkou v kapse, s neustále rozlítanou hřívou na hlavě.</p>
+          <p>Ráda beru do ruky mapu, užívám si výhledy do přírody a není den, kdy by mi nehrála hudba ve sluchátkách. Miluju cestování a výlety, s oblibou se pustím do čehokoliv kreativního a nadšeně si s vámi zahraju skoro jakoukoli deskovku.</p>
+          <p>Na kempu se těším snad na všechno 😁 Speakování s amíky, společné zážitky, hry a večerní programy s Biblí v ruce… Nejvíc na to, jak si to užijem! A kdyby něco, jsem tu! 😉</p>
+        </div>
       </div>
     </div>
-
-    <p style="margin-top: 1.5rem; font-size:0.82rem; color: var(--text-muted); font-style: italic;">
-      * Jména a fotky jsou zatím ilustrační – doplň skutečné vedoucí a americké hosty.
-    </p>
   </div>
 
   <!-- TAB 3: FOTKY -->
