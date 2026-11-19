@@ -224,6 +224,21 @@ body {
 
 }
 
+@media (orientation: portrait) {
+    .game-grid.veryEasy {
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(4, 1fr);
+        max-width: 36vh;
+    }
+}
+@media (orientation: landscape) {
+    .game-grid.veryEasy {
+        grid-template-columns: repeat(4, 1fr);
+        grid-template-rows: repeat(3, 1fr);
+        max-width: 48vh;
+    }
+}
+
 .card-button {
 
     width: 100%;
@@ -714,6 +729,7 @@ class FirebaseConnection {
 
         const difficultyConfig = {
 
+            veryEasy: { rows: 4, cols: 3, pairs: 6, name: "Very easy" },
             easy: { rows: 5, cols: 4, pairs: 10, name: "Easy" },
 
             medium: { rows: 8, cols: 5, pairs: 20, name: "Medium" },
@@ -979,6 +995,17 @@ class FirebaseConnection {
                 easy: "Easy", medium: "Medium", hard: "Hard",
                 animals: "Animals", biblical: "Biblical", childish: "Childish", puppies: "Puppies",
                 bestOf: "Best of 3:",
+                veryEasy: "Very easy",
+                about: "About", close: "Close", version: "Version",
+                firstPrototype: "First prototype: 11/2025", contact: "Contact",
+                aiImages: "Images created with the help of AI (Microsoft Copilot, ChatGPT).",
+                verse: "Blessed are the pure in heart: for they shall see God.", verseRef: "Matthew 5:8",
+                p1WonRound: "Player 1 won this round!", p2WonRound: "Player 2 won this round!", drawRound: "Draw!",
+                series: "Series:", ready: "Ready", nextRound: "Next round", waitingSecond: "Waiting for the second player...",
+                overallWinner: "OVERALL WINNER!", newSeries: "New series",
+                winsSeries: "wins the series!", finalScore: "Final score:", backToMenu: "Back to Menu",
+                codeCopied: "Code copied:", gameCodeLabel: "Game Code:", errorCreating: "Error creating game:",
+                exitBtn: "exit", cardAlt: "Card",
             },
             cs: {
                 chooseMotive: "Vyber motiv:", difficulty: "Obtížnost:",
@@ -999,11 +1026,33 @@ class FirebaseConnection {
                 easy: "Lehká", medium: "Střední", hard: "Těžká",
                 animals: "Zvířata", biblical: "Biblická", childish: "Pro nejmenší", puppies: "Štěňata",
                 bestOf: "Na 3 výhry:",
+                veryEasy: "Super lehká",
+                about: "O hře", close: "Zavřít", version: "Verze",
+                firstPrototype: "První prototyp: 11/2025", contact: "Kontakt",
+                aiImages: "Obrázky vytvořeny s pomocí AI (Microsoft Copilot, ChatGPT).",
+                verse: "Blahoslavení čistého srdce, neboť oni uvidí Boha.", verseRef: "Mt 5:8",
+                p1WonRound: "Hráč 1 vyhrál toto kolo!", p2WonRound: "Hráč 2 vyhrál toto kolo!", drawRound: "Remíza!",
+                series: "Série:", ready: "Připraveno", nextRound: "Další kolo", waitingSecond: "Čekám na druhého hráče...",
+                overallWinner: "CELKOVÝ VÍTĚZ!", newSeries: "Nová série",
+                winsSeries: "vyhrává sérii!", finalScore: "Konečné skóre:", backToMenu: "Zpět do menu",
+                codeCopied: "Kód zkopírován:", gameCodeLabel: "Kód hry:", errorCreating: "Chyba při vytváření hry:",
+                exitBtn: "konec", cardAlt: "Karta",
             }
         };
 
+        const APP_VERSION = '1.13';
+        function localizeError(message, lang) {
+            const m = message || '';
+            if (lang !== 'cs') return m;
+            if (m.startsWith('Room not found')) return 'Hra nenalezena! Hráč 1 musí mít hru otevřenou.';
+            if (m.startsWith('Connection timeout')) return 'Vypršel čas připojení – zkontroluj internet.';
+            if (m.startsWith('Timeout')) return 'Připojení trvá příliš dlouho. Zkus to znovu.';
+            if (m.startsWith('Ably connection failed')) return 'Připojení se nezdařilo' + m.slice('Ably connection failed'.length);
+            if (m.startsWith('Firebase SDK')) return 'Nepodařilo se načíst Firebase.';
+            return m;
+        }
         // ── AI GAME HELPERS ─────────────────────────────────────
-        const aiMemoryChance = { easy: 0.45, medium: 0.72, hard: 0.95 };
+        const aiMemoryChance = { veryEasy: 0.3, easy: 0.45, medium: 0.72, hard: 0.95 };
 
         function aiChoose(cards, matched, aiMemory, difficulty) {
             const unmatched = cards.map((_, i) => i).filter(i => !matched.includes(i));
@@ -1303,6 +1352,7 @@ class FirebaseConnection {
             const [selectedCategory, setSelectedCategory] = useState('animals');
 
             const [selectedDifficulty, setSelectedDifficulty] = useState('hard');
+            const [showAbout, setShowAbout] = useState(false);
 
             const [roomCode, setRoomCode] = useState('');
 
@@ -1452,7 +1502,18 @@ useEffect(() => { flippedRef.current = flipped; }, [flipped]);
 
             
 
-           const createRoom = async () => {
+           const resetGameState = () => {
+                flippedRef.current = [];
+                matchedRef.current = [];
+                scoresRef.current = { player1: 0, player2: 0 };
+                matchWinsRef.current = { player1: 0, player2: 0 };
+                currentPlayerRef.current = 1;
+                setCanFlip(true);
+                setReadyForNextRound({ player1: false, player2: false });
+            };
+
+            const createRoom = async () => {
+    resetGameState();
 
     
 
@@ -1518,7 +1579,7 @@ useEffect(() => { flippedRef.current = flipped; }, [flipped]);
 
     } catch (err) {
 
-        alert('Error creating game: ' + err.message);
+        alert(t.errorCreating + ' ' + localizeError(err.message, lang));
 
         backToMenu();
 
@@ -1529,6 +1590,7 @@ useEffect(() => { flippedRef.current = flipped; }, [flipped]);
           const joinRoom = async () => {
 
     if (!joinCode.trim()) return;
+    resetGameState();
 
     
 
@@ -1556,7 +1618,7 @@ useEffect(() => { flippedRef.current = flipped; }, [flipped]);
 
     } catch (err) {
 
-        alert(err.message);
+        alert(localizeError(err.message, lang));
 
         backToMenu();
 
@@ -2041,6 +2103,7 @@ handleRemoteRef.current = handleRemoteUpdate;
             const backToMenu = () => {
 
 		p2p.disconnect();
+                resetGameState();
 
                 setGameMode('menu');
 
@@ -2092,7 +2155,7 @@ handleRemoteRef.current = handleRemoteUpdate;
 
             if (isSeriesOver) {
 
-                const winner = matchWins.player1 > matchWins.player2 ? 'Player 1' : 'Player 2';
+                const winner = matchWins.player1 > matchWins.player2 ? t.player1 : t.player2;
 
                 return (
 
@@ -2108,9 +2171,9 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                         <div className="rounded-2xl shadow-2xl p-8 max-w-md w-full border-4 border-yellow-500" style={{backgroundColor: 'rgba(181, 101, 29, 0.75)'}}>
 
-                            <h2 className="text-4xl font-bold mb-4" style={{color: '#FFD700'}}>🎉 {winner} wins the series!</h2>
+                            <h2 className="text-4xl font-bold mb-4" style={{color: '#FFD700'}}>🎉 {winner} {t.winsSeries}</h2>
 
-                            <p className="text-lg mb-6" style={{color: '#FFD700'}}>Final score: {matchWins.player1} – {matchWins.player2}</p>
+                            <p className="text-lg mb-6" style={{color: '#FFD700'}}>{t.finalScore} {matchWins.player1} – {matchWins.player2}</p>
 
                             <button
 
@@ -2120,7 +2183,7 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                             >
 
-                                Back to Menu
+                                {t.backToMenu}
 
                             </button>
 
@@ -2154,7 +2217,21 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                     
 
-           <ButterflyComponent position={butterflyPosition} wingsStopped={butterflyWingsStopped} />          
+           <ButterflyComponent position={butterflyPosition} wingsStopped={butterflyWingsStopped} />
+                    {showAbout && (
+                        <div className="fixed inset-0 flex items-center justify-center" style={{backgroundColor:'rgba(0,0,0,0.7)', zIndex: 10000}} onClick={() => setShowAbout(false)}>
+                            <div className="bg-gray-800 rounded-2xl p-6 mx-4 max-w-sm w-full border border-yellow-600 text-center" onClick={(e) => e.stopPropagation()}>
+                                <h2 className="text-4xl text-yellow-400 mb-1" style={{ fontFamily: 'Great Vibes, cursive' }}>Pexeso</h2>
+                                <p className="text-xs text-gray-400 mb-4">{t.version} {APP_VERSION} · {t.firstPrototype}</p>
+                                <p className="text-white italic mb-1">{lang === 'cs' ? `„${t.verse}“` : `“${t.verse}”`}</p>
+                                <p className="text-sm text-yellow-400 mb-4">{t.verseRef}</p>
+                                <p className="text-xs text-gray-300 mb-1">© Jan Pexeso</p>
+                                <p className="text-xs text-gray-300 mb-1">{t.contact}: <a href="mailto:jan.pexeso@gmail.com" className="underline">jan.pexeso@gmail.com</a></p>
+                                <p className="text-xs text-gray-400 mb-4">{t.aiImages}</p>
+                                <button onClick={() => setShowAbout(false)} className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-2 rounded-lg">{t.close}</button>
+                            </div>
+                        </div>
+                    )}          
 
                     
 
@@ -2167,14 +2244,15 @@ handleRemoteRef.current = handleRemoteUpdate;
                         }}>
 
 <div className="absolute top-2 left-2 flex flex-col items-start z-10">
-    <button onClick={async () => { if (window.confirm(t.exitApp)) { try { if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) { await window.Capacitor.Plugins.App.minimizeApp(); } } catch (e) {} } }} className="text-white-500 hover:text-yellow-400 text-xl font-bold" style={{fontFamily: 'Great Vibes, cursive'}}>exit</button>
+    <button onClick={async () => { if (window.confirm(t.exitApp)) { try { if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) { await window.Capacitor.Plugins.App.minimizeApp(); } } catch (e) {} } }} className="text-white-500 hover:text-yellow-400 text-xl font-bold" style={{fontFamily: 'Great Vibes, cursive'}}>{t.exitBtn}</button>
     <div className="flex flex-col items-start mt-1">
         <button onClick={() => changeLang('en')} className={`text-xl leading-none ${lang === 'en' ? 'opacity-100' : 'opacity-40'}`} title="English">🇬🇧</button>
         <button onClick={() => changeLang('cs')} className={`text-xl leading-none mt-1 ${lang === 'cs' ? 'opacity-100' : 'opacity-40'}`} title="Čeština">🇨🇿</button>
     </div>
 </div>
 
-                            <span className="absolute bottom-0 right-3 text-gray-400" style={{fontSize: '0.7rem'}}>v1.12</span>
+                            <button onClick={() => setShowAbout(true)} className="absolute top-2 right-3 text-gray-300 hover:text-yellow-400 text-xs z-10">ⓘ {t.about}</button>
+                            <span className="absolute bottom-0 right-3 text-gray-400" style={{fontSize: '0.7rem'}}>v{APP_VERSION}</span>
                             <span className="absolute bottom-0 left-3 text-gray-400" style={{fontSize: '0.7rem'}}>Made by John1:12</span>
 
                             <h1 className="text-5xl text-center mb-4 text-yellow-500" style={{ fontFamily: 'Great Vibes, cursive' }}>
@@ -2403,7 +2481,7 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                 await navigator.clipboard.writeText(roomCode);
 
-                alert('Code copied: ' + roomCode);
+                alert(t.codeCopied + ' ' + roomCode);
 
             }
 
@@ -2417,11 +2495,11 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                     await navigator.clipboard.writeText(roomCode);
 
-                    alert('Code copied: ' + roomCode);
+                    alert(t.codeCopied + ' ' + roomCode);
 
                 } catch {
 
-                    alert('Game Code: ' + roomCode);
+                    alert(t.gameCodeLabel + ' ' + roomCode);
 
                 }
 
@@ -2597,7 +2675,7 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                                         className="mx-1 bg-green-500 hover:bg-green-600 text-white p-1.5 rounded-full shadow-lg transition-transform hover:scale-110"
 
-                                        title="New series"
+                                        title={t.newSeries}
 
                                     >
 
@@ -2639,15 +2717,15 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                                     <div className="text-sm md:text-base font-bold text-white">
 
-                                        {scores.player1 > scores.player2 ? 'Player 1 won this round!' : 
+                                        {scores.player1 > scores.player2 ? t.p1WonRound : 
 
-                                         scores.player2 > scores.player1 ? 'Player 2 won this round!' : 'Draw!'}
+                                         scores.player2 > scores.player1 ? t.p2WonRound : t.drawRound}
 
                                     </div>
 
                                     <div className="text-xs text-gray-400 mt-0.5">
 
-                                        Series: {matchWins.player1} - {matchWins.player2}
+                                        {t.series} {matchWins.player1} - {matchWins.player2}
 
                                     </div>
 
@@ -2675,9 +2753,9 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                                                 {readyForNextRound[`player${playerNumber}`] 
 
-                                                    ? 'Ready' 
+                                                    ? t.ready 
 
-                                                    : 'Next round'}
+                                                    : t.nextRound}
 
                                             </button>
 
@@ -2687,7 +2765,7 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                                                 <div className="text-xs text-gray-400 mt-0.5">
 
-                                                    Waiting for the second player...
+                                                    {t.waitingSecond}
 
                                                 </div>
 
@@ -2705,7 +2783,7 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                                         >
 
-                                            Next round
+                                            {t.nextRound}
 
                                         </button>
 
@@ -2721,19 +2799,19 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                                     <div className="text-base md:text-lg font-bold text-white mb-0.5">
 
-                                        OVERALL WINNER!
+                                        {t.overallWinner}
 
                                     </div>
 
                                     <div className="text-sm md:text-base font-bold text-white">
 
-                                        {matchWins.player1 > matchWins.player2 ? 'Player 1' : 'Player 2'}
+                                        {matchWins.player1 > matchWins.player2 ? t.player1 : t.player2}
 
                                     </div>
 
                                     <div className="text-xs text-white mt-0.5">
 
-                                        Series: {matchWins.player1} - {matchWins.player2}
+                                        {t.series} {matchWins.player1} - {matchWins.player2}
 
                                     </div>
 
@@ -2785,7 +2863,7 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                                                 {(isFlipped || isMatched) ? (
 
-                                                    <img src={card.animal} alt="obrázek" className="card-image" />
+                                                    <img src={card.animal} alt={t.cardAlt} className="card-image" />
 
                                                 ) : (
 
