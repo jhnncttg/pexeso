@@ -997,8 +997,7 @@ class FirebaseConnection {
                 bestOf: "Best of 3:",
                 veryEasy: "Very easy",
                 about: "About", close: "Close", version: "Version",
-                firstPrototype: "First prototype: 11/2025", contact: "Contact",
-                aiImages: "Images created with the help of AI (Microsoft Copilot, ChatGPT).",
+                firstVersion: "First version: 11/2025", contact: "Contact",
                 verse: "Blessed are the pure in heart: for they shall see God.", verseRef: "Matthew 5:8",
                 p1WonRound: "Player 1 won this round!", p2WonRound: "Player 2 won this round!", drawRound: "Draw!",
                 series: "Series:", ready: "Ready", nextRound: "Next round", waitingSecond: "Waiting for the second player...",
@@ -1028,8 +1027,7 @@ class FirebaseConnection {
                 bestOf: "Na 3 výhry:",
                 veryEasy: "Super lehká",
                 about: "O hře", close: "Zavřít", version: "Verze",
-                firstPrototype: "První prototyp: 11/2025", contact: "Kontakt",
-                aiImages: "Obrázky vytvořeny s pomocí AI (Microsoft Copilot, ChatGPT).",
+                firstVersion: "První verze: 11/2025", contact: "Kontakt",
                 verse: "Blahoslavení čistého srdce, neboť oni uvidí Boha.", verseRef: "Mt 5:8",
                 p1WonRound: "Hráč 1 vyhrál toto kolo!", p2WonRound: "Hráč 2 vyhrál toto kolo!", drawRound: "Remíza!",
                 series: "Série:", ready: "Připraveno", nextRound: "Další kolo", waitingSecond: "Čekám na druhého hráče...",
@@ -2221,13 +2219,12 @@ handleRemoteRef.current = handleRemoteUpdate;
                     {showAbout && (
                         <div className="fixed inset-0 flex items-center justify-center" style={{backgroundColor:'rgba(0,0,0,0.7)', zIndex: 10000}} onClick={() => setShowAbout(false)}>
                             <div className="bg-gray-800 rounded-2xl p-6 mx-4 max-w-sm w-full border border-yellow-600 text-center" onClick={(e) => e.stopPropagation()}>
-                                <h2 className="text-4xl text-yellow-400 mb-1" style={{ fontFamily: 'Great Vibes, cursive' }}>Pexeso</h2>
-                                <p className="text-xs text-gray-400 mb-4">{t.version} {APP_VERSION} · {t.firstPrototype}</p>
+                                <h2 className="text-4xl text-yellow-400 mb-1" style={{ fontFamily: 'Great Vibes, cursive' }}>Pexeso <span className="text-sm align-top text-yellow-400">for Debbie</span></h2>
+                                <p className="text-xs text-gray-400 mb-4">{t.version} {APP_VERSION} · {t.firstVersion}</p>
                                 <p className="text-white italic mb-1">{lang === 'cs' ? `„${t.verse}“` : `“${t.verse}”`}</p>
                                 <p className="text-sm text-yellow-400 mb-4">{t.verseRef}</p>
                                 <p className="text-xs text-gray-300 mb-1">© Jan Pexeso</p>
                                 <p className="text-xs text-gray-300 mb-1">{t.contact}: <a href="mailto:jan.pexeso@gmail.com" className="underline">jan.pexeso@gmail.com</a></p>
-                                <p className="text-xs text-gray-400 mb-4">{t.aiImages}</p>
                                 <button onClick={() => setShowAbout(false)} className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-2 rounded-lg">{t.close}</button>
                             </div>
                         </div>
