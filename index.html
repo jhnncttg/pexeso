@@ -269,6 +269,9 @@ body {
 
 }
 
+    
+        .btn-velvet { background-color: #9B1D3A; background-image: linear-gradient(180deg, #A82343 0%, #8A1832 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 2px 6px rgba(0,0,0,0.35); }
+        .btn-velvet:hover { background-image: linear-gradient(180deg, #912040 0%, #7A1429 100%); }
     </style>
 
 </head>
@@ -1005,6 +1008,11 @@ class FirebaseConnection {
                 winsSeries: "wins the series!", finalScore: "Final score:", backToMenu: "Back to Menu",
                 codeCopied: "Code copied:", gameCodeLabel: "Game Code:", errorCreating: "Error creating game:",
                 exitBtn: "exit", cardAlt: "Card",
+                singleMode: "Single mode", score: "Score", scoreTitle: "Personal records",
+                moves: "Moves", time: "Time", fastest: "Fastest", gamesLabel: "Games",
+                wellDone: "Well done!", bestMoves: "Fewest moves", bestTime: "Fastest time",
+                newRecordMoves: "New record – fewest moves! 🎉", newRecordTime: "New record – fastest time! ⏱️",
+                firstResult: "First result saved!", recordsBtn: "Records",
             },
             cs: {
                 chooseMotive: "Vyber motiv:", difficulty: "Obtížnost:",
@@ -1035,10 +1043,15 @@ class FirebaseConnection {
                 winsSeries: "vyhrává sérii!", finalScore: "Konečné skóre:", backToMenu: "Zpět do menu",
                 codeCopied: "Kód zkopírován:", gameCodeLabel: "Kód hry:", errorCreating: "Chyba při vytváření hry:",
                 exitBtn: "konec", cardAlt: "Karta",
+                singleMode: "Hraji jen já", score: "Skóre", scoreTitle: "Osobní rekordy",
+                moves: "Tahy", time: "Čas", fastest: "Nejrychleji", gamesLabel: "Her",
+                wellDone: "Hotovo!", bestMoves: "Nejméně tahů", bestTime: "Nejrychlejší čas",
+                newRecordMoves: "Nový rekord – nejméně tahů! 🎉", newRecordTime: "Nový rekord – nejrychlejší čas! ⏱️",
+                firstResult: "První výsledek uložen!", recordsBtn: "Rekordy",
             }
         };
 
-        const APP_VERSION = '1.13';
+        const APP_VERSION = '1.14';
         function localizeError(message, lang) {
             const m = message || '';
             if (lang !== 'cs') return m;
@@ -1332,6 +1345,325 @@ class FirebaseConnection {
                                 })}
                             </div>
                         </div>
+                    </div>
+                </div>
+            );
+        }
+
+
+        // ── SINGLE MODE: PERSONAL RECORDS ───────────────────────
+        const RECORDS_KEY = 'pexeso-records';
+        function loadRecords() {
+            try { return JSON.parse(localStorage.getItem(RECORDS_KEY)) || {}; } catch (e) { return {}; }
+        }
+        // Ranking: fewest moves first; on equal moves the shorter time wins.
+        // Separately we also keep the fastest time ever.
+        function saveResult(categoryKey, difficultyKey, moves, time) {
+            const key = categoryKey + '|' + difficultyKey;
+            const all = loadRecords();
+            const prev = all[key] || null;
+            const rec = prev ? { ...prev } : { moves: moves, time: time, bestTime: time, games: 0 };
+            let newMoves = false, newTime = false;
+            if (prev) {
+                if (moves < prev.moves || (moves === prev.moves && time < prev.time)) { rec.moves = moves; rec.time = time; newMoves = true; }
+                if (time < prev.bestTime) { rec.bestTime = time; newTime = true; }
+            }
+            rec.games = (prev ? prev.games : 0) + 1;
+            all[key] = rec;
+            try { localStorage.setItem(RECORDS_KEY, JSON.stringify(all)); } catch (e) {}
+            return { rec: rec, isFirst: !prev, newMoves: newMoves, newTime: newTime };
+        }
+        function formatTime(ms) {
+            const s = Math.floor(ms / 1000);
+            return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+        }
+
+        function SingleGame({ categoryKey, difficultyKey, onBack, onScore, lang }) {
+            const t = translations[lang] || translations.en;
+            const config = difficultyConfig[difficultyKey] || difficultyConfig.easy;
+            const PAIRS = config.pairs;
+            const TOTAL_CARDS = PAIRS * 2;
+            const [cards, setCards]         = useState([]);
+            const [flipped, setFlipped]     = useState([]);
+            const [matched, setMatched]     = useState([]);
+            const [moves, setMoves]         = useState(0);
+            const [elapsed, setElapsed]     = useState(0);
+            const [canFlip, setCanFlip]     = useState(true);
+            const [gameOver, setGameOver]   = useState(false);
+            const [result, setResult]       = useState(null);
+            const [showConfirm, setShowConfirm] = useState(false);
+            const cardsRef     = useRef([]);
+            const matchedRef   = useRef([]);
+            const flippedRef   = useRef([]);
+            const movesRef     = useRef(0);
+            const elapsedRef   = useRef(0);
+            const lastTickRef  = useRef(0);
+            const runningRef   = useRef(false);
+            const startedRef   = useRef(false);
+            const overRef      = useRef(false);
+
+            function tick() {
+                if (!runningRef.current) return;
+                const now = Date.now();
+                elapsedRef.current += now - lastTickRef.current;
+                lastTickRef.current = now;
+                setElapsed(elapsedRef.current);
+            }
+
+            useEffect(() => {
+                startNewGame();
+                const id = setInterval(tick, 250);
+                // Pause the clock while the app is in the background
+                const onVis = () => {
+                    if (document.hidden) { tick(); runningRef.current = false; }
+                    else if (startedRef.current && !overRef.current) { lastTickRef.current = Date.now(); runningRef.current = true; }
+                };
+                document.addEventListener('visibilitychange', onVis);
+                return () => { clearInterval(id); document.removeEventListener('visibilitychange', onVis); };
+            }, []);
+
+            function startNewGame() {
+                const seed = Math.floor(Math.random() * 1e9);
+                const newCards = generateCards(seed, PAIRS, categoryKey);
+                cardsRef.current   = newCards;
+                matchedRef.current = [];
+                flippedRef.current = [];
+                movesRef.current   = 0;
+                elapsedRef.current = 0;
+                runningRef.current = false;
+                startedRef.current = false;
+                overRef.current    = false;
+                setCards(newCards);
+                setFlipped([]);
+                setMatched([]);
+                setMoves(0);
+                setElapsed(0);
+                setCanFlip(true);
+                setGameOver(false);
+                setResult(null);
+            }
+
+            function finishGame() {
+                const res = saveResult(categoryKey, difficultyKey, movesRef.current, elapsedRef.current);
+                setResult({ moves: movesRef.current, time: elapsedRef.current, rec: res.rec, isFirst: res.isFirst, newMoves: res.newMoves, newTime: res.newTime });
+                setCanFlip(false);
+                setGameOver(true);
+                if (res.isFirst || res.newMoves || res.newTime) launchConfettiAI();
+            }
+
+            function handleCardClick(index) {
+                if (!canFlip) return;
+                if (flippedRef.current.includes(index)) return;
+                if (matchedRef.current.includes(index)) return;
+                if (!startedRef.current) {
+                    startedRef.current = true;
+                    runningRef.current = true;
+                    lastTickRef.current = Date.now();
+                }
+                const newFlipped = [...flippedRef.current, index];
+                flippedRef.current = newFlipped;
+                setFlipped(newFlipped);
+                if (newFlipped.length === 2) {
+                    setCanFlip(false);
+                    movesRef.current += 1;
+                    setMoves(movesRef.current);
+                    const a = newFlipped[0], b = newFlipped[1];
+                    const isMatch = cardsRef.current[a].value === cardsRef.current[b].value;
+                    if (isMatch) {
+                        // Stop the clock at the moment the last pair is turned
+                        if (matchedRef.current.length + 2 === TOTAL_CARDS) {
+                            tick();
+                            runningRef.current = false;
+                            overRef.current = true;
+                        }
+                        setTimeout(() => {
+                            const newMatched = [...matchedRef.current, a, b];
+                            matchedRef.current = newMatched;
+                            flippedRef.current = [];
+                            setMatched(newMatched);
+                            setFlipped([]);
+                            if (newMatched.length === TOTAL_CARDS) { finishGame(); }
+                            else { setCanFlip(true); }
+                        }, 700);
+                    } else {
+                        setTimeout(() => {
+                            flippedRef.current = [];
+                            setFlipped([]);
+                            setCanFlip(true);
+                        }, 900);
+                    }
+                }
+            }
+
+            if (gameOver && result) {
+                return (
+                    <div className="min-h-screen flex items-center justify-center p-4"
+                        style={{ backgroundImage: 'url(images/meadow.png)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                        <div className="rounded-2xl shadow-2xl p-6 max-w-sm w-full border border-yellow-500 text-center"
+                            style={{ backgroundColor: 'rgba(181,101,29,0.9)' }}>
+                            <h1 className="text-4xl text-yellow-400 mb-3" style={{ fontFamily: 'Great Vibes, cursive' }}>{t.wellDone}</h1>
+                            <p className="text-white text-xl mb-2">
+                                {t.moves}: <strong>{result.moves}</strong> &nbsp;|&nbsp; {t.time}: <strong>{formatTime(result.time)}</strong>
+                            </p>
+                            {result.isFirst && <p className="text-yellow-300 font-bold text-sm">{t.firstResult}</p>}
+                            {result.newMoves && <p className="text-yellow-300 font-bold text-sm">{t.newRecordMoves}</p>}
+                            {result.newTime && <p className="text-yellow-300 font-bold text-sm">{t.newRecordTime}</p>}
+                            <div className="rounded-lg p-3 my-4 text-white text-sm" style={{ backgroundColor: 'rgba(0,0,0,0.3)' }}>
+                                <div>{t.bestMoves}: <strong>{result.rec.moves}</strong> ({formatTime(result.rec.time)})</div>
+                                <div>{t.bestTime}: <strong>{formatTime(result.rec.bestTime)}</strong></div>
+                            </div>
+                            <div className="space-y-3">
+                                <button onClick={startNewGame}
+                                    className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg text-lg">
+                                    {t.playAgain}
+                                </button>
+                                <button onClick={onScore}
+                                    className="btn-velvet w-full text-white font-bold py-3 rounded-lg text-lg">
+                                    {t.recordsBtn}
+                                </button>
+                                <button onClick={onBack}
+                                    className="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-lg">
+                                    {t.mainMenu}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="h-screen p-2 flex flex-col overflow-hidden"
+                    style={{ backgroundImage: 'url(images/meadow.png)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                    {showConfirm && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{backgroundColor:'rgba(0,0,0,0.7)'}}>
+                            <div className="bg-gray-800 rounded-2xl p-6 mx-4 max-w-sm w-full border border-yellow-600 text-center">
+                                <p className="text-white text-lg font-bold mb-5">{t.confirmExit}</p>
+                                <div className="flex gap-3">
+                                    <button onClick={onBack} className="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded-lg">{t.confirmYes}</button>
+                                    <button onClick={() => setShowConfirm(false)} className="flex-1 bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 rounded-lg">{t.confirmNo}</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    <div className="w-full h-full flex flex-col max-w-2xl mx-auto">
+                        <div className="flex items-center justify-between mb-1">
+                            <button onClick={() => setShowConfirm(true)}
+                                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm font-bold">
+                                {t.menuBtn}
+                            </button>
+                            <h1 className="text-xl md:text-2xl font-bold text-white text-center flex-1"
+                                style={{ fontFamily: 'Great Vibes, cursive' }}>
+                                Pexeso <span className="text-[10px] text-white/70 relative -top-2 ml-1">for Debbie</span>
+                            </h1>
+                            <div className="w-16"></div>
+                        </div>
+                        <div className="bg-gray-800 rounded-lg shadow-xl p-1 mb-1 flex-shrink-0 border border-yellow-700">
+                            <div className="flex justify-around items-center">
+                                <div className="text-center">
+                                    <div className="text-xs font-bold text-blue-400">{t.moves}</div>
+                                    <div className="text-2xl font-bold text-white">{moves}</div>
+                                </div>
+                                <div className="text-center px-2">
+                                    <div className="text-gray-300 text-xs">{t[categoryKey] || categories[categoryKey].name}</div>
+                                    <div className="text-gray-400 text-xs mt-1">{t[difficultyKey] || config.name}</div>
+                                </div>
+                                <div className="text-center">
+                                    <div className="text-xs font-bold text-yellow-400">{t.time}</div>
+                                    <div className="text-2xl font-bold text-white">{formatTime(elapsed)}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="bg-gray-800 rounded-lg shadow-xl p-2 flex-1 overflow-hidden border border-gray-700 min-h-0">
+                            <div className={`game-grid ${difficultyKey}`}
+                                style={{ height: '100%', gridTemplateRows: `repeat(${config.rows}, 1fr)` }}>
+                                {cards.map((card, index) => {
+                                    const isFlipped = flipped.includes(index);
+                                    const isMatched = matched.includes(index);
+                                    return (
+                                        <button
+                                            key={index}
+                                            onClick={() => handleCardClick(index)}
+                                            className={`card-button transition-all duration-300 ${isMatched ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+                                            style={{
+                                                backgroundColor: isFlipped || isMatched ? 'transparent' : '#6B7280',
+                                                cursor: canFlip && !isFlipped && !isMatched ? 'pointer' : 'default',
+                                            }}
+                                            disabled={!canFlip || isFlipped || isMatched}
+                                        >
+                                            <div className="w-full h-full flex items-center justify-center">
+                                                {(isFlipped || isMatched) ? (
+                                                    <img src={card.animal} alt="card" className="card-image" />
+                                                ) : (
+                                                    <div className="flex flex-col items-center justify-center h-full">
+                                                        <span className="text-black text-lg md:text-xl leading-tight"
+                                                            style={{ fontFamily: 'Great Vibes, cursive' }}>Pexeso</span>
+                                                        <span className="text-black text-[8px] md:text-[10px] leading-none"
+                                                            style={{ fontFamily: 'Great Vibes, cursive' }}>for Debbie</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function ScoreScreen({ categoryKey, onBack, lang }) {
+            const t = translations[lang] || translations.en;
+            const [cat, setCat] = useState(categoryKey);
+            const records = loadRecords();
+            return (
+                <div className="h-screen p-4 flex items-center justify-center" style={{
+                    backgroundImage: 'url(images/meadow.png)',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center'
+                }}>
+                    <div className="rounded-2xl shadow-2xl p-5 max-w-md w-full border border-yellow-500" style={{
+                        backgroundColor: 'rgba(181, 101, 29, 0.85)',
+                        backdropFilter: 'blur(1px)'
+                    }}>
+                        <h1 className="text-4xl text-center mb-3 text-yellow-400" style={{ fontFamily: 'Great Vibes, cursive' }}>{t.scoreTitle}</h1>
+                        <label className="block text-sm font-medium text-gray-300 mb-1">{t.chooseMotive}</label>
+                        <select
+                            value={cat}
+                            onChange={(e) => setCat(e.target.value)}
+                            className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-yellow-600 focus:outline-none text-sm mb-3"
+                        >
+                            {Object.entries(categories).map(([key, c]) => (
+                                <option key={key} value={key}>{t[key] || c.name}</option>
+                            ))}
+                        </select>
+                        <div className="rounded-xl p-2 mb-3" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                            <div className="grid gap-1 text-xs font-bold text-yellow-300 px-1 pb-1" style={{ gridTemplateColumns: '1.6fr 1fr 1fr 1fr' }}>
+                                <div>{t.difficulty.replace(':', '')}</div>
+                                <div className="text-center">{t.moves}</div>
+                                <div className="text-center">{t.time}</div>
+                                <div className="text-center">{t.fastest}</div>
+                            </div>
+                            {Object.entries(difficultyConfig).map(([key, config]) => {
+                                const rec = records[cat + '|' + key];
+                                return (
+                                    <div key={key} className="grid gap-1 items-center text-sm text-white px-1 py-2 border-t border-white/10"
+                                        style={{ gridTemplateColumns: '1.6fr 1fr 1fr 1fr' }}>
+                                        <div>
+                                            <div className="font-bold leading-tight">{t[key] || config.name}</div>
+                                            <div className="text-[10px] text-gray-300">{config.pairs} {t.pairs}{rec ? ' · ' + t.gamesLabel + ': ' + rec.games : ''}</div>
+                                        </div>
+                                        <div className="text-center font-bold">{rec ? rec.moves : '–'}</div>
+                                        <div className="text-center">{rec ? formatTime(rec.time) : '–'}</div>
+                                        <div className="text-center">{rec ? formatTime(rec.bestTime) : '–'}</div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        <button onClick={onBack}
+                            className="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 rounded-lg text-base">
+                            {t.mainMenu}
+                        </button>
                     </div>
                 </div>
             );
@@ -2199,6 +2531,12 @@ handleRemoteRef.current = handleRemoteUpdate;
 
             }
 
+            if (gameMode === 'single') {
+                return <SingleGame categoryKey={selectedCategory} difficultyKey={selectedDifficulty} onBack={backToMenu} onScore={() => setGameMode('score')} lang={lang} />;
+            }
+            if (gameMode === 'score') {
+                return <ScoreScreen categoryKey={selectedCategory} onBack={backToMenu} lang={lang} />;
+            }
             if (gameMode === 'menu') {
 
                 return (
@@ -2314,15 +2652,33 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                             </div>
 
-                            <div className="space-y-2">
+                            <div className="space-y-1.5">
 
-                                <div className="rounded-xl p-3" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
+                                <div className="rounded-xl p-2" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => setGameMode('single')}
+                                            style={{ flex: '3 1 0%' }}
+                                            className="btn-velvet text-white font-bold py-2 px-3 rounded-lg text-base transition-all transform hover:scale-105"
+                                        >
+                                            {t.singleMode}
+                                        </button>
+                                        <button
+                                            onClick={() => setGameMode('score')}
+                                            style={{ flex: '2 1 0%' }}
+                                            className="btn-velvet text-white font-bold py-2 px-3 rounded-lg text-base transition-all transform hover:scale-105"
+                                        >
+                                            {t.score}
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="rounded-xl p-2" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
 
                                     <button
 
                                         onClick={initLocalGame}
 
-                                        className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg text-base transition-all transform hover:scale-105"
+                                        className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg text-base transition-all transform hover:scale-105"
 
                                     >
 
@@ -2332,13 +2688,13 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                                 </div>
 
-                                <div className="rounded-xl p-3" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
+                                <div className="rounded-xl p-2" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
 
                                     <button
 
                                         onClick={() => setGameMode('ai')}
 
-                                        className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-4 rounded-lg text-base transition-all transform hover:scale-105"
+                                        className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg text-base transition-all transform hover:scale-105"
 
                                     >
 
@@ -2348,13 +2704,13 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                                 </div>
 
-                                <div className="rounded-xl p-3" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
+                                <div className="rounded-xl p-2" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
 
                                     <button
 
                                         onClick={createRoom}
 
-                                        className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg text-base transition-all transform hover:scale-105 mb-2"
+                                        className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg text-base transition-all transform hover:scale-105 mb-1.5"
 
                                     >
 
@@ -2362,7 +2718,7 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                                     </button>
 
-                                    <div className="space-y-2">
+                                    <div className="space-y-1.5">
 
                                         <input
 
@@ -2374,7 +2730,7 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                                             onChange={(e) => setJoinCode(e.target.value)}
 
-                                            className="w-full px-3 py-2 border-2 border-yellow-600 bg-gray-700 text-white rounded-lg text-center text-sm font-mono uppercase placeholder-gray-400"
+                                            className="w-full px-3 py-1.5 border-2 border-yellow-600 bg-gray-700 text-white rounded-lg text-center text-sm font-mono uppercase placeholder-gray-400"
 
                                             maxLength="50"
 
@@ -2384,7 +2740,7 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                                             onClick={joinRoom}
 
-                                            className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg text-base transition-all transform hover:scale-105"
+                                            className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg text-base transition-all transform hover:scale-105"
 
                                         >
 
