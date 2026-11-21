@@ -272,6 +272,39 @@ body {
     
         .btn-velvet { background-color: #9B1D3A; background-image: linear-gradient(180deg, #A82343 0%, #8A1832 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 2px 6px rgba(0,0,0,0.35); }
         .btn-velvet:hover { background-image: linear-gradient(180deg, #912040 0%, #7A1429 100%); }
+    
+        /* ── Card flip + match animation ── */
+        .pcard { background: none; padding: 0; border: 0; }
+        .pcard-lift { width: 100%; height: 100%; perspective: 700px; }
+        .pcard-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; -webkit-transform-style: preserve-3d; transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
+        .pcard.is-flipped .pcard-inner { transform: rotateY(180deg); }
+        .pcard.is-flipped .pcard-lift { animation: pcard-lift 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
+        .pcard-face { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; border-radius: 0.5rem; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+        .pcard-back { background-color: #6B7280; }
+        .pcard-front { background-color: transparent; transform: rotateY(180deg); }
+        .pcard.is-matched { z-index: 5; pointer-events: none; animation: pcard-match 0.9s ease-in forwards; }
+        .pcard.is-matched .pcard-front { animation: pcard-glow 0.9s ease-out forwards; }
+        @keyframes pcard-lift { 0% { transform: scale(1); } 50% { transform: scale(1.06); } 100% { transform: scale(1); } }
+        @keyframes pcard-match {
+            0%   { transform: scale(1);    opacity: 1; }
+            30%  { transform: scale(1.14); opacity: 1; }
+            55%  { transform: scale(1.10); opacity: 1; }
+            100% { transform: scale(0.85); opacity: 0; }
+        }
+        @keyframes pcard-glow {
+            0%   { box-shadow: 0 0 0 0 rgba(255, 215, 64, 0);     filter: brightness(1); }
+            30%  { box-shadow: 0 0 16px 6px rgba(255, 215, 64, 0.95); filter: brightness(1.25); }
+            60%  { box-shadow: 0 0 22px 8px rgba(255, 200, 40, 0.55); filter: brightness(1.15); }
+            100% { box-shadow: 0 0 10px 2px rgba(255, 200, 40, 0);   filter: brightness(1); }
+        }
+        @media (max-width: 640px) { .pcard-face { border-radius: 0.25rem; } }
+        @media (prefers-reduced-motion: reduce) {
+            .pcard-inner { transition: none; }
+            .pcard.is-flipped .pcard-lift { animation: none; }
+            .pcard.is-matched { animation: pcard-fade 0.3s ease-out forwards; }
+            .pcard.is-matched .pcard-front { animation: none; }
+            @keyframes pcard-fade { from { opacity: 1; } to { opacity: 0; } }
+        }
     </style>
 
 </head>
@@ -1101,6 +1134,30 @@ class FirebaseConnection {
         }
 
         // ── AI GAME COMPONENT ───────────────────────────────────
+        // ── SHARED CARD (flip + match animation) ───────────────
+        function PexesoCard({ card, isFlipped, isMatched, disabled, pointer, onClick, alt }) {
+            return (
+                <button
+                    onClick={onClick}
+                    disabled={disabled}
+                    className={`card-button pcard${(isFlipped || isMatched) ? ' is-flipped' : ''}${isMatched ? ' is-matched' : ''}`}
+                    style={{ cursor: pointer ? 'pointer' : 'default' }}
+                >
+                    <div className="pcard-lift">
+                        <div className="pcard-inner">
+                            <div className="pcard-face pcard-back">
+                                <span className="text-black text-lg md:text-xl leading-tight" style={{ fontFamily: 'Great Vibes, cursive' }}>Pexeso</span>
+                                <span className="text-black text-[8px] md:text-[10px] leading-none" style={{ fontFamily: 'Great Vibes, cursive' }}>for Debbie</span>
+                            </div>
+                            <div className="pcard-face pcard-front">
+                                <img src={card.animal} alt={alt || 'card'} className="card-image" />
+                            </div>
+                        </div>
+                    </div>
+                </button>
+            );
+        }
+
         function AIGame({ categoryKey, difficultyKey, onBack, lang }) {
             const t = translations[lang] || translations.en;
             const config = difficultyConfig[difficultyKey] || difficultyConfig.easy;
@@ -1167,9 +1224,11 @@ class FirebaseConnection {
                         setScores(newScores);
                         setFlipped([]);
                         if (newMatched.length === TOTAL_CARDS) {
-                            setGameOver(true);
-                            if (newScores.player > newScores.ai) launchConfettiAI();
                             setCanFlip(false);
+                            setTimeout(() => {
+                                setGameOver(true);
+                                if (newScores.player > newScores.ai) launchConfettiAI();
+                            }, 900);
                             return;
                         }
                         if (actor === 'player') {
@@ -1181,7 +1240,7 @@ class FirebaseConnection {
                             setMessage(t.aiMatch);
                             scheduleAITurn(newMatched);
                         }
-                    }, 700);
+                    }, 950);
                 } else {
                     setTimeout(() => {
                         flippedRef.current = [];
@@ -1197,7 +1256,7 @@ class FirebaseConnection {
                             setMessage(t.aiTurn);
                             scheduleAITurn(curMatched);
                         }
-                    }, 900);
+                    }, 1000);
                 }
             }
 
@@ -1318,29 +1377,10 @@ class FirebaseConnection {
                                     const isFlipped = flipped.includes(index);
                                     const isMatched = matched.includes(index);
                                     return (
-                                        <button
-                                            key={index}
+                                        <PexesoCard key={index} card={card} isFlipped={isFlipped} isMatched={isMatched}
                                             onClick={() => handleCardClick(index)}
-                                            className={`card-button transition-all duration-300 ${isMatched ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
-                                            style={{
-                                                backgroundColor: isFlipped || isMatched ? 'transparent' : '#6B7280',
-                                                cursor: canFlip && isPlayerTurn && !isFlipped && !isMatched ? 'pointer' : 'default',
-                                            }}
                                             disabled={!canFlip || !isPlayerTurn || isFlipped || isMatched}
-                                        >
-                                            <div className="w-full h-full flex items-center justify-center">
-                                                {(isFlipped || isMatched) ? (
-                                                    <img src={card.animal} alt="card" className="card-image" />
-                                                ) : (
-                                                    <div className="flex flex-col items-center justify-center h-full">
-                                                        <span className="text-black text-lg md:text-xl leading-tight"
-                                                            style={{ fontFamily: 'Great Vibes, cursive' }}>Pexeso</span>
-                                                        <span className="text-black text-[8px] md:text-[10px] leading-none"
-                                                            style={{ fontFamily: 'Great Vibes, cursive' }}>for Debbie</span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </button>
+                                            pointer={canFlip && isPlayerTurn && !isFlipped && !isMatched} />
                                     );
                                 })}
                             </div>
@@ -1482,15 +1522,15 @@ class FirebaseConnection {
                             flippedRef.current = [];
                             setMatched(newMatched);
                             setFlipped([]);
-                            if (newMatched.length === TOTAL_CARDS) { finishGame(); }
+                            if (newMatched.length === TOTAL_CARDS) { setTimeout(finishGame, 900); }
                             else { setCanFlip(true); }
-                        }, 700);
+                        }, 950);
                     } else {
                         setTimeout(() => {
                             flippedRef.current = [];
                             setFlipped([]);
                             setCanFlip(true);
-                        }, 900);
+                        }, 1000);
                     }
                 }
             }
@@ -1580,29 +1620,10 @@ class FirebaseConnection {
                                     const isFlipped = flipped.includes(index);
                                     const isMatched = matched.includes(index);
                                     return (
-                                        <button
-                                            key={index}
+                                        <PexesoCard key={index} card={card} isFlipped={isFlipped} isMatched={isMatched}
                                             onClick={() => handleCardClick(index)}
-                                            className={`card-button transition-all duration-300 ${isMatched ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
-                                            style={{
-                                                backgroundColor: isFlipped || isMatched ? 'transparent' : '#6B7280',
-                                                cursor: canFlip && !isFlipped && !isMatched ? 'pointer' : 'default',
-                                            }}
                                             disabled={!canFlip || isFlipped || isMatched}
-                                        >
-                                            <div className="w-full h-full flex items-center justify-center">
-                                                {(isFlipped || isMatched) ? (
-                                                    <img src={card.animal} alt="card" className="card-image" />
-                                                ) : (
-                                                    <div className="flex flex-col items-center justify-center h-full">
-                                                        <span className="text-black text-lg md:text-xl leading-tight"
-                                                            style={{ fontFamily: 'Great Vibes, cursive' }}>Pexeso</span>
-                                                        <span className="text-black text-[8px] md:text-[10px] leading-none"
-                                                            style={{ fontFamily: 'Great Vibes, cursive' }}>for Debbie</span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </button>
+                                            pointer={canFlip && !isFlipped && !isMatched} />
                                     );
                                 })}
                             </div>
@@ -2140,7 +2161,7 @@ if (data.t === 'SYNC') {
 
             setCanFlip(true);
 
-        }, 600);
+        }, 900);
 
     } else if (data.t === 'HIT') {
 
@@ -2180,7 +2201,7 @@ if (data.t === 'SYNC') {
 
             setCanFlip(true);
 
-        }, 600);
+        }, 900);
 
     } else if (data.t === 'R') {
 
@@ -2368,7 +2389,7 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                                 setMatchWins(nw);
 
-                                if (!isOnline) setShowRoundResult(true);
+                                if (!isOnline) setTimeout(() => setShowRoundResult(true), 900);
 
                             }
 
@@ -2388,7 +2409,7 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                             if (isOnline) p2p.send({ t: 'HIT', f1: first, f2: second, s: newScores, mw: nw, p: curPlayer });
 
-                        }, 600);
+                        }, 900);
 
                     } else if (curCards[first] && curCards[second]) {
 
@@ -2410,7 +2431,7 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                             if (isOnline) p2p.send({ t: 'NM', f1: first, f2: second, p: nextPlayer });
 
-                        }, 600);
+                        }, 900);
 
                     }
 
@@ -3170,51 +3191,11 @@ handleRemoteRef.current = handleRemoteUpdate;
 
                                     return (
 
-                                        <button
-
-                                            key={index}
-
+                                        <PexesoCard key={index} card={card} isFlipped={isFlipped} isMatched={isMatched}
                                             onClick={() => handleCardClick(index)}
-
-                                            className={`card-button transition-all duration-300 ${
-
-                                                isMatched ? 'opacity-0 pointer-events-none' : 'opacity-100'
-
-                                            }`}
-
-                                            style={{
-
-                                                backgroundColor: isFlipped || isMatched ? 'transparent' : '#6B7280',
-
-                                                cursor: canFlip && !isFlipped && !isMatched && (!isOnline || currentPlayer === playerNumber) ? 'pointer' : 'default'
-
-                                            }}
-
                                             disabled={!canFlip || isFlipped || isMatched || (isOnline && currentPlayer !== playerNumber)}
-
-                                        >
-
-                                            <div className="w-full h-full flex items-center justify-center">
-
-                                                {(isFlipped || isMatched) ? (
-
-                                                    <img src={card.animal} alt={t.cardAlt} className="card-image" />
-
-                                                ) : (
-
-                                                    <div className="flex flex-col items-center justify-center h-full">
-
-    <span className="text-black text-lg md:text-xl leading-tight" style={{fontFamily: 'Great Vibes, cursive'}}>Pexeso</span>
-
-    <span className="text-black text-[8px] md:text-[10px] leading-none" style={{fontFamily: 'Great Vibes, cursive'}}>for Debbie</span>
-
-</div>
-
-                                                )}
-
-                                            </div>
-
-                                        </button>
+                                            pointer={canFlip && !isFlipped && !isMatched && (!isOnline || currentPlayer === playerNumber)}
+                                            alt={t.cardAlt} />
 
                                     );
 
